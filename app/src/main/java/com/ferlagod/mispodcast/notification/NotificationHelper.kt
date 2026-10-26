@@ -46,6 +46,16 @@ object NotificationHelper {
     const val CHANNEL_DOWNLOADS_NAME = "Descargas de episodios"
     private const val NOTIFICATION_GROUP_KEY = "com.ferlagod.mispodcast.NEW_EPISODES_GROUP"
     private const val SUMMARY_NOTIFICATION_ID = 9999
+    private const val BATCH_SUMMARY_NOTIFICATION_ID = 8888
+
+    /**
+     * Limpia todas las notificaciones pendientes de la aplicación.
+     */
+    fun cancelAllNotifications(context: Context) {
+        try {
+            NotificationManagerCompat.from(context).cancelAll()
+        } catch (_: Exception) {}
+    }
 
     /**
      * Crea los canales de notificaciones (nuevos episodios y descargas) en Android 8.0+.
@@ -56,12 +66,12 @@ object NotificationHelper {
             val channelEpisodes = NotificationChannel(
                 CHANNEL_NEW_EPISODES_ID,
                 CHANNEL_NEW_EPISODES_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "Notificaciones automáticas al detectar nuevos capítulos de tus podcasts suscritos"
                 enableLights(true)
                 lightColor = android.graphics.Color.BLUE
-                enableVibration(true)
+                enableVibration(false)
                 setShowBadge(true)
                 lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
             }
@@ -79,6 +89,83 @@ object NotificationHelper {
                 lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
             }
             notificationManager.createNotificationChannel(channelDownloads)
+        }
+    }
+
+    /**
+     * Notificación consolidada para comprobaciones del worker con múltiples podcasts.
+     * Si solo 1 podcast tiene novedades (y <= 3 episodios), emite la notificación individual de ese podcast.
+     * Si varios podcasts tienen novedades o son muchos episodios, emite UNA SOLA notificación resumen (InboxStyle)
+     * para evitar saturar la barra de estado y el sonido del usuario.
+     */
+    suspend fun notifyBatchNewEpisodes(
+        context: Context,
+        podcastsWithEpisodes: Map<PodcastEntity, List<EpisodeEntity>>
+    ) = withContext(Dispatchers.IO) {
+        if (podcastsWithEpisodes.isEmpty()) return@withContext
+
+        val validEntries = podcastsWithEpisodes.filter { it.value.isNotEmpty() }
+        if (validEntries.isEmpty()) return@withContext
+
+        createNotificationChannels(context)
+
+        val notificationManager = NotificationManagerCompat.from(context)
+        if (!notificationManager.areNotificationsEnabled()) {
+            return@withContext
+        }
+
+        val totalEpisodes = validEntries.values.sumOf { it.size }
+        val totalPodcasts = validEntries.size
+
+        // Si solo 1 podcast tiene novedades y <= 3 episodios, mostramos su detalle
+        if (totalPodcasts == 1 && totalEpisodes <= 3) {
+            val single = validEntries.entries.first()
+            notifyNewEpisodes(context, single.key, single.value)
+            return@withContext
+        }
+
+        // Si son múltiples podcasts o más de 3 episodios, emitimos UNA ÚNICA NOTIFICACIÓN RESUMEN
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to", "new_releases")
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            BATCH_SUMMARY_NOTIFICATION_ID,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val inboxStyle = NotificationCompat.InboxStyle()
+            .setBigContentTitle("$totalEpisodes nuevos episodios disponibles")
+            .setSummaryText("$totalPodcasts programas con novedades")
+
+        val sampleLines = validEntries.flatMap { (podcast, eps) ->
+            eps.map { ep -> "${podcast.title}: ${ep.title}" }
+        }
+
+        sampleLines.take(5).forEach { line ->
+            inboxStyle.addLine("• $line")
+        }
+        if (sampleLines.size > 5) {
+            inboxStyle.addLine("y ${sampleLines.size - 5} episodios más...")
+        }
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
+            .setSmallIcon(R.drawable.app_logo)
+            .setContentTitle("Mis Podcast")
+            .setContentText("$totalEpisodes nuevos episodios en $totalPodcasts podcasts")
+            .setSubText("Novedades")
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setStyle(inboxStyle)
+
+        try {
+            notificationManager.notify(BATCH_SUMMARY_NOTIFICATION_ID, builder.build())
+        } catch (_: SecurityException) {
         }
     }
 
@@ -135,8 +222,8 @@ object NotificationHelper {
                 .setSubText("Nuevo episodio")
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setGroup(NOTIFICATION_GROUP_KEY)
                 .setStyle(
                     NotificationCompat.BigTextStyle()
@@ -190,8 +277,8 @@ object NotificationHelper {
                 .setSubText("Novedades")
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setGroup(NOTIFICATION_GROUP_KEY)
                 .setStyle(inboxStyle)
 

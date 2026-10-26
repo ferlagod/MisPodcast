@@ -139,6 +139,7 @@ class PodcastCheckWorker(
 
             val feedParser = container?.rssFeedParser ?: RssFeedParser()
             val totalNewEpisodesFound = AtomicInteger(0)
+            val discoveredNewEpisodes = java.util.concurrent.ConcurrentHashMap<com.ferlagod.mispodcast.data.local.entities.PodcastEntity, List<com.ferlagod.mispodcast.data.local.entities.EpisodeEntity>>()
             val downloadManager = EpisodeDownloadManager.getInstance(applicationContext, podcastDao)
             val semaphore = Semaphore(6) // Concurrencia controlada para no saturar sockets ni CPU
 
@@ -176,27 +177,41 @@ class PodcastCheckWorker(
 
                                         // Inserción directa eficiente con IGNORE (evita cargar miles de episodios a memoria)
                                         val insertResults = podcastDao.insertEpisodesIgnore(episodeEntities)
-                                        val newEpisodes = episodeEntities.filterIndexed { index, _ ->
+                                        val newlyInserted = episodeEntities.filterIndexed { index, _ ->
                                             insertResults.getOrNull(index) != null && insertResults[index] != -1L
                                         }
 
-                                        if (newEpisodes.isNotEmpty()) {
-                                            totalNewEpisodesFound.addAndGet(newEpisodes.size)
-                                            Log.i(TAG, "Detectados ${newEpisodes.size} nuevos episodios en '${podcast.title}'")
+                                        // Baseline y corte temporal de seguridad:
+                                        // 1. Si podcast.lastUpdated <= 0L, es la sincronización inicial tras suscripción o importación.
+                                        //    NUNCA se debe notificar ni auto-encolar el archivo histórico descargado.
+                                        // 2. Para podcasts ya sincronizados previamente, solo los episodios con pubDate
+                                        //    estrictamente posterior a lastUpdated y emitidos en las últimas 48 horas son considerados novedades.
+                                        val isFirstSync = podcast.lastUpdated <= 0L
+                                        val now = System.currentTimeMillis()
+                                        val maxEpisodeAgeMs = 48L * 3600L * 1000L // Máximo 48 horas
+                                        val oldestAllowedDate = now - maxEpisodeAgeMs
 
-                                            // Enviar notificación local agrupada
-                                            if (settings.newEpisodeNotifications) {
-                                                NotificationHelper.notifyNewEpisodes(
-                                                    context = applicationContext,
-                                                    podcast = podcast,
-                                                    newEpisodes = newEpisodes
-                                                )
+                                        val genuinelyNewEpisodes = if (isFirstSync) {
+                                            emptyList()
+                                        } else {
+                                            newlyInserted.filter { episode ->
+                                                episode.pubDate > podcast.lastUpdated &&
+                                                episode.pubDate > (podcast.subscribedAt - 3600_000L) &&
+                                                episode.pubDate >= oldestAllowedDate
                                             }
+                                        }
+
+                                        if (genuinelyNewEpisodes.isNotEmpty()) {
+                                            totalNewEpisodesFound.addAndGet(genuinelyNewEpisodes.size)
+                                            Log.i(TAG, "Detectados ${genuinelyNewEpisodes.size} nuevos episodios genuinos en '${podcast.title}'")
+
+                                            // Acumular para notificación consolidada al finalizar el worker
+                                            discoveredNewEpisodes[podcast] = genuinelyNewEpisodes
 
                                             // Auto-descargar según preferencia específica del podcast o ajuste global (respetando restricciones de Wi-Fi y batería)
                                             val shouldAutoDownload = podcast.autoDownloadEnabled ?: settings.autoDownloadNewEpisodes
                                             if (shouldAutoDownload) {
-                                                newEpisodes.take(2).forEach { episode ->
+                                                genuinelyNewEpisodes.take(2).forEach { episode ->
                                                     downloadManager.downloadEpisode(episode, ignoreNetworkConstraints = false)
                                                 }
                                             }
@@ -208,7 +223,7 @@ class PodcastCheckWorker(
                                                 podcast.autoEnqueueRule
                                             }
                                             if (effectiveRule != "DISABLED") {
-                                                newEpisodes.sortedBy { it.pubDate }.forEach { ep ->
+                                                genuinelyNewEpisodes.sortedBy { it.pubDate }.forEach { ep ->
                                                     if (effectiveRule == "TOP") {
                                                         podcastDao.addEpisodeToQueueTop(ep.id)
                                                     } else if (effectiveRule == "BOTTOM") {
@@ -237,6 +252,14 @@ class PodcastCheckWorker(
                         }
                     }
                 }.awaitAll()
+            }
+
+            // Emitir notificación consolidada si hay novedades y están habilitadas
+            if (settings.newEpisodeNotifications && discoveredNewEpisodes.isNotEmpty()) {
+                NotificationHelper.notifyBatchNewEpisodes(
+                    context = applicationContext,
+                    podcastsWithEpisodes = discoveredNewEpisodes
+                )
             }
 
             Log.i(TAG, "Comprobación finalizada. Total nuevos capítulos descubiertos: ${totalNewEpisodesFound.get()}")

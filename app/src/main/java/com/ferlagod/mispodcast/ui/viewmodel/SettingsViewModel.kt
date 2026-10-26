@@ -327,6 +327,7 @@ class SettingsViewModel @JvmOverloads constructor(
             _backupMessage.value = "Analizando e importando base de datos..."
             val result = DatabaseBackupManager.importDatabase(getApplication(), sourceUri, database)
             result.onSuccess { msg ->
+                com.ferlagod.mispodcast.notification.NotificationHelper.cancelAllNotifications(getApplication())
                 _backupMessage.value = msg
                 nextcloudSyncManager.triggerSyncIfConfigured(debounceMs = 2500L)
             }.onFailure { err ->
