@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
  * Provee métodos para agregar episodios, reordenar elementos por arrastre, aplicar criterios de ordenación
  * automática (duración, tamaño, fecha) y vaciar la cola preservando el episodio actualmente en escucha.
  */
-class QueueViewModel(
+class QueueViewModel @JvmOverloads constructor(
     application: Application,
     private val repository: PodcastRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.podcastRepository
         ?: PodcastRepository(PodcastDatabase.getInstance(application).podcastDao())

@@ -71,7 +71,7 @@ import kotlin.math.min
  * exponiendo flujos reactivos ([StateFlow]) para la posición actual, duración, estado de reproducción,
  * velocidad de escucha y saltos inteligentes hacia adelante y atrás.
  */
-class PlayerViewModel(
+class PlayerViewModel @JvmOverloads constructor(
     application: Application,
     private val repository: PodcastRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.podcastRepository
         ?: PodcastRepository(PodcastDatabase.getInstance(application).podcastDao()),

@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
  * Gestiona el cambio de tema visual, idioma de la interfaz, frecuencias de sincronización en segundo plano,
  * credenciales de Nextcloud WebDAV y copias de seguridad de la base de datos y archivos OPML.
  */
-class SettingsViewModel(
+class SettingsViewModel @JvmOverloads constructor(
     application: Application,
     private val preferencesManager: UserPreferencesManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.preferencesManager
         ?: UserPreferencesManager.getInstance(application),

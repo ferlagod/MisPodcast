@@ -59,7 +59,7 @@ import kotlinx.coroutines.flow.map
  * Administra la obtención de tendencias de Apple Podcasts, el feed de novedades de podcasts suscritos,
  * el escaneo de carpetas locales SAF, favoritos, historial y solicitudes de descarga offline.
  */
-class PodcastViewModel(
+class PodcastViewModel @JvmOverloads constructor(
     application: Application,
     private val repository: PodcastRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.podcastRepository
         ?: PodcastRepository(PodcastDatabase.getInstance(application).podcastDao()),
