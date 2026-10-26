@@ -311,4 +311,7 @@
     <string name="action_explore_podcasts">Explore podcasts</string>
     <string name="action_add_feed">Add podcast feed</string>
     <string name="continue_prefix">Continue</string>
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_night">Good evening</string>
 </resources>

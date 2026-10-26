@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -183,13 +184,16 @@ fun HomeScreen(
 
     var searchQuery by remember { mutableStateOf("") }
 
-    // Saludo contextual según la hora del día
+    // Saludo contextual según la hora del día (universal y localizado)
+    val morningStr = stringResource(R.string.greeting_morning)
+    val afternoonStr = stringResource(R.string.greeting_afternoon)
+    val nightStr = stringResource(R.string.greeting_night)
     val currentHour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
-    val greeting = remember(currentHour) {
+    val greeting = remember(currentHour, morningStr, afternoonStr, nightStr) {
         when (currentHour) {
-            in 6..12 -> "Buenos días, Fer"
-            in 13..20 -> "Buenas tardes, Fer"
-            else -> "Buenas noches, Fer"
+            in 6..12 -> morningStr
+            in 13..20 -> afternoonStr
+            else -> nightStr
         }
     }
 
@@ -235,6 +239,7 @@ fun HomeScreen(
         onRefresh = { podcastViewModel.refreshAllPodcasts() },
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(

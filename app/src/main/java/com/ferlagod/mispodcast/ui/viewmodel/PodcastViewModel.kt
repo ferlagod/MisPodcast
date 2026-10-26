@@ -87,23 +87,6 @@ class PodcastViewModel @JvmOverloads constructor(
         return downloadManager.getDownloadState(episode)
     }
 
-    init {
-        // Programar sincronización periódica en segundo plano
-        SyncWorker.schedulePeriodicSync(application)
-
-        // Observar reactivamente el cambio de idioma/país para recargar recomendaciones
-        viewModelScope.launch {
-            preferencesManager.userSettingsFlow
-                .map { it.languageCode }
-                .distinctUntilChanged()
-                .collect { langCode ->
-                    loadRecommendations(langCode)
-                }
-        }
-        // Carga inicial del resumen anual Wrapped
-        loadWrapped(2026)
-    }
-
     // ==========================================
     // ESTADOS REACTIVOS DESDE ROOM
     // ==========================================
@@ -188,6 +171,23 @@ class PodcastViewModel @JvmOverloads constructor(
             }
             _isLoadingRecommendations.value = false
         }
+    }
+
+    init {
+        // Programar sincronización periódica en segundo plano
+        SyncWorker.schedulePeriodicSync(application)
+
+        // Observar reactivamente el cambio de idioma/país para recargar recomendaciones
+        viewModelScope.launch {
+            preferencesManager.userSettingsFlow
+                .map { it.languageCode }
+                .distinctUntilChanged()
+                .collect { langCode ->
+                    loadRecommendations(langCode)
+                }
+        }
+        // Carga inicial del resumen anual Wrapped
+        loadWrapped(2026)
     }
 
     // ==========================================
