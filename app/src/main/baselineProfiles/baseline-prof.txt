@@ -1,0 +1,71 @@
+# Baseline Profile for Mis Podcast
+# Copyright (C) 2026 ferlagod - GNU GPLv3
+# Optimizes cold startup, frame rate, and initial interactions
+
+# Application and DI
+Lcom/ferlagod/mispodcast/MisPodcastApplication;
+HSPLcom/ferlagod/mispodcast/MisPodcastApplication;-><init>()V
+HSPLcom/ferlagod/mispodcast/MisPodcastApplication;->onCreate()V
+HSPLcom/ferlagod/mispodcast/MisPodcastApplication;->getContainer()Lcom/ferlagod/mispodcast/di/AppContainer;
+Lcom/ferlagod/mispodcast/di/AppContainer;
+HSPLcom/ferlagod/mispodcast/di/AppContainer;-><init>(Landroid/content/Context;)V
+HSPLcom/ferlagod/mispodcast/di/AppContainer;->getPreferencesManager()Lcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;
+HSPLcom/ferlagod/mispodcast/di/AppContainer;->getDatabase()Lcom/ferlagod/mispodcast/data/local/PodcastDatabase;
+HSPLcom/ferlagod/mispodcast/di/AppContainer;->getPodcastRepository()Lcom/ferlagod/mispodcast/data/repository/PodcastRepository;
+HSPLcom/ferlagod/mispodcast/di/AppContainer;->getDownloadManager()Lcom/ferlagod/mispodcast/data/download/PodcastDownloadManager;
+HSPLcom/ferlagod/mispodcast/di/AppContainer;->getNextcloudSyncManager()Lcom/ferlagod/mispodcast/sync/NextcloudSyncManager;
+
+# Main Entry & Activity
+Lcom/ferlagod/mispodcast/MainActivity;
+HSPLcom/ferlagod/mispodcast/MainActivity;-><init>()V
+HSPLcom/ferlagod/mispodcast/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLcom/ferlagod/mispodcast/MainActivity;->onNewIntent(Landroid/content/Intent;)V
+Lcom/ferlagod/mispodcast/MainActivity$onCreate$1;
+
+# Preferences and Settings
+Lcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;
+HSPLcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;->getInstance(Landroid/content/Context;)Lcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;
+HSPLcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;->getUserSettingsFlow()Lkotlinx/coroutines/flow/Flow;
+Lcom/ferlagod/mispodcast/data/preferences/UserSettings;
+Lcom/ferlagod/mispodcast/data/preferences/AppThemeMode;
+
+# Database & Entities
+Lcom/ferlagod/mispodcast/data/local/PodcastDatabase;
+HSPLcom/ferlagod/mispodcast/data/local/PodcastDatabase;->getInstance(Landroid/content/Context;)Lcom/ferlagod/mispodcast/data/local/PodcastDatabase;
+HSPLcom/ferlagod/mispodcast/data/local/PodcastDatabase;->podcastDao()Lcom/ferlagod/mispodcast/data/local/dao/PodcastDao;
+Lcom/ferlagod/mispodcast/data/local/dao/PodcastDao;
+Lcom/ferlagod/mispodcast/data/local/entities/PodcastEntity;
+Lcom/ferlagod/mispodcast/data/local/entities/EpisodeEntity;
+Lcom/ferlagod/mispodcast/data/repository/PodcastRepository;
+
+# Theme and Styling
+Lcom/ferlagod/mispodcast/ui/theme/ThemeKt;
+Lcom/ferlagod/mispodcast/ui/theme/ColorKt;
+Lcom/ferlagod/mispodcast/ui/theme/TypeKt;
+Lcom/ferlagod/mispodcast/ui/theme/ShapeKt;
+
+# Scaffold and Adaptive Navigation
+Lcom/ferlagod/mispodcast/ui/components/MainScaffoldKt;
+Lcom/ferlagod/mispodcast/ui/components/MiniPlayerKt;
+
+# Screens
+Lcom/ferlagod/mispodcast/ui/screens/SubscriptionsScreenKt;
+Lcom/ferlagod/mispodcast/ui/screens/PodcastDetailScreenKt;
+Lcom/ferlagod/mispodcast/ui/screens/PlayerScreenKt;
+Lcom/ferlagod/mispodcast/ui/screens/SettingsScreenKt;
+Lcom/ferlagod/mispodcast/ui/screens/DownloadsScreenKt;
+Lcom/ferlagod/mispodcast/ui/screens/QueueScreenKt;
+Lcom/ferlagod/mispodcast/ui/screens/ExploreScreenKt;
+
+# ViewModels
+Lcom/ferlagod/mispodcast/ui/viewmodel/PodcastViewModel;
+Lcom/ferlagod/mispodcast/ui/viewmodel/PlayerViewModel;
+Lcom/ferlagod/mispodcast/ui/viewmodel/SettingsViewModel;
+
+# Playback Service & Audio Pipeline
+Lcom/ferlagod/mispodcast/playback/PodcastPlaybackService;
+HSPLcom/ferlagod/mispodcast/playback/PodcastPlaybackService;->onCreate()V
+Lcom/ferlagod/mispodcast/playback/PlaybackController;
+Lcom/ferlagod/mispodcast/playback/ProgressTracker;
+Lcom/ferlagod/mispodcast/playback/SleepTimerManager;
+Lcom/ferlagod/mispodcast/data/download/PodcastDownloadManager;

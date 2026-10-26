@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mis Podcast</string>
+
+    <!-- Navigation Bottom Bar -->
+    <string name="nav_home">Startseite</string>
+    <string name="nav_queue">Warteschlange</string>
+    <string name="nav_new_releases">Neuheiten</string>
+    <string name="nav_subscriptions">Abonnements</string>
+    <string name="nav_more">Mehr</string>
+    <string name="nav_more_options">Weitere Optionen</string>
+
+    <!-- 3-Dot Overflow Menu -->
+    <string name="menu_history">Verlauf</string>
+    <string name="menu_favorites">Lieblingsepisoden</string>
+    <string name="menu_stats">Statistiken</string>
+    <string name="menu_add_podcast">Podcast hinzufügen</string>
+    <string name="menu_settings">Einstellungen</string>
+    <string name="menu_about">Über</string>
+
+    <!-- Categories -->
+    <string name="category_for_you">Für dich</string>
+    <string name="category_technology">Technologie</string>
+    <string name="category_science">Wissenschaft</string>
+    <string name="category_history">Geschichte</string>
+    <string name="category_comedy">Comedy</string>
+    <string name="category_news">Nachrichten</string>
+    <string name="category_fiction">Fiktion</string>
+    <string name="category_health">Gesundheit</string>
+    <string name="category_books">Bücher</string>
+    <string name="category_title">Kategorie</string>
+
+    <!-- Actions and States -->
+    <string name="now_playing">Aktuelle Wiedergabe</string>
+    <string name="continue_listening">WEITERSPIELEN</string>
+    <string name="listen_now">Jetzt hören</string>
+    <string name="up_next">ALS NÄCHSTES</string>
+    <string name="subscribe">Abonnieren</string>
+    <string name="subscribed">Abonniert</string>
+    <string name="unsubscribe">Abbestellen</string>
+    <string name="download">Herunterladen</string>
+    <string name="downloading">Wird heruntergeladen…</string>
+    <string name="downloaded">Heruntergeladen</string>
+    <string name="delete_download">Download löschen</string>
+    <string name="clear">Löschen</string>
+    <string name="clear_queue">Warteschlange leeren</string>
+    <string name="sort_by">Sortieren nach</string>
+    <string name="sort_rest_of_queue">REST DER WARTESCHLANGE SORTIEREN</string>
+    <string name="sort_duration_asc">Dauer: Kürzeste zuerst</string>
+    <string name="sort_duration_desc">Dauer: Längste zuerst</string>
+    <string name="sort_size_asc">Größe: Kleinste zuerst</string>
+    <string name="sort_size_desc">Größe: Größte zuerst</string>
+    <string name="sort_name_asc">Titel: A - Z</string>
+    <string name="sort_name_desc">Titel: Z - A</string>
+    <string name="sort_date_desc">Datum: Neueste zuerst</string>
+    <string name="sort_date_asc">Datum: Älteste zuerst</string>
+    <string name="add_local_folder">Lokalen Ordner hinzufügen</string>
+    <string name="add_local_folder_title">Lokalen Audio-Ordner hinzufügen</string>
+    <string name="add_local_folder_subtitle">Audiodateien aus deinem Speicher in einen lokalen Podcast umwandeln</string>
+    <string name="search_podcasts">Podcasts suchen</string>
+    <string name="search_or_paste_rss">Podcasts suchen oder RSS-Feed einfügen…</string>
+    <string name="paste_rss_url">RSS-Feed-URL einfügen</string>
+    <string name="tab_search">Suchen</string>
+    <string name="tab_rss_feed">RSS-Feed</string>
+    <string name="tab_local_folder">Lokaler Ordner</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_theme">Design</string>
+    <string name="settings_theme_system">Systemstandard</string>
+    <string name="settings_theme_light">Hell</string>
+    <string name="settings_theme_dark">Dunkel</string>
+    <string name="settings_theme_amoled">Reines AMOLED</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_language_app">App-Sprache auswählen</string>
+    <string name="settings_lang_system">Systemstandard</string>
+    <string name="settings_lang_spanish">Español</string>
+    <string name="settings_lang_english">English</string>
+    <string name="settings_lang_french">Français</string>
+    <string name="settings_lang_german">Deutsch</string>
+    <string name="settings_lang_italian">Italiano</string>
+    <string name="settings_lang_portuguese">Português</string>
+    <string name="settings_playback_controls">Wiedergabesteuerung</string>
+    <string name="settings_skip_forward">Vorwärts springen</string>
+    <string name="settings_skip_backward">Zurückspringen</string>
+    <string name="settings_default_speed">Standard-Wiedergabegeschwindigkeit</string>
+    <string name="settings_skip_silence">Stille überspringen</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_auto_download">Neue Episoden automatisch herunterladen</string>
+    <string name="settings_cache_limit">Limit für zwischengespeicherte Episoden</string>
+    <string name="settings_delete_after_played">Nach Wiedergabe löschen</string>
+    <string name="settings_nextcloud_sync">Nextcloud-Synchronisierung</string>
+    <string name="settings_server_url">Server-URL</string>
+    <string name="settings_username">Benutzername</string>
+    <string name="settings_app_password">App-Passwort</string>
+    <string name="settings_test_connection">Verbindung testen</string>
+    <string name="settings_sync_now">Jetzt synchronisieren</string>
+    <string name="settings_backup">Backups</string>
+    <string name="settings_export_opml">OPML exportieren</string>
+    <string name="settings_import_opml">OPML importieren</string>
+    <string name="settings_export_db">Datenbank exportieren</string>
+    <string name="settings_import_db">Datenbank importieren</string>
+    <string name="settings_notifications">Benachrichtigungen</string>
+    <string name="settings_check_frequency">Prüfintervall</string>
+    <string name="freq_manual">Manuell (Nur beim Starten der App)</string>
+    <string name="freq_1_hour">Jede Stunde</string>
+    <string name="freq_2_hours">Alle 2 Stunden</string>
+    <string name="freq_6_hours">Alle 6 Stunden</string>
+    <string name="freq_12_hours">Alle 12 Stunden</string>
+    <string name="freq_24_hours">Alle 24 Stunden</string>
+    <string name="settings_about">Über</string>
+
+    <!-- Common UI Strings -->
+    <string name="close">Schließen</string>
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="delete">Löschen</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="library">BIBLIOTHEK</string>
+    <string name="from_your_subscriptions">AUS DEINEN ABONNEMENTS</string>
+    <string name="empty_queue">Deine Warteschlange ist leer</string>
+    <string name="empty_queue_subtitle">Füge Episoden aus deinen Abonnements hinzu oder entdecke neue Podcasts</string>
+    <string name="empty_subscriptions">Noch keine Abonnements</string>
+    <string name="empty_subscriptions_subtitle">Finde deine Lieblingssendungen in der Suche oder füge eine RSS-Feed-URL ein.</string>
+    <string name="add_first_podcast">Ersten Podcast hinzufügen</string>
+    <string name="empty_new_releases">Keine neuen Episoden verfügbar</string>
+    <string name="empty_new_releases_subtitle">Aktuelle Episoden deiner Lieblingssendungen erscheinen hier.</string>
+    <string name="empty_history">Der Hörverlauf ist leer</string>
+    <string name="empty_favorites">Keine Lieblingsepisoden</string>
+    <string name="podcast_detail_title">Podcast-Details</string>
+    <string name="stats_title">Statistiken</string>
+    <string name="history_title">Verlauf</string>
+    <string name="favorites_title">Lieblingsepisoden</string>
+    <string name="queue_title">Warteschlange</string>
+    <string name="episodes">Episoden</string>
+    <string name="programs_followed">abonnierte Sendungen</string>
+    <string name="episode_detail_title">Episodendetails</string>
+    <string name="episode_notes">Episodennotizen</string>
+    <string name="play_episode">Episode abspielen</string>
+    <string name="pause_episode">Pausieren</string>
+    <string name="add_to_queue">In die Warteschlange</string>
+    <string name="in_queue">In Warteschlange</string>
+    <string name="mark_as_played">Als gespielt markieren</string>
+    <string name="mark_as_unplayed">Als ungehört markieren</string>
+    <string name="share_episode">Teilen</string>
+    <string name="favorite">Favorit</string>
+    <string name="mark_favorite">Zu Favoriten</string>
+    <string name="badge_local">LOKAL</string>
+    <string name="badge_played">GEHÖRT</string>
+    <string name="additional_resources">Zusätzliche Ressourcen</string>
+    <string name="support_show">Show unterstützen</string>
+    <string name="transcript">Transkript</string>
+    <string name="no_episode_notes">Keine Notizen oder Beschreibung für diese Episode verfügbar.</string>
+    <string name="toast_added_to_queue">Zur Warteschlange hinzugefügt</string>
+    <string name="toast_downloading_episode">Episode wird heruntergeladen...</string>
+    <string name="toast_marked_as_played">Als gespielt markiert</string>
+    <string name="toast_marked_as_unplayed">Als ungehört markiert</string>
+    <string name="share_episode_format">Höre \'%1$s\' von %2$s: %3$s</string>
+    <string name="widget_description">Wiedergabesteuerung für Mis Podcast auf dem Startbildschirm</string>
+    <string name="tile_label">Mis Podcast</string>
+    <string name="tile_play">Wiedergeben</string>
+    <string name="tile_pause">Pause</string>
+    <string name="tile_no_episode">Tippen zum Abspielen</string>
+    <string name="support_podcast_button">Unterstützen</string>
+    <string name="support_podcast_title">%1$s unterstützen</string>
+    <string name="support_podcast_subtitle">Value4Value &amp; Unabhängige Finanzierung</string>
+    <string name="support_creator_message">Notiz des Erstellers</string>
+    <string name="support_traditional_funding">Spenden &amp; Crowdfunding</string>
+    <string name="support_open_link">Unterstützungsseite öffnen</string>
+    <string name="support_v4v_title">Value4Value (Lightning-Netzwerk)</string>
+    <string name="support_v4v_description">Senden Sie Satoshis direkt über das Bitcoin Lightning-Netzwerk an die Ersteller.</string>
+    <string name="support_suggested_amount">Vorschlag des Erstellers: %1$s</string>
+    <string name="support_open_lightning_wallet">Lightning-Wallet öffnen</string>
+    <string name="support_copy_address">Adresse kopieren</string>
+    <string name="support_address_copied">Lightning-Adresse in die Zwischenablage kopiert</string>
+    <string name="support_no_wallet_found">Keine Lightning-Wallet-App gefunden (z. B. Phoenix, Breez, Alby, Muun)</string>
+
+    <!-- General Accessibility and Actions -->
+    <string name="btn_back">Zurück</string>
+    <string name="btn_close">Schließen</string>
+    <string name="action_refresh">Aktualisieren</string>
+    <string name="action_share">Teilen</string>
+    <string name="action_search">Suchen</string>
+    <string name="action_play">Wiedergeben</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_copy">Kopieren</string>
+    <string name="action_selected">Ausgewählt</string>
+    <string name="action_remove_favorite">Aus Favoriten entfernen</string>
+    <string name="action_add_favorite">Zu Favoriten hinzufügen</string>
+
+    <!-- About Screen -->
+    <string name="about_developer_title">Entwickler</string>
+    <string name="about_developer_name">Fernando Lago Dávila</string>
+    <string name="about_developer_bio">Open-Source-Softwareentwickler und Schöpfer von Projekten wie Rocinante, BiblioHouse, DosisApp und Mis Curas.</string>
+    <string name="about_website">Webseite</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_app_description">Ihr moderner Podcast-Player und -Manager mit von Apple Podcasts inspiriertem Design, Podcasting 2.0, Trends und Empfehlungen direkt von Apple Podcasts und Cloud-Synchronisation.</string>
+    <string name="about_version_license">Version 1.0.0 • GNU GPL v3 Lizenz</string>
+    <string name="about_license_title">Lizenz &amp; Philosophie</string>
+    <string name="about_license_description">Mis Podcast wird als freie Software unter den Bedingungen der GNU General Public License Version 3 (GNU GPL v3) verbreitet. Sie haben die Freiheit, den Quellcode zu nutzen, zu studieren, zu teilen und zu verändern. Es enthält keine invasive Werbung, Telemetrie oder Tracker von Drittanbietern.</string>
+    <string name="about_view_license">GNU GPL v3 Lizenz anzeigen</string>
+    <string name="about_tech_used">Verwendete Technologien:</string>
+    <string name="about_made_with">Erstellt mit</string>
+    <string name="about_love">Liebe</string>
+    <string name="about_for_community">für die Podcasting-Community</string>
+    <string name="about_logo_description">Mis Podcast Logo</string>
+
+    <!-- Podcast Detail Screen -->
+    <string name="podcast_settings_title">Podcast-Einstellungen</string>
+    <string name="podcast_reconnect_folder">Lokalen Ordner wiederverbinden</string>
+    <string name="podcast_scan_folder">Lokalen Ordner durchsuchen</string>
+    <string name="podcast_update_feed">Feed aktualisieren</string>
+    <string name="podcast_local_folder_badge">Lokaler Ordner</string>
+
+    <!-- Player and Sheets Accessibility -->
+    <string name="player_cover_description">Cover-Artwork</string>
+    <string name="player_close_description">Player schließen</string>
+    <string name="player_sleep_timer_description">Schlaf-Timer</string>
+    <string name="player_speed_description">Wiedergabegeschwindigkeit anpassen</string>
+    <string name="player_audio_effects_description">Audioeffekte und Stimmverstärkung</string>
+    <string name="player_bookmarks_description">Lesezeichen und Notizen</string>
+    <string name="player_transcript_description">Transkript anzeigen</string>
+    <string name="player_prev_chapter_description">Vorheriges Kapitel</string>
+    <string name="player_next_chapter_description">Nächstes Kapitel</string>
+    <string name="player_skip_forward_format">%1$d Sekunden vorwärts</string>
+    <string name="player_skip_backward_format">%1$d Sekunden zurück</string>
+    <string name="player_speed_decrease_description">0.1x verringern</string>
+    <string name="player_speed_increase_description">0.1x erhöhen</string>
+    <string name="transcript_copy_full">Vollständiges Transkript kopieren</string>
+    <string name="transcript_clear_search">Suche löschen</string>
+    <string name="transcript_jump_to">Zu diesem Zeitpunkt springen</string>
+    <string name="bookmark_add_description">Lesezeichen hinzufügen</string>
+    <string name="bookmark_share_description">Zeitstempel teilen</string>
+    <string name="bookmark_delete_description">Lesezeichen löschen</string>
+    <string name="chapter_open_link_description">Kapitellink öffnen</string>
+    <string name="chapter_play_this_description">Dieses Kapitel abspielen</string>
+
+    <!-- Wrapped & Stats -->
+    <string name="stats_wrapped_badge">WRAPPED JAHRESRÜCKBLICK</string>
+    <string name="stats_wrapped_title">Dein Podcast-Jahr ist bereit!</string>
+    <string name="stats_wrapped_subtitle">Entdecke deine gesamten Hörstunden, deinen Top-Podcast und deinen Hörertyp.</string>
+    <string name="stats_wrapped_button">Mein Wrapped ansehen ✨</string>
+    <string name="stats_view_wrapped_description">Wrapped ansehen</string>
+    <string name="wrapped_modal_title">Mis Podcast Wrapped</string>
+    <string name="wrapped_empty_title">Dein Wrapped hat noch keine Daten</string>
+    <string name="wrapped_empty_subtitle">Höre Episoden deiner Lieblingspodcasts, um deinen persönlichen Jahresrückblick zu erstellen.</string>
+    <string name="wrapped_personality_title">DEINE HÖRER-PERSÖNLICHKEIT</string>
+    <string name="wrapped_stat_time">Zeit</string>
+    <string name="wrapped_stat_completed">Abgeschlossen</string>
+    <string name="wrapped_stat_podcasts">Shows</string>
+    <string name="wrapped_stat_days_format">%1$.1f durchgehende Tage</string>
+    <string name="wrapped_stat_full_episodes">Ganze Episoden</string>
+    <string name="wrapped_stat_different">Verschiedene</string>
+    <string name="wrapped_top_podcast_badge">🏆 DEIN #1 PODCAST</string>
+    <string name="wrapped_top_podcast_format">%1$s gehört • %2$d%% deiner Zeit</string>
+    <string name="wrapped_top_list_title">Meistgehörte Podcasts</string>
+    <string name="wrapped_share_button">Mein Wrapped teilen</string>
+    <string name="wrapped_share_chooser_title">Mein Wrapped teilen</string>
+    <string name="wrapped_historic_label">Gesamt</string>
+
+    <!-- Wiedergabegeschwindigkeit Notizen -->
+    <string name="speed_note_slow">Langsame Wiedergabe</string>
+    <string name="speed_note_normal">Normale Geschwindigkeit</string>
+    <string name="speed_note_slightly_fast">Etwas schneller</string>
+    <string name="speed_note_fast">Schnell (optimal für Nachrichten)</string>
+    <string name="speed_note_ultra_fast">Ultraschnell</string>
+
+    <!-- Zusätzliche Barrierefreiheit für Warteschlange und Aktionen -->
+    <string name="queue_all">Alle einreihen</string>
+    <string name="play_next">Als nächstes abspielen</string>
+    <string name="play_last">Als letztes abspielen</string>
+    <string name="download_all">Alle herunterladen</string>
+    <string name="remove_from_queue">Aus Warteschlange entfernen</string>
+    <string name="move_up">Nach oben verschieben</string>
+    <string name="move_down">Nach unten verschieben</string>
+    <string name="drag_handle_description">Episode neu anordnen</string>
+    <string name="trending">Trends</string>
+    <string name="local_folder">Lokaler Ordner</string>
+
+    <!-- Player slider accessibility -->
+    <string name="player_progress_slider_description">Wiedergabeposition</string>
+    <string name="player_progress_state_minutes">%1$d Minuten von %2$d</string>
+    <string name="player_progress_state_hours">%1$d Std. %2$d Min. von %3$d Std. %4$d Min.</string>
+    <string name="player_progress_state_hours_start">%1$d Min. von %2$d Std. %3$d Min.</string>
+
+    <!-- Sleep Timer Custom -->
+    <string name="sleep_timer_custom_duration">Benutzerdefinierte Dauer</string>
+    <string name="sleep_timer_activate_custom">Für %1$d Minuten aktivieren</string>
+
+    <!-- Material You Dynamic Color -->
+    <string name="settings_dynamic_color_title">Dynamische Farben (Material You)</string>
+    <string name="settings_dynamic_color_subtitle">App-Farbpalette an das Hintergrundbild deines Geräts anpassen</string>
+</resources>

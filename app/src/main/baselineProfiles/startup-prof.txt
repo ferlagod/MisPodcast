@@ -1,0 +1,15 @@
+# Startup Profile for Mis Podcast
+# Classes and methods prioritized for first frame rendering
+
+Lcom/ferlagod/mispodcast/MisPodcastApplication;
+HSPLcom/ferlagod/mispodcast/MisPodcastApplication;-><init>()V
+HSPLcom/ferlagod/mispodcast/MisPodcastApplication;->onCreate()V
+Lcom/ferlagod/mispodcast/di/AppContainer;
+HSPLcom/ferlagod/mispodcast/di/AppContainer;-><init>(Landroid/content/Context;)V
+Lcom/ferlagod/mispodcast/MainActivity;
+HSPLcom/ferlagod/mispodcast/MainActivity;->onCreate(Landroid/os/Bundle;)V
+Lcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;
+HSPLcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;->getInstance(Landroid/content/Context;)Lcom/ferlagod/mispodcast/data/preferences/UserPreferencesManager;
+Lcom/ferlagod/mispodcast/ui/theme/ThemeKt;
+Lcom/ferlagod/mispodcast/ui/components/MainScaffoldKt;
+Lcom/ferlagod/mispodcast/ui/screens/SubscriptionsScreenKt;

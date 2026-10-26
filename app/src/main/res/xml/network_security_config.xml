@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+      Configuración de seguridad de red para MisPodcast.
+      Los podcasts y sus audios provienen de miles de servidores RSS externos en Internet,
+      muchos de los cuales aún sirven multimedia a través de HTTP estándar (sin cifrado TLS).
+      Se permite tráfico en texto claro de forma general para la reproducción y descarga de feeds,
+      mientras que las conexiones críticas (Nextcloud, Apple Podcasts) exigen HTTPS a nivel aplicativo.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

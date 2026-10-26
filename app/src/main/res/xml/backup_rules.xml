@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Excluir DataStore de preferencias con credenciales en copias de seguridad de Google Drive -->
+    <exclude domain="file" path="datastore" />
+    <exclude domain="sharedpref" path="." />
+</full-backup-content>

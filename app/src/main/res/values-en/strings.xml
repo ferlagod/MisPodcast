@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mis Podcast</string>
+
+    <!-- Navigation Bottom Bar -->
+    <string name="nav_home">Home</string>
+    <string name="nav_queue">Queue</string>
+    <string name="nav_new_releases">New Releases</string>
+    <string name="nav_subscriptions">Subscriptions</string>
+    <string name="nav_more">More</string>
+    <string name="nav_more_options">More options</string>
+
+    <!-- 3-Dot Overflow Menu -->
+    <string name="menu_history">History</string>
+    <string name="menu_favorites">Favorite Episodes</string>
+    <string name="menu_stats">Statistics</string>
+    <string name="menu_add_podcast">Add Podcast</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_about">About</string>
+
+    <!-- Categories -->
+    <string name="category_for_you">For You</string>
+    <string name="category_technology">Technology</string>
+    <string name="category_science">Science</string>
+    <string name="category_history">History</string>
+    <string name="category_comedy">Comedy</string>
+    <string name="category_news">News</string>
+    <string name="category_fiction">Fiction</string>
+    <string name="category_health">Health</string>
+    <string name="category_books">Books</string>
+    <string name="category_title">Category</string>
+
+    <!-- Actions and States -->
+    <string name="now_playing">Now Playing</string>
+    <string name="continue_listening">CONTINUE LISTENING</string>
+    <string name="listen_now">Listen Now</string>
+    <string name="up_next">UP NEXT</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="subscribed">Subscribed</string>
+    <string name="unsubscribe">Unsubscribe</string>
+    <string name="download">Download</string>
+    <string name="downloading">Downloading…</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="delete_download">Delete download</string>
+    <string name="clear">Clear</string>
+    <string name="clear_queue">Clear queue</string>
+    <string name="sort_by">Sort by</string>
+    <string name="sort_rest_of_queue">SORT REST OF QUEUE</string>
+    <string name="sort_duration_asc">Duration: Shortest first</string>
+    <string name="sort_duration_desc">Duration: Longest first</string>
+    <string name="sort_size_asc">Size: Smallest first</string>
+    <string name="sort_size_desc">Size: Largest first</string>
+    <string name="sort_name_asc">Title: A - Z</string>
+    <string name="sort_name_desc">Title: Z - A</string>
+    <string name="sort_date_desc">Date: Newest first</string>
+    <string name="sort_date_asc">Date: Oldest first</string>
+    <string name="add_local_folder">Add local folder</string>
+    <string name="add_local_folder_title">Add local audio folder</string>
+    <string name="add_local_folder_subtitle">Convert audio files from your storage into a local podcast</string>
+    <string name="search_podcasts">Search podcasts</string>
+    <string name="search_or_paste_rss">Search podcasts or paste RSS feed…</string>
+    <string name="paste_rss_url">Paste RSS feed URL</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_rss_feed">RSS Feed</string>
+    <string name="tab_local_folder">Local Folder</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_amoled">Pure AMOLED</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_app">Select app language</string>
+    <string name="settings_lang_system">System default</string>
+    <string name="settings_lang_spanish">Español</string>
+    <string name="settings_lang_english">English</string>
+    <string name="settings_lang_french">Français</string>
+    <string name="settings_lang_german">Deutsch</string>
+    <string name="settings_lang_italian">Italiano</string>
+    <string name="settings_lang_portuguese">Português</string>
+    <string name="settings_playback_controls">Playback controls</string>
+    <string name="settings_skip_forward">Skip forward</string>
+    <string name="settings_skip_backward">Skip backward</string>
+    <string name="settings_default_speed">Default playback speed</string>
+    <string name="settings_skip_silence">Skip silence</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_auto_download">Auto-download new episodes</string>
+    <string name="settings_cache_limit">Cached episodes limit</string>
+    <string name="settings_delete_after_played">Delete after played</string>
+    <string name="settings_nextcloud_sync">Nextcloud Sync</string>
+    <string name="settings_server_url">Server URL</string>
+    <string name="settings_username">Username</string>
+    <string name="settings_app_password">App password</string>
+    <string name="settings_test_connection">Test connection</string>
+    <string name="settings_sync_now">Sync now</string>
+    <string name="settings_backup">Backups</string>
+    <string name="settings_export_opml">Export OPML</string>
+    <string name="settings_import_opml">Import OPML</string>
+    <string name="settings_export_db">Export database</string>
+    <string name="settings_import_db">Import database</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_check_frequency">Check frequency</string>
+    <string name="freq_manual">Manually (Only on app launch)</string>
+    <string name="freq_1_hour">Every hour</string>
+    <string name="freq_2_hours">Every 2 hours</string>
+    <string name="freq_6_hours">Every 6 hours</string>
+    <string name="freq_12_hours">Every 12 hours</string>
+    <string name="freq_24_hours">Every 24 hours</string>
+    <string name="settings_about">About</string>
+
+    <!-- Common UI Strings -->
+    <string name="close">Close</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="library">LIBRARY</string>
+    <string name="from_your_subscriptions">FROM YOUR SUBSCRIPTIONS</string>
+    <string name="empty_queue">Your queue is empty</string>
+    <string name="empty_queue_subtitle">Add episodes from your subscriptions or discover new podcasts</string>
+    <string name="empty_subscriptions">No subscriptions yet</string>
+    <string name="empty_subscriptions_subtitle">Find your favorite shows in search or paste an RSS feed URL.</string>
+    <string name="add_first_podcast">Add first podcast</string>
+    <string name="empty_new_releases">No new episodes available</string>
+    <string name="empty_new_releases_subtitle">Recent episodes from your favorite shows will appear here.</string>
+    <string name="empty_history">Listening history is empty</string>
+    <string name="empty_favorites">No favorite episodes</string>
+    <string name="podcast_detail_title">Podcast detail</string>
+    <string name="stats_title">Statistics</string>
+    <string name="history_title">History</string>
+    <string name="favorites_title">Favorite Episodes</string>
+    <string name="queue_title">Waiting queue</string>
+    <string name="episodes">episodes</string>
+    <string name="programs_followed">shows following</string>
+    <string name="episode_detail_title">Episode Details</string>
+    <string name="episode_notes">Episode Notes</string>
+    <string name="play_episode">Play episode</string>
+    <string name="pause_episode">Pause</string>
+    <string name="add_to_queue">Add to queue</string>
+    <string name="in_queue">In queue</string>
+    <string name="mark_as_played">Mark as played</string>
+    <string name="mark_as_unplayed">Mark as unplayed</string>
+    <string name="share_episode">Share</string>
+    <string name="favorite">Favorite</string>
+    <string name="mark_favorite">Add to favorites</string>
+    <string name="badge_local">LOCAL</string>
+    <string name="badge_played">PLAYED</string>
+    <string name="additional_resources">Additional resources</string>
+    <string name="support_show">Support show</string>
+    <string name="transcript">Transcript</string>
+    <string name="no_episode_notes">No notes or description available for this episode.</string>
+    <string name="toast_added_to_queue">Added to queue</string>
+    <string name="toast_downloading_episode">Downloading episode...</string>
+    <string name="toast_marked_as_played">Marked as played</string>
+    <string name="toast_marked_as_unplayed">Marked as unplayed</string>
+    <string name="share_episode_format">Listen to \'%1$s\' by %2$s: %3$s</string>
+    <string name="widget_description">Playback controls for Mis Podcast on the home screen</string>
+    <string name="tile_label">Mis Podcast</string>
+    <string name="tile_play">Play</string>
+    <string name="tile_pause">Pause</string>
+    <string name="tile_no_episode">Tap to play</string>
+    <string name="support_podcast_button">Support</string>
+    <string name="support_podcast_title">Support %1$s</string>
+    <string name="support_podcast_subtitle">Value4Value &amp; Independent funding</string>
+    <string name="support_creator_message">Creator\'s note</string>
+    <string name="support_traditional_funding">Donations &amp; Crowdfunding</string>
+    <string name="support_open_link">Open support page</string>
+    <string name="support_v4v_title">Value4Value (Lightning Network)</string>
+    <string name="support_v4v_description">Send satoshis directly to the creators using Bitcoin\'s Lightning Network.</string>
+    <string name="support_suggested_amount">Creator suggestion: %1$s</string>
+    <string name="support_open_lightning_wallet">Open Lightning wallet</string>
+    <string name="support_copy_address">Copy address</string>
+    <string name="support_address_copied">Lightning address copied to clipboard</string>
+    <string name="support_no_wallet_found">No Lightning wallet app found (e.g. Phoenix, Breez, Alby, Muun)</string>
+
+    <!-- General Accessibility and Actions -->
+    <string name="btn_back">Back</string>
+    <string name="btn_close">Close</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_share">Share</string>
+    <string name="action_search">Search</string>
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_selected">Selected</string>
+    <string name="action_remove_favorite">Remove from favorites</string>
+    <string name="action_add_favorite">Add to favorites</string>
+
+    <!-- About Screen -->
+    <string name="about_developer_title">Developer</string>
+    <string name="about_developer_name">Fernando Lago Dávila</string>
+    <string name="about_developer_bio">Open source software developer and creator of projects like Rocinante, BiblioHouse, DosisApp, and Mis Curas.</string>
+    <string name="about_website">Website</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_app_description">Your modern podcast player and manager with Apple Podcasts inspired design, Podcasting 2.0, direct Apple Podcasts trends and recommendations, and cloud sync.</string>
+    <string name="about_version_license">Version 1.0.0 • GNU GPL v3 License</string>
+    <string name="about_license_title">License &amp; Philosophy</string>
+    <string name="about_license_description">Mis Podcast is distributed as free software under the terms of the GNU General Public License version 3 (GNU GPL v3). You are free to use, study, share, and modify the source code respecting the 4 essential freedoms. It contains no invasive ads, telemetry, or third-party trackers.</string>
+    <string name="about_view_license">View GNU GPL v3 License</string>
+    <string name="about_tech_used">Technologies used:</string>
+    <string name="about_made_with">Made with</string>
+    <string name="about_love">love</string>
+    <string name="about_for_community">for the podcasting community</string>
+    <string name="about_logo_description">Mis Podcast Logo</string>
+
+    <!-- Podcast Detail Screen -->
+    <string name="podcast_settings_title">Podcast settings</string>
+    <string name="podcast_reconnect_folder">Reconnect local folder</string>
+    <string name="podcast_scan_folder">Scan local folder</string>
+    <string name="podcast_update_feed">Update feed</string>
+    <string name="podcast_local_folder_badge">Local folder</string>
+
+    <!-- Player and Sheets Accessibility -->
+    <string name="player_cover_description">Cover artwork</string>
+    <string name="player_close_description">Close player</string>
+    <string name="player_sleep_timer_description">Sleep timer</string>
+    <string name="player_speed_description">Adjust playback speed</string>
+    <string name="player_audio_effects_description">Audio effects and vocal boost</string>
+    <string name="player_bookmarks_description">Bookmarks and clips</string>
+    <string name="player_transcript_description">View transcript</string>
+    <string name="player_prev_chapter_description">Previous chapter</string>
+    <string name="player_next_chapter_description">Next chapter</string>
+    <string name="player_skip_forward_format">Skip forward %1$d seconds</string>
+    <string name="player_skip_backward_format">Skip backward %1$d seconds</string>
+    <string name="player_speed_decrease_description">Decrease 0.1x</string>
+    <string name="player_speed_increase_description">Increase 0.1x</string>
+    <string name="transcript_copy_full">Copy full transcript</string>
+    <string name="transcript_clear_search">Clear search</string>
+    <string name="transcript_jump_to">Jump to timestamp</string>
+    <string name="bookmark_add_description">Add bookmark</string>
+    <string name="bookmark_share_description">Share timestamp</string>
+    <string name="bookmark_delete_description">Delete bookmark</string>
+    <string name="chapter_open_link_description">Open chapter link</string>
+    <string name="chapter_play_this_description">Play this chapter</string>
+
+    <!-- Wrapped & Stats -->
+    <string name="stats_wrapped_badge">WRAPPED ANNUAL REVIEW</string>
+    <string name="stats_wrapped_title">Your year in podcasts is ready!</string>
+    <string name="stats_wrapped_subtitle">Discover your total listening hours, top podcast, and listening personality.</string>
+    <string name="stats_wrapped_button">View my Wrapped ✨</string>
+    <string name="stats_view_wrapped_description">View Wrapped</string>
+    <string name="wrapped_modal_title">Mis Podcast Wrapped</string>
+    <string name="wrapped_empty_title">Your Wrapped has no data yet</string>
+    <string name="wrapped_empty_subtitle">Listen to episodes from your favorite podcasts to generate your personalized annual review.</string>
+    <string name="wrapped_personality_title">YOUR LISTENING PERSONALITY</string>
+    <string name="wrapped_stat_time">Time</string>
+    <string name="wrapped_stat_completed">Completed</string>
+    <string name="wrapped_stat_podcasts">Shows</string>
+    <string name="wrapped_stat_days_format">%1$.1f continuous days</string>
+    <string name="wrapped_stat_full_episodes">Full episodes</string>
+    <string name="wrapped_stat_different">Different</string>
+    <string name="wrapped_top_podcast_badge">🏆 YOUR #1 PODCAST</string>
+    <string name="wrapped_top_podcast_format">%1$s listened • %2$d%% of your time</string>
+    <string name="wrapped_top_list_title">Most Listened Podcasts</string>
+    <string name="wrapped_share_button">Share my Wrapped</string>
+    <string name="wrapped_share_chooser_title">Share my Wrapped</string>
+    <string name="wrapped_historic_label">All-time</string>
+
+    <!-- Playback Speed Notes -->
+    <string name="speed_note_slow">Slow playback</string>
+    <string name="speed_note_normal">Normal speed</string>
+    <string name="speed_note_slightly_fast">Slightly faster</string>
+    <string name="speed_note_fast">Fast (optimal for news)</string>
+    <string name="speed_note_ultra_fast">Ultra fast</string>
+
+    <!-- Additional Queue and Action Accessibility -->
+    <string name="queue_all">Queue all</string>
+    <string name="play_next">Play next</string>
+    <string name="play_last">Play last</string>
+    <string name="download_all">Download all</string>
+    <string name="remove_from_queue">Remove from queue</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="drag_handle_description">Reorder episode</string>
+    <string name="trending">Trending</string>
+    <string name="local_folder">Local folder</string>
+
+    <!-- Player slider accessibility -->
+    <string name="player_progress_slider_description">Playback position</string>
+    <string name="player_progress_state_minutes">%1$d minutes of %2$d</string>
+    <string name="player_progress_state_hours">%1$d h %2$d min of %3$d h %4$d min</string>
+    <string name="player_progress_state_hours_start">%1$d min of %2$d h %3$d min</string>
+
+    <!-- Sleep Timer Custom -->
+    <string name="sleep_timer_custom_duration">Custom duration</string>
+    <string name="sleep_timer_activate_custom">Activate for %1$d minutes</string>
+
+    <!-- Material You Dynamic Color -->
+    <string name="settings_dynamic_color_title">Dynamic color (Material You)</string>
+    <string name="settings_dynamic_color_subtitle">Adapt app palette to your device\'s wallpaper</string>
+</resources>

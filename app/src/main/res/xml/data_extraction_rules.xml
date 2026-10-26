@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Excluir DataStore de preferencias para que las credenciales de Nextcloud no viajen a la nube de Google -->
+        <exclude domain="file" path="datastore" />
+        <exclude domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <!-- Permitir transferencia directa offline de dispositivo a dispositivo -->
+        <include domain="file" path="datastore" />
+    </device-transfer>
+</data-extraction-rules>

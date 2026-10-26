@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.MisPodcast" parent="Theme.AppCompat.Light.NoActionBar" />
+
+    <!-- Official AndroidX SplashScreen theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Background color of the splash screen -->
+        <item name="windowSplashScreenBackground">#297A9D</item>
+        <!-- Icon to show in the center of splash screen -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <!-- Theme to be applied to the activity once splash screen is done -->
+        <item name="postSplashScreenTheme">@style/Theme.MisPodcast</item>
+    </style>
+
+</resources>
