@@ -1,5 +1,6 @@
 Categories:
   - Multimedia
+  - Podcast
 License: GPL-3.0-or-later
 AuthorName: ferlagod
 SourceCode: https://github.com/ferlagod/MisPodcast
@@ -7,7 +8,6 @@ IssueTracker: https://github.com/ferlagod/MisPodcast/issues
 Changelog: https://github.com/ferlagod/MisPodcast/releases
 
 AutoName: Mis Podcast
-Summary: Modern, private podcast manager & player with Podcasting 2.0
 Description: |-
   Mis Podcast is an open-source, private, and modern podcast player and manager for Android.
   Built with Jetpack Compose and Material 3, it offers a clean, fluid experience with zero ads or tracking.
@@ -32,7 +32,7 @@ Builds:
     gradle:
       - yes
 
-AutoUpdateMode: Version v%v
+AutoUpdateMode: Version
 UpdateCheckMode: Tags
 CurrentVersion: 1.0.0
 CurrentVersionCode: 10000118
