@@ -33,7 +33,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.LibraryResult
@@ -245,7 +248,13 @@ class PodcastPlaybackService : MediaLibraryService() {
             }
         }
 
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent("MisPodcast/1.0 (Android; ExoPlayer)")
+            .setAllowCrossProtocolRedirects(true)
+        val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)
+
         player = ExoPlayer.Builder(this, renderersFactory)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -462,7 +471,8 @@ class PodcastPlaybackService : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
-            val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
+            val baseResult = super.onConnect(session, controller)
+            val sessionCommands = baseResult.availableSessionCommands.buildUpon()
                 .add(COMMAND_REPLAY_10)
                 .add(COMMAND_FORWARD_30)
                 .add(COMMAND_CYCLE_SPEED)
@@ -470,7 +480,11 @@ class PodcastPlaybackService : MediaLibraryService() {
                 .add(COMMAND_PREV_CHAPTER)
                 .build()
 
-            val playerCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon().build()
+            val playerCommands = if (baseResult.availablePlayerCommands.size() > 0) {
+                baseResult.availablePlayerCommands
+            } else {
+                MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS
+            }
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailablePlayerCommands(playerCommands)

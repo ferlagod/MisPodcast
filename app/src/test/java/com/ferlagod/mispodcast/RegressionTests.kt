@@ -1031,6 +1031,16 @@ class RegressionTests {
         val buttonsWithChapters = controller.buildCustomCommandButtons()
         assertTrue(buttonsWithChapters.any { it.sessionCommand?.customAction == com.ferlagod.mispodcast.playback.PlaybackController.ACTION_CUSTOM_NEXT_CHAPTER })
 
+        // Verificar que ningún botón tiene como iconResId las constantes de CommandButton (0xe000+)
+        // y que todos tienen un iconResId válido asignado para el DefaultMediaNotificationProvider
+        buttonsWithChapters.forEach { btn ->
+            assertTrue("El botón ${btn.displayName} debe tener iconResId != 0", btn.iconResId != 0)
+            assertFalse(
+                "iconResId del botón ${btn.displayName} no debe ser la constante ICON_SKIP_BACK_10",
+                btn.iconResId == androidx.media3.session.CommandButton.ICON_SKIP_BACK_10
+            )
+        }
+
         // Si no hay capítulos, no debe incluir el botón de siguiente capítulo
         controller.setChapters(emptyList())
         val buttonsWithoutChapters = controller.buildCustomCommandButtons()

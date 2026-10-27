@@ -224,33 +224,31 @@ class PlaybackController(
     ): List<CommandButton> {
         val buttons = mutableListOf<CommandButton>()
 
-        val replayButton = CommandButton.Builder()
+        val replayButton = CommandButton.Builder(skipBackIcon(skipBackSeconds))
             .setSessionCommand(COMMAND_REPLAY_10)
             .setDisplayName("Retroceder $skipBackSeconds s")
-            .setIconResId(skipBackIcon(skipBackSeconds))
             .build()
         buttons.add(replayButton)
 
-        val forwardButton = CommandButton.Builder()
+        val forwardButton = CommandButton.Builder(skipForwardIcon(skipForwardSeconds))
             .setSessionCommand(COMMAND_FORWARD_30)
             .setDisplayName("Avanzar $skipForwardSeconds s")
-            .setIconResId(skipForwardIcon(skipForwardSeconds))
             .build()
         buttons.add(forwardButton)
 
         if (hasChapters) {
-            val nextChapterButton = CommandButton.Builder()
+            val nextChapterButton = CommandButton.Builder(CommandButton.ICON_NEXT)
                 .setSessionCommand(COMMAND_NEXT_CHAPTER)
                 .setDisplayName("Siguiente capítulo")
-                .setIconResId(R.drawable.ic_skip_next)
+                .setCustomIconResId(R.drawable.ic_skip_next)
                 .build()
             buttons.add(nextChapterButton)
         }
 
-        val speedButton = CommandButton.Builder()
+        val speedButton = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setSessionCommand(COMMAND_CYCLE_SPEED)
             .setDisplayName("Velocidad: ${formatSpeed(currentSpeed)}")
-            .setIconResId(R.drawable.ic_speed)
+            .setCustomIconResId(R.drawable.ic_speed)
             .build()
         buttons.add(speedButton)
 
