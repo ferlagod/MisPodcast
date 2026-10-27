@@ -13,7 +13,7 @@ android {
         applicationId = "com.ferlagod.mispodcast"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10000117
+        versionCode = 10000118
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

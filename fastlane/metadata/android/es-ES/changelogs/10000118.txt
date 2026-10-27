@@ -1,0 +1,8 @@
+¡Primer lanzamiento oficial de Mis Podcast en F-Droid!
+• Interfaz moderna con Jetpack Compose y Material 3.
+• Soporte completo de Podcasting 2.0 (capítulos, transcripciones y financiación).
+• Sincronización en la nube propia con Nextcloud WebDAV / GPodder.
+• Soporte para carpetas locales de audio e integración con Android Auto.
+• Importación y exportación de OPML y base de datos AntennaPod.
+• Notificaciones inteligentes agrupadas y cola de reproducción avanzada.
+• 100% Software Libre (GNU GPLv3), sin anuncios ni rastreadores.

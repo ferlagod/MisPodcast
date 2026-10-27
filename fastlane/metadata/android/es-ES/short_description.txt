@@ -1,0 +1,1 @@
+Gestor y reproductor de podcasts moderno, libre, privado y con Podcasting 2.0.

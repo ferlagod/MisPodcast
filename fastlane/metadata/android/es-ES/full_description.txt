@@ -1,0 +1,25 @@
+<b>Mis Podcast</b> es un gestor y reproductor de podcasts nativo para Android, diseñado con Jetpack Compose y Material 3 para ofrecer una experiencia auditiva fluida, limpia y moderna con los estándares del Software Libre.
+
+<b>Sin publicidad ni seguimiento</b>
+Tu privacidad es lo primero: sin anuncios, sin telemetría invasiva, sin cuentas forzadas ni bibliotecas propietarias. Código 100% libre bajo licencia GNU GPLv3.
+
+<b>Podcasting 2.0</b>
+Disfruta de las características del podcasting moderno: transcripciones completas sincronizadas, capítulos interactivos con enlaces e imágenes, créditos del equipo y opciones de financiación directa y Value-for-Value.
+
+<b>Sincronización en la nube propia con Nextcloud</b>
+Mantén tus suscripciones, episodios escuchados, favoritos y cola de reproducción sincronizados entre tus dispositivos conectando directamente con tu propio servidor Nextcloud a través de WebDAV o GPodder.
+
+<b>Soporte completo para audios y carpetas locales</b>
+Añade carpetas locales con audios o audiolibros descargados mediante Storage Access Framework (SAF). Reconoce carátulas incrustadas y re-escanea cambios automáticamente.
+
+<b>Android Auto integrado</b>
+Interfaz nativa y segura para escuchar tus podcasts favoritos, tu cola de reproducción y episodios descargados mientras conduces.
+
+<b>Características principales:</b>
+• Descubrimiento de podcasts y tendencias con búsqueda instantánea y filtros temáticos.
+• Reproductor potente basado en AndroidX Media3 y ExoPlayer con velocidad variable (0.5x a 3.0x), salto de silencios y temporizador de apagado.
+• Cola de reproducción inteligente y permanente con reordenación manual y ordenación automática.
+• Detección y notificación selectiva de nuevos lanzamientos sin bombardeo de episodios antiguos.
+• Importación y exportación estándar de listas OPML y copias de seguridad completas de la base de datos (compatibles con AntennaPod).
+• Descarga selectiva o automática para reproducción sin conexión.
+• Interfaz dinámica con tema oscuro puro, colores temáticos del sistema y diseño responsive.

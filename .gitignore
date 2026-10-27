@@ -36,6 +36,7 @@ proguard/
 .kotlin/
 .vscode/
 
+
 # Native build artifacts
 .externalNativeBuild
 .cxx/
@@ -65,3 +66,5 @@ google-services.json
 # Capture and Profiler outputs
 /captures
 *.hprof
+generate_all_variants.py
+Capturas/Captura de pantalla*

@@ -1,0 +1,8 @@
+Initial official release of Mis Podcast on F-Droid!
+• Modern Jetpack Compose and Material 3 interface.
+• Podcasting 2.0 support (chapters, transcripts, funding).
+• Nextcloud WebDAV / GPodder self-hosted cloud synchronization.
+• Local audio folder support and Android Auto integration.
+• OPML import/export and AntennaPod database compatibility.
+• Smart consolidated notifications and advanced playback queue.
+• 100% Free and Open Source (GNU GPLv3), with zero ads and zero tracking.

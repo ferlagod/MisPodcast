@@ -1,0 +1,25 @@
+<b>Mis Podcast</b> is a native Android podcast manager and player built with modern technologies (Kotlin, Jetpack Compose, Material 3) providing a clean, fluid, and privacy-respecting audio experience.
+
+<b>Zero Ads, Zero Tracking</b>
+Your privacy is respected: no advertisements, no hidden trackers, no mandatory cloud accounts. 100% Free and Open Source Software licensed under GNU GPLv3.
+
+<b>Podcasting 2.0 Ready</b>
+Experience the future of podcasting: full synchronized transcripts, interactive chapters with rich links and artwork, host/guest credits, and direct creator funding (Value-for-Value).
+
+<b>Self-Hosted Cloud Sync with Nextcloud</b>
+Keep your playback positions, subscriptions, history, favorites, and queue seamlessly synchronized across devices using your own Nextcloud instance via WebDAV or GPodder.
+
+<b>Local Audio & Folder Podcasts</b>
+Play locally stored audio files and audiobooks via Storage Access Framework (SAF). Automatically extracts embedded artwork and intelligently rescans folders for new tracks.
+
+<b>Android Auto Integration</b>
+Drive safely with a dedicated car-friendly interface allowing quick access to your queue, downloads, history, and subscribed shows.
+
+<b>Key Features:</b>
+• Fast podcast discovery and trending feeds with instant search and category browsing.
+• Robust player powered by AndroidX Media3 and ExoPlayer with variable speed (0.5x to 3.0x), silence skipping, and sleep timer.
+• Smart persistent queue with flexible drag-and-drop reordering and automatic sorting rules.
+• Intelligent notifications for genuine new releases without spamming you with back-catalog episodes.
+• Full OPML import/export and comprehensive database backup (compatible with AntennaPod).
+• Automatic and selective background downloads for offline listening.
+• Beautiful dark and light themes with dynamic system color palette support.
