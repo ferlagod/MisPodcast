@@ -44,7 +44,8 @@ import androidx.room.PrimaryKey
         Index(value = ["podcastId"]),
         Index(value = ["pubDate"]),
         Index(value = ["isFavorite"]),
-        Index(value = ["isPlayed"])
+        Index(value = ["isPlayed"]),
+        Index(value = ["isDismissedFromNewReleases"])
     ]
 )
 data class EpisodeEntity(
@@ -69,5 +70,6 @@ data class EpisodeEntity(
     val transcriptUrl: String? = null,
     val fundingUrl: String? = null,
     val valueForValueInfo: String? = null,
-    val persons: String? = null // Serializado como JSON String
+    val persons: String? = null, // Serializado como JSON String
+    val isDismissedFromNewReleases: Boolean = false
 )

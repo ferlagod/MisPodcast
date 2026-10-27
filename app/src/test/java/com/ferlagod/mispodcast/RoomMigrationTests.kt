@@ -83,13 +83,21 @@ class RoomMigrationTests {
      */
     @Test
     fun testMigrationVersionDefinitions() {
-        // Migración acumulativa directa v1 -> v9
-        assertEquals(1, PodcastDatabase.MIGRATION_1_9.startVersion)
-        assertEquals(9, PodcastDatabase.MIGRATION_1_9.endVersion)
+        // Migración acumulativa directa v1 -> v10
+        assertEquals(1, PodcastDatabase.MIGRATION_1_10.startVersion)
+        assertEquals(10, PodcastDatabase.MIGRATION_1_10.endVersion)
 
-        // Migración última v8 -> v9 (Ajustes de podcast y bookmarks)
+        // Migración última v9 -> v10 (Ocultar de novedades / descartes)
+        assertEquals(9, PodcastDatabase.MIGRATION_9_10.startVersion)
+        assertEquals(10, PodcastDatabase.MIGRATION_9_10.endVersion)
+
+        // Migración previa v8 -> v9 (Ajustes de podcast y bookmarks)
         assertEquals(8, PodcastDatabase.MIGRATION_8_9.startVersion)
         assertEquals(9, PodcastDatabase.MIGRATION_8_9.endVersion)
+
+        // Migración acumulativa v1 -> v9
+        assertEquals(1, PodcastDatabase.MIGRATION_1_9.startVersion)
+        assertEquals(9, PodcastDatabase.MIGRATION_1_9.endVersion)
 
         // Migraciones intermedias
         assertEquals(7, PodcastDatabase.MIGRATION_7_8.startVersion)
@@ -121,11 +129,11 @@ class RoomMigrationTests {
     }
 
     /**
-     * Test 2: Ejecutar MIGRATION_8_9 y verificar la adición de columnas y tablas.
+     * Test 2: Ejecutar MIGRATION_9_10 y verificar la adición de columnas y tablas.
      */
     @Test
-    fun testMigration8To9CreatesAllRequiredTablesAndColumns() {
-        PodcastDatabase.MIGRATION_8_9.migrate(mockDb)
+    fun testMigration9To10CreatesAllRequiredTablesAndColumns() {
+        PodcastDatabase.MIGRATION_9_10.migrate(mockDb)
 
         val allSql = executedSqlStatements.joinToString("\n")
 
@@ -146,6 +154,7 @@ class RoomMigrationTests {
 
         // 2. Columnas de episodios
         assertTrue("Debe añadir positionUpdatedAt", allSql.contains("ALTER TABLE `episodes` ADD COLUMN `positionUpdatedAt`"))
+        assertTrue("Debe añadir isDismissedFromNewReleases", allSql.contains("ALTER TABLE `episodes` ADD COLUMN `isDismissedFromNewReleases`"))
         assertTrue("Debe añadir localFilePath", allSql.contains("ALTER TABLE `episodes` ADD COLUMN `localFilePath`"))
         assertTrue("Debe añadir fileSizeBytes", allSql.contains("ALTER TABLE `episodes` ADD COLUMN `fileSizeBytes`"))
         assertTrue("Debe añadir chaptersUrl", allSql.contains("ALTER TABLE `episodes` ADD COLUMN `chaptersUrl`"))
@@ -159,20 +168,22 @@ class RoomMigrationTests {
         assertTrue("Debe crear la tabla playback_stats", allSql.contains("CREATE TABLE IF NOT EXISTS `playback_stats`"))
         assertTrue("Debe crear índice de feedUrl", allSql.contains("index_podcasts_feedUrl"))
         assertTrue("Debe crear índice de episodeId en queue_items", allSql.contains("index_queue_items_episodeId"))
+        assertTrue("Debe crear índice de isDismissedFromNewReleases en episodes", allSql.contains("index_episodes_isDismissedFromNewReleases"))
     }
 
     /**
-     * Test 3: Migración acumulativa desde versión antigua v1 a v9.
+     * Test 3: Migración acumulativa desde versión antigua v1 a v10.
      */
     @Test
-    fun testDirectMigration1To9CompletesSuccessfully() {
-        PodcastDatabase.MIGRATION_1_9.migrate(mockDb)
+    fun testDirectMigration1To10CompletesSuccessfully() {
+        PodcastDatabase.MIGRATION_1_10.migrate(mockDb)
 
         val allSql = executedSqlStatements.joinToString("\n")
         assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `bookmarks`"))
         assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `queue_items`"))
         assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `listening_history`"))
         assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `playback_stats`"))
+        assertTrue(allSql.contains("isDismissedFromNewReleases"))
     }
 
     /**

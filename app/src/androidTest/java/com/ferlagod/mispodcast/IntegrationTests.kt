@@ -45,6 +45,7 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -154,12 +155,25 @@ class IntegrationTests {
         assertTrue(updatedEp5!!.isPlayed)
         assertEquals(300000L, updatedEp5.currentPositionMs)
 
-        // 4. Limpiar Novedades (todos los episodios no reproducidos pasan a isPlayed = 1)
-        val updatedCount = dao.markAllNewReleasesAsPlayedDirect()
-        assertTrue("Debe marcar al menos los episodios restantes como reproducidos", updatedCount >= 4)
+        // 4. Quitar dos episodios de la cola y limpiar Novedades
+        dao.removeFromQueue("ep-test-3")
+        dao.removeFromQueue("ep-test-4")
+        val queueBeforeClear = dao.getQueueFlow().first().map { it.episode.id }
+        dao.clearAllNewReleasesDirect()
 
-        val unplayedNewEpisodes = dao.getEpisodesForPodcast(podcast.id).filter { !it.isPlayed }
-        assertTrue("Todos los episodios pendientes deben haber pasado a isPlayed = true", unplayedNewEpisodes.isEmpty())
+        // Los que NO estaban en la cola se marcan como reproducidos (isPlayed = 1)
+        assertTrue(dao.getEpisodeById("ep-test-3")!!.isPlayed)
+        assertTrue(dao.getEpisodeById("ep-test-4")!!.isPlayed)
+
+        // 5. La cola queda exactamente igual y sus episodios NO se marcan como reproducidos
+        val queueAfterClear = dao.getQueueFlow().first()
+        assertEquals(queueBeforeClear, queueAfterClear.map { it.episode.id })
+        assertFalse(dao.getEpisodeById("ep-test-1")!!.isPlayed)
+        assertFalse(dao.getEpisodeById("ep-test-2")!!.isPlayed)
+
+        // 6. La pestaña de novedades queda completamente vacía (descartados de novedades)
+        val newReleasesAfterClear = dao.getNewReleasesList(100)
+        assertTrue("La pestaña de novedades debe quedar completamente vacía", newReleasesAfterClear.isEmpty())
     }
 
     /**

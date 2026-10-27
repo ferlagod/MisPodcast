@@ -47,7 +47,7 @@ import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
         PlaybackStatsEntity::class,
         com.ferlagod.mispodcast.data.local.entities.BookmarkEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 abstract class PodcastDatabase : RoomDatabase() {
@@ -66,6 +66,18 @@ abstract class PodcastDatabase : RoomDatabase() {
          * Todas delegan en [ensureAllTablesAndColumns] para garantizar de forma acumulativa
          * que cualquier usuario con cualquier versión previa conserve intactos todos sus datos.
          */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                ensureAllTablesAndColumns(db)
+            }
+        }
+
+        val MIGRATION_1_10 = object : Migration(1, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                ensureAllTablesAndColumns(db)
+            }
+        }
+
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 ensureAllTablesAndColumns(db)
@@ -224,6 +236,8 @@ abstract class PodcastDatabase : RoomDatabase() {
                     DATABASE_NAME
                 )
                     .addMigrations(
+                        MIGRATION_9_10,
+                        MIGRATION_1_10,
                         MIGRATION_8_9,
                         MIGRATION_1_9,
                         MIGRATION_7_8,
@@ -338,11 +352,13 @@ abstract class PodcastDatabase : RoomDatabase() {
             addColumnIfNotExists(db, "episodes", "valueForValueInfo", "TEXT DEFAULT NULL")
             addColumnIfNotExists(db, "episodes", "persons", "TEXT DEFAULT NULL")
             addColumnIfNotExists(db, "episodes", "positionUpdatedAt", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(db, "episodes", "isDismissedFromNewReleases", "INTEGER NOT NULL DEFAULT 0")
 
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_podcastId` ON `episodes` (`podcastId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_pubDate` ON `episodes` (`pubDate`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_isFavorite` ON `episodes` (`isFavorite`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_isPlayed` ON `episodes` (`isPlayed`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_isDismissedFromNewReleases` ON `episodes` (`isDismissedFromNewReleases`)")
 
             // 3. Tabla queue_items (Cola persistente)
             db.execSQL("""

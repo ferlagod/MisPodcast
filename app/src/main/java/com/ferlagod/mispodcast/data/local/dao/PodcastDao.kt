@@ -253,6 +253,7 @@ interface PodcastDao {
         INNER JOIN podcasts p ON e.podcastId = p.id 
         WHERE p.isSubscribed = 1 
           AND e.isPlayed = 0 
+          AND e.isDismissedFromNewReleases = 0
           AND p.subscribedAt > 0 
           AND e.pubDate > p.subscribedAt
         ORDER BY e.pubDate DESC 
@@ -266,6 +267,7 @@ interface PodcastDao {
         INNER JOIN podcasts p ON e.podcastId = p.id 
         WHERE p.isSubscribed = 1 
           AND e.isPlayed = 0 
+          AND e.isDismissedFromNewReleases = 0
           AND p.subscribedAt > 0 
           AND e.pubDate > p.subscribedAt
         ORDER BY e.pubDate DESC 
@@ -284,38 +286,38 @@ interface PodcastDao {
 
     @Query("""
         UPDATE episodes 
-        SET isPlayed = 1, 
-            currentPositionMs = duration 
+        SET isDismissedFromNewReleases = 1,
+            isPlayed = CASE 
+                WHEN id IN (SELECT episodeId FROM queue_items) THEN isPlayed 
+                ELSE 1 
+            END,
+            currentPositionMs = CASE 
+                WHEN id IN (SELECT episodeId FROM queue_items) THEN currentPositionMs 
+                ELSE duration 
+            END 
         WHERE id IN (
             SELECT e.id 
             FROM episodes e 
             INNER JOIN podcasts p ON e.podcastId = p.id 
             WHERE p.isSubscribed = 1 
               AND e.isPlayed = 0 
+              AND e.isDismissedFromNewReleases = 0
               AND p.subscribedAt > 0 
               AND e.pubDate > p.subscribedAt
         )
     """)
+    /**
+     * Limpia la pestaña Novedades:
+     * - Todos los episodios en Novedades quedan marcados como descartados de dicha pestaña (isDismissedFromNewReleases = 1).
+     * - Los episodios que el usuario tiene en la cola de reproducción permanecen intactos (no se borran de la cola,
+     *   no se marcan como reproducidos y conservan su posición actual).
+     * - Los episodios que NO están en la cola se marcan como reproducidos con posición igual a su duración.
+     */
     suspend fun markAllNewReleasesAsPlayedDirect(): Int
-
-    @Query("""
-        DELETE FROM queue_items 
-        WHERE episodeId IN (
-            SELECT e.id 
-            FROM episodes e 
-            INNER JOIN podcasts p ON e.podcastId = p.id 
-            WHERE p.isSubscribed = 1 
-              AND p.subscribedAt > 0 
-              AND e.pubDate > p.subscribedAt
-        )
-    """)
-    suspend fun removeNewReleasesFromQueueDirect(): Int
 
     @Transaction
     suspend fun clearAllNewReleasesDirect() {
-        removeNewReleasesFromQueueDirect()
         markAllNewReleasesAsPlayedDirect()
-        reindexQueue()
     }
 
     @Transaction
