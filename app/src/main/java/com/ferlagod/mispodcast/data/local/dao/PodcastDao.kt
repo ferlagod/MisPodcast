@@ -520,15 +520,26 @@ interface PodcastDao {
         reindexQueue()
         val episode = getEpisodeById(episodeId)
         if (episode != null) {
-            insertListeningHistory(
-                ListeningHistoryEntity(
-                    episodeId = episodeId,
-                    podcastId = episode.podcastId,
-                    listenedAt = System.currentTimeMillis(),
-                    durationListenedMs = episode.duration,
-                    completed = true
+            val latestHistory = getLatestListeningHistoryEntry(episodeId)
+            val now = System.currentTimeMillis()
+            if (latestHistory != null && (now - latestHistory.listenedAt) < 30 * 60 * 1000L) {
+                updateListeningHistory(
+                    latestHistory.copy(
+                        listenedAt = now,
+                        completed = true
+                    )
                 )
-            )
+            } else {
+                insertListeningHistory(
+                    ListeningHistoryEntity(
+                        episodeId = episodeId,
+                        podcastId = episode.podcastId,
+                        listenedAt = now,
+                        durationListenedMs = episode.duration,
+                        completed = true
+                    )
+                )
+            }
         }
     }
 
@@ -542,24 +553,52 @@ interface PodcastDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertListeningHistoryList(items: List<ListeningHistoryEntity>)
 
+    @Update
+    suspend fun updateListeningHistory(history: ListeningHistoryEntity)
+
+    @Query("SELECT * FROM listening_history WHERE episodeId = :episodeId ORDER BY listenedAt DESC, id DESC LIMIT 1")
+    suspend fun getLatestListeningHistoryEntry(episodeId: String): ListeningHistoryEntity?
+
     @Query("""
-        SELECT h.id AS historyId, h.listenedAt, h.durationListenedMs, h.completed,
-               p.title AS podcastTitle, p.artworkUrl AS podcastArtworkUrl, e.*
+        SELECT h.id AS historyId,
+               latest.maxListenedAt AS listenedAt,
+               h.durationListenedMs,
+               (CASE WHEN MAX(h.completed) = 1 OR e.isPlayed = 1 THEN 1 ELSE 0 END) AS completed,
+               p.title AS podcastTitle,
+               p.artworkUrl AS podcastArtworkUrl,
+               e.*
         FROM listening_history h
         INNER JOIN episodes e ON h.episodeId = e.id
         INNER JOIN podcasts p ON e.podcastId = p.id
-        ORDER BY h.listenedAt DESC
+        INNER JOIN (
+            SELECT episodeId, MAX(listenedAt) AS maxListenedAt
+            FROM listening_history
+            GROUP BY episodeId
+        ) latest ON h.episodeId = latest.episodeId AND h.listenedAt = latest.maxListenedAt
+        GROUP BY e.id
+        ORDER BY listenedAt DESC
         LIMIT :limit
     """)
     fun getListeningHistoryFlow(limit: Int = 100): Flow<List<HistoryEpisodeItem>>
 
     @Query("""
-        SELECT h.id AS historyId, h.listenedAt, h.durationListenedMs, h.completed,
-               p.title AS podcastTitle, p.artworkUrl AS podcastArtworkUrl, e.*
+        SELECT h.id AS historyId,
+               latest.maxListenedAt AS listenedAt,
+               h.durationListenedMs,
+               (CASE WHEN MAX(h.completed) = 1 OR e.isPlayed = 1 THEN 1 ELSE 0 END) AS completed,
+               p.title AS podcastTitle,
+               p.artworkUrl AS podcastArtworkUrl,
+               e.*
         FROM listening_history h
         INNER JOIN episodes e ON h.episodeId = e.id
         INNER JOIN podcasts p ON e.podcastId = p.id
-        ORDER BY h.listenedAt DESC
+        INNER JOIN (
+            SELECT episodeId, MAX(listenedAt) AS maxListenedAt
+            FROM listening_history
+            GROUP BY episodeId
+        ) latest ON h.episodeId = latest.episodeId AND h.listenedAt = latest.maxListenedAt
+        GROUP BY e.id
+        ORDER BY listenedAt DESC
         LIMIT :limit
     """)
     suspend fun getListeningHistoryList(limit: Int = 50): List<HistoryEpisodeItem>
@@ -650,15 +689,28 @@ interface PodcastDao {
         additionalDurationMs: Long,
         isCompleted: Boolean
     ) {
-        // 1. Guardar entrada de historial
-        insertListeningHistory(
-            ListeningHistoryEntity(
-                episodeId = episodeId,
-                podcastId = podcastId,
-                durationListenedMs = additionalDurationMs,
-                completed = isCompleted
+        // 1. Guardar o actualizar entrada de historial para la sesión
+        val latestHistory = getLatestListeningHistoryEntry(episodeId)
+        val now = System.currentTimeMillis()
+        if (latestHistory != null && (now - latestHistory.listenedAt) < 30 * 60 * 1000L) {
+            updateListeningHistory(
+                latestHistory.copy(
+                    listenedAt = now,
+                    durationListenedMs = latestHistory.durationListenedMs + additionalDurationMs,
+                    completed = isCompleted || latestHistory.completed
+                )
             )
-        )
+        } else {
+            insertListeningHistory(
+                ListeningHistoryEntity(
+                    episodeId = episodeId,
+                    podcastId = podcastId,
+                    listenedAt = now,
+                    durationListenedMs = additionalDurationMs,
+                    completed = isCompleted
+                )
+            )
+        }
 
         // 2. Acumular estadísticas del podcast
         val existing = getStatsForPodcast(podcastId)
@@ -670,7 +722,7 @@ interface PodcastDao {
                 podcastTitle = podcastTitle,
                 totalTimeListenedMs = newTotalTime,
                 episodesCompletedCount = newCompletedCount,
-                lastListenedAt = System.currentTimeMillis()
+                lastListenedAt = now
             )
         )
     }

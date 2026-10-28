@@ -44,6 +44,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import kotlinx.coroutines.flow.first
 
 class RegressionTests {
 
@@ -1847,6 +1848,74 @@ class RegressionTests {
             com.ferlagod.mispodcast.ui.theme.BackgroundDark,
             com.ferlagod.mispodcast.ui.theme.BackgroundAmoled
         )
+    }
+
+    @Test
+    fun testHistoryItemsDeduplicationByEpisode() = kotlinx.coroutines.runBlocking {
+        val mockDao = mockk<com.ferlagod.mispodcast.data.local.dao.PodcastDao>()
+        val ep1 = EpisodeEntity(
+            id = "ep_1",
+            podcastId = "pod_1",
+            title = "Episode 1",
+            description = "Desc 1",
+            audioUrl = "https://example.com/1.mp3",
+            imageUrl = "",
+            pubDate = 1000L,
+            duration = 60000L
+        )
+        val ep2 = EpisodeEntity(
+            id = "ep_2",
+            podcastId = "pod_1",
+            title = "Episode 2",
+            description = "Desc 2",
+            audioUrl = "https://example.com/2.mp3",
+            imageUrl = "",
+            pubDate = 2000L,
+            duration = 60000L
+        )
+        val duplicateHistoryItems = listOf(
+            com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem(
+                historyId = 3L,
+                listenedAt = 3000L,
+                durationListenedMs = 5000L,
+                completed = false,
+                podcastTitle = "Podcast 1",
+                podcastArtworkUrl = "",
+                episode = ep1
+            ),
+            com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem(
+                historyId = 2L,
+                listenedAt = 2000L,
+                durationListenedMs = 10000L,
+                completed = false,
+                podcastTitle = "Podcast 1",
+                podcastArtworkUrl = "",
+                episode = ep2
+            ),
+            com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem(
+                historyId = 1L,
+                listenedAt = 1000L,
+                durationListenedMs = 2000L,
+                completed = false,
+                podcastTitle = "Podcast 1",
+                podcastArtworkUrl = "",
+                episode = ep1
+            )
+        )
+        every { mockDao.getListeningHistoryFlow(any()) } returns kotlinx.coroutines.flow.flowOf(duplicateHistoryItems)
+
+        val repo = com.ferlagod.mispodcast.data.repository.PodcastRepository(
+            podcastDao = mockDao,
+            searchService = mockk(relaxed = true),
+            feedParser = mockk(relaxed = true)
+        )
+
+        val result = repo.getListeningHistory().first()
+        assertEquals(2, result.size)
+        assertEquals("ep_1", result[0].episode.id)
+        assertEquals(3000L, result[0].listenedAt)
+        assertEquals("ep_2", result[1].episode.id)
+        assertEquals(2000L, result[1].listenedAt)
     }
 }
 

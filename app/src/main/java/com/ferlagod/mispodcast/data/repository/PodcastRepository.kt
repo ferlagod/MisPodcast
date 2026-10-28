@@ -37,6 +37,7 @@ import com.ferlagod.mispodcast.data.remote.parser.RssFeedParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -528,7 +529,9 @@ class PodcastRepository(
     // ==========================================
 
     fun getListeningHistory(limit: Int = 100): Flow<List<HistoryEpisodeItem>> =
-        podcastDao.getListeningHistoryFlow(limit)
+        podcastDao.getListeningHistoryFlow(limit).map { items ->
+            items.distinctBy { it.episode.id }
+        }
 
     suspend fun clearHistory() = withContext(Dispatchers.IO) {
         podcastDao.clearHistory()

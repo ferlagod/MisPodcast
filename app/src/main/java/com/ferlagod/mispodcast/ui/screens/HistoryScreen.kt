@@ -174,7 +174,7 @@ fun HistoryScreen(
                     .padding(innerPadding),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                items(historyItems, key = { it.historyId }) { item ->
+                items(historyItems, key = { it.episode.id }) { item ->
                     val dateFormatted = remember(item.listenedAt) {
                         val sdf = SimpleDateFormat("dd MMM • HH:mm", Locale.getDefault())
                         sdf.format(Date(item.listenedAt))

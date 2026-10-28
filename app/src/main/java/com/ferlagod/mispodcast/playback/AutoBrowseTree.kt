@@ -283,7 +283,7 @@ class AutoBrowseTree(
             }
 
             parentId == MEDIA_ID_HISTORY -> {
-                val historyList = database.podcastDao().getListeningHistoryList(30)
+                val historyList = database.podcastDao().getListeningHistoryList(30).distinctBy { it.episode.id }
                 for (hist in historyList) {
                     items.add(
                         buildPlayableMediaItem(
