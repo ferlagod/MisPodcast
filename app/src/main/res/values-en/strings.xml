@@ -54,6 +54,10 @@
     <string name="sort_name_desc">Title: Z - A</string>
     <string name="sort_date_desc">Date: Newest first</string>
     <string name="sort_date_asc">Date: Oldest first</string>
+    <string name="sort_subscription_recent">Subscription: Newest first</string>
+    <string name="sort_subscription_oldest">Subscription: Oldest first</string>
+    <string name="sort_recently_updated">Recently updated</string>
+    <string name="sort_author_asc">Author: A - Z</string>
     <string name="add_local_folder">Add local folder</string>
     <string name="add_local_folder_title">Add local audio folder</string>
     <string name="add_local_folder_subtitle">Convert audio files from your storage into a local podcast</string>

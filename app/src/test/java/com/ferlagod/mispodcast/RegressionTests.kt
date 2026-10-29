@@ -1917,7 +1917,99 @@ class RegressionTests {
         assertEquals("ep_2", result[1].episode.id)
         assertEquals(2000L, result[1].listenedAt)
     }
+
+    /**
+     * Regresión: Verificación de ordenación de suscripciones (SubscriptionSortOption)
+     * y persistencia en UserSettings.
+     */
+    @Test
+    fun testRegression_subscriptionSortOptions() {
+        // 1. Opciones por defecto y resolución por nombre
+        val defaultSettings = UserSettings()
+        assertEquals(
+            com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.RECENTLY_SUBSCRIBED,
+            defaultSettings.subscriptionSortOption
+        )
+
+        val customSettings = UserSettings(
+            subscriptionSortOption = com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.TITLE_ASC
+        )
+        assertEquals(
+            com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.TITLE_ASC,
+            customSettings.subscriptionSortOption
+        )
+
+        assertEquals(
+            com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.TITLE_DESC,
+            com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.fromName("TITLE_DESC")
+        )
+        assertEquals(
+            com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.RECENTLY_SUBSCRIBED,
+            com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption.fromName("UNKNOWN_VALUE")
+        )
+
+        // 2. Comportamiento de ordenación
+        val p1 = PodcastEntity(
+            id = "1",
+            title = "Zeta Podcast",
+            author = "Beatriz",
+            description = "",
+            feedUrl = "https://feed1.xml",
+            artworkUrl = "",
+            subscribedAt = 1000L,
+            lastUpdated = 5000L
+        )
+        val p2 = PodcastEntity(
+            id = "2",
+            title = "alpha Podcast",
+            author = "Carlos",
+            description = "",
+            feedUrl = "https://feed2.xml",
+            artworkUrl = "",
+            subscribedAt = 3000L,
+            lastUpdated = 2000L
+        )
+        val p3 = PodcastEntity(
+            id = "3",
+            title = "Beta Podcast",
+            author = "Alberto",
+            description = "",
+            feedUrl = "https://feed3.xml",
+            artworkUrl = "",
+            subscribedAt = 2000L,
+            lastUpdated = 4000L
+        )
+        val list = listOf(p1, p2, p3)
+
+        // Title ASC (case insensitive: alpha, Beta, Zeta)
+        val sortedTitleAsc = list.sortedWith(compareBy<PodcastEntity, String>(String.CASE_INSENSITIVE_ORDER) { it.title })
+        assertEquals(listOf("2", "3", "1"), sortedTitleAsc.map { it.id })
+
+        // Title DESC
+        val sortedTitleDesc = list.sortedWith(compareByDescending<PodcastEntity, String>(String.CASE_INSENSITIVE_ORDER) { it.title })
+        assertEquals(listOf("1", "3", "2"), sortedTitleDesc.map { it.id })
+
+        // Recently subscribed (DESC)
+        val sortedRecentSub = list.sortedWith(compareByDescending<PodcastEntity> { it.subscribedAt }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+        assertEquals(listOf("2", "3", "1"), sortedRecentSub.map { it.id })
+
+        // Oldest subscribed (ASC)
+        val sortedOldestSub = list.sortedWith(compareBy<PodcastEntity> { it.subscribedAt }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+        assertEquals(listOf("1", "3", "2"), sortedOldestSub.map { it.id })
+
+        // Recently updated (DESC)
+        val sortedUpdated = list.sortedWith(compareByDescending<PodcastEntity> { it.lastUpdated }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+        assertEquals(listOf("1", "3", "2"), sortedUpdated.map { it.id })
+
+        // Author ASC (case insensitive: Alberto, Beatriz, Carlos)
+        val sortedAuthor = list.sortedWith(
+            compareBy<PodcastEntity, String>(String.CASE_INSENSITIVE_ORDER) { it.author }
+                .thenBy(String.CASE_INSENSITIVE_ORDER) { it.title }
+        )
+        assertEquals(listOf("3", "1", "2"), sortedAuthor.map { it.id })
+    }
 }
+
 
 
 

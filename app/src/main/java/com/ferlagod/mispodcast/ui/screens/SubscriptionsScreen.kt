@@ -41,12 +41,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +59,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
+import com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption
 import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
 import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
@@ -88,6 +96,7 @@ fun SubscriptionsScreen(
     onPodcastClick: (podcastId: String, feedUrl: String) -> Unit = { _, _ -> }
 ) {
     val subscriptions by podcastViewModel.subscribedPodcasts.collectAsState()
+    val currentSortOption by podcastViewModel.subscriptionSortOption.collectAsState()
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(3), // Cuadrícula de 3 columnas exacta
@@ -118,25 +127,102 @@ fun SubscriptionsScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
 
-                    IconButton(
-                        onClick = onNavigateToAddPodcast,
-                        modifier = Modifier
-                            .size(38.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = stringResource(R.string.menu_add_podcast),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        if (subscriptions.isNotEmpty()) {
+                            var showSortMenu by remember { mutableStateOf(false) }
+
+                            Box {
+                                IconButton(
+                                    onClick = { showSortMenu = true },
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Sort,
+                                        contentDescription = stringResource(R.string.sort_by),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismissRequest = { showSortMenu = false }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.sort_by),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+                                    SubscriptionSortOption.entries.forEach { sortOption ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = stringResource(sortOption.titleRes),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = if (sortOption == currentSortOption) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (sortOption == currentSortOption) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                            },
+                                            trailingIcon = {
+                                                if (sortOption == currentSortOption) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Check,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            },
+                                            onClick = {
+                                                showSortMenu = false
+                                                podcastViewModel.setSubscriptionSortOption(sortOption)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        IconButton(
+                            onClick = onNavigateToAddPodcast,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = stringResource(R.string.menu_add_podcast),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${subscriptions.size} ${stringResource(R.string.programs_followed)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${subscriptions.size} ${stringResource(R.string.programs_followed)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (subscriptions.isNotEmpty()) {
+                        Text(
+                            text = stringResource(currentSortOption.titleRes),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }

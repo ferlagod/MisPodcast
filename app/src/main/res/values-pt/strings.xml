@@ -54,6 +54,10 @@
     <string name="sort_name_desc">Título: Z - A</string>
     <string name="sort_date_desc">Data: Mais recentes primeiro</string>
     <string name="sort_date_asc">Data: Mais antigos primeiro</string>
+    <string name="sort_subscription_recent">Inscrição: Mais recentes</string>
+    <string name="sort_subscription_oldest">Inscrição: Mais antigas</string>
+    <string name="sort_recently_updated">Atualizado recentemente</string>
+    <string name="sort_author_asc">Autor: A - Z</string>
     <string name="add_local_folder">Adicionar pasta local</string>
     <string name="add_local_folder_title">Adicionar pasta de áudio local</string>
     <string name="add_local_folder_subtitle">Converta arquivos de áudio do seu armazenamento em um podcast local</string>

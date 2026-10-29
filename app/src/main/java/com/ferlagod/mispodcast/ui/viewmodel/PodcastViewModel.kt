@@ -48,8 +48,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption
 import com.ferlagod.mispodcast.data.mapper.PodcastLanguageMapper
 import com.ferlagod.mispodcast.data.preferences.UserPreferencesManager
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
@@ -91,8 +93,17 @@ class PodcastViewModel @JvmOverloads constructor(
     // ESTADOS REACTIVOS DESDE ROOM
     // ==========================================
 
-    val subscribedPodcasts: StateFlow<List<PodcastEntity>> = repository.getSubscribedPodcasts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val subscriptionSortOption: StateFlow<SubscriptionSortOption> = preferencesManager.userSettingsFlow
+        .map { it.subscriptionSortOption }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SubscriptionSortOption.RECENTLY_SUBSCRIBED)
+
+    val subscribedPodcasts: StateFlow<List<PodcastEntity>> = combine(
+        repository.getSubscribedPodcasts(),
+        subscriptionSortOption
+    ) { podcasts, sortOption ->
+        sortPodcasts(podcasts, sortOption)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val newReleases: StateFlow<List<EpisodeWithPodcast>> = repository.getNewReleases()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -476,6 +487,36 @@ class PodcastViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             repository.reorderQueue(newOrderedIds)
             syncWithNextcloud()
+        }
+    }
+
+    fun setSubscriptionSortOption(option: SubscriptionSortOption) {
+        viewModelScope.launch {
+            preferencesManager.setSubscriptionSortOption(option)
+        }
+    }
+
+    private fun sortPodcasts(podcasts: List<PodcastEntity>, sortOption: SubscriptionSortOption): List<PodcastEntity> {
+        return when (sortOption) {
+            SubscriptionSortOption.RECENTLY_SUBSCRIBED -> podcasts.sortedWith(
+                compareByDescending<PodcastEntity> { it.subscribedAt }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title }
+            )
+            SubscriptionSortOption.OLDEST_SUBSCRIBED -> podcasts.sortedWith(
+                compareBy<PodcastEntity> { it.subscribedAt }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title }
+            )
+            SubscriptionSortOption.TITLE_ASC -> podcasts.sortedWith(
+                compareBy<PodcastEntity, String>(String.CASE_INSENSITIVE_ORDER) { it.title }
+            )
+            SubscriptionSortOption.TITLE_DESC -> podcasts.sortedWith(
+                compareByDescending<PodcastEntity, String>(String.CASE_INSENSITIVE_ORDER) { it.title }
+            )
+            SubscriptionSortOption.RECENTLY_UPDATED -> podcasts.sortedWith(
+                compareByDescending<PodcastEntity> { it.lastUpdated }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title }
+            )
+            SubscriptionSortOption.AUTHOR_ASC -> podcasts.sortedWith(
+                compareBy<PodcastEntity, String>(String.CASE_INSENSITIVE_ORDER) { it.author }
+                    .thenBy(String.CASE_INSENSITIVE_ORDER) { it.title }
+            )
         }
     }
 

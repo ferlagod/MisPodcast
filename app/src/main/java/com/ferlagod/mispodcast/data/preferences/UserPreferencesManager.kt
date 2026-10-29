@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.map
 
 import androidx.annotation.StringRes
 import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")
 
@@ -114,6 +115,7 @@ data class UserSettings(
     val monoAudioEnabled: Boolean = false,
     val defaultAutoEnqueueRule: String = "DISABLED",
     val useDynamicColor: Boolean = false,
+    val subscriptionSortOption: SubscriptionSortOption = SubscriptionSortOption.RECENTLY_SUBSCRIBED,
     val lastSyncTimestamp: Long = 0L
 )
 
@@ -148,6 +150,7 @@ class UserPreferencesManager(private val context: Context) {
         private val KEY_VOICE_BOOST_GAIN_MB = intPreferencesKey("voice_boost_gain_mb")
         private val KEY_MONO_AUDIO_ENABLED = booleanPreferencesKey("mono_audio_enabled")
         private val KEY_DEFAULT_AUTO_ENQUEUE_RULE = stringPreferencesKey("default_auto_enqueue_rule")
+        private val KEY_SUBSCRIPTION_SORT_OPTION = stringPreferencesKey("subscription_sort_option")
         private val KEY_LAST_SYNC = longPreferencesKey("last_sync_timestamp")
 
         @Volatile
@@ -203,6 +206,7 @@ class UserPreferencesManager(private val context: Context) {
             monoAudioEnabled = preferences[KEY_MONO_AUDIO_ENABLED] ?: false,
             defaultAutoEnqueueRule = preferences[KEY_DEFAULT_AUTO_ENQUEUE_RULE] ?: "DISABLED",
             useDynamicColor = preferences[KEY_USE_DYNAMIC_COLOR] ?: false,
+            subscriptionSortOption = SubscriptionSortOption.fromName(preferences[KEY_SUBSCRIPTION_SORT_OPTION]),
             lastSyncTimestamp = preferences[KEY_LAST_SYNC] ?: 0L
         )
     }
@@ -285,6 +289,10 @@ class UserPreferencesManager(private val context: Context) {
 
     suspend fun setLastSyncTimestamp(timestamp: Long) {
         context.dataStore.edit { it[KEY_LAST_SYNC] = timestamp }
+    }
+
+    suspend fun setSubscriptionSortOption(option: SubscriptionSortOption) {
+        context.dataStore.edit { it[KEY_SUBSCRIPTION_SORT_OPTION] = option.name }
     }
 
     suspend fun setNextcloudConfig(serverUrl: String, username: String, appPassword: String) {
