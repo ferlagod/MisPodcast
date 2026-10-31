@@ -371,7 +371,8 @@ object AntennaPodDatabaseImporter {
                         isFavorite = isFavorite,
                         isDownloaded = false,
                         localFilePath = null,
-                        fileSizeBytes = fileSize
+                        fileSizeBytes = fileSize,
+                        isDismissedFromNewReleases = true
                     )
                     episodesToInsert.add(episodeEntity)
 

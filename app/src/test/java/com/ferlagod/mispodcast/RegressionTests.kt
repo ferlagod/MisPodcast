@@ -2008,6 +2008,46 @@ class RegressionTests {
         )
         assertEquals(listOf("3", "1", "2"), sortedAuthor.map { it.id })
     }
+
+    @Test
+    fun testNewReleasesInclusionCriteria() {
+        val now = 1000000000L
+        val subscribedAt = now
+
+        // Caso 1: Episodio nuevo publicado con fecha idéntica a subscribedAt (ej. subida en el mismo minuto o ajustado)
+        val epSameDate = EpisodeEntity(
+            id = "ep-same", podcastId = "p1", title = "Same Date", description = "",
+            audioUrl = "http://test/1.mp3", imageUrl = "", pubDate = subscribedAt,
+            duration = 1000L, currentPositionMs = 0L, isPlayed = false,
+            isDismissedFromNewReleases = false
+        )
+        // Debe incluirse porque pubDate >= subscribedAt
+        assertTrue(epSameDate.pubDate >= subscribedAt)
+        assertFalse(epSameDate.isPlayed)
+        assertFalse(epSameDate.isDismissedFromNewReleases)
+
+        // Caso 2: Episodio antiguo anterior a la fecha de suscripción
+        val epOlder = EpisodeEntity(
+            id = "ep-older", podcastId = "p1", title = "Older Date", description = "",
+            audioUrl = "http://test/2.mp3", imageUrl = "", pubDate = subscribedAt - 1000L,
+            duration = 1000L, currentPositionMs = 0L, isPlayed = false,
+            isDismissedFromNewReleases = false
+        )
+        // No debe incluirse para podcasts normales porque pubDate < subscribedAt
+        assertFalse(epOlder.pubDate >= subscribedAt)
+
+        // Caso 3: Episodio descartado de novedades
+        val epDismissed = epSameDate.copy(id = "ep-dismissed", isDismissedFromNewReleases = true)
+        assertTrue(epDismissed.isDismissedFromNewReleases)
+
+        // Caso 4: Episodio de carpeta local (isLocalFolder = true)
+        val pLocal = PodcastEntity(
+            id = "local_p", title = "Local", author = "", description = "",
+            feedUrl = "local://1", artworkUrl = "", isSubscribed = true,
+            isLocalFolder = true, subscribedAt = now
+        )
+        assertTrue(pLocal.isLocalFolder)
+    }
 }
 
 

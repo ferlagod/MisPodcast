@@ -271,19 +271,6 @@ abstract class PodcastDatabase : RoomDatabase() {
                         override fun onOpen(db: SupportSQLiteDatabase) {
                             super.onOpen(db)
                             try {
-                                // Asegurar que los podcasts suscritos previamente ajusten su subscribedAt
-                                // para no mostrar episodios antiguos en la sección de novedades
-                                db.execSQL("""
-                                    UPDATE podcasts 
-                                    SET subscribedAt = (
-                                        SELECT MAX(e.pubDate) 
-                                        FROM episodes e 
-                                        WHERE e.podcastId = podcasts.id
-                                    )
-                                    WHERE isSubscribed = 1 
-                                      AND (SELECT MAX(e.pubDate) FROM episodes e WHERE e.podcastId = podcasts.id) > subscribedAt
-                                """)
-
                                 // Corregir episodios en curso que tuvieran erróneamente marcado isPlayed = 1
                                 // para garantizar su reanudación exacta desde la posición guardada
                                 db.execSQL("""

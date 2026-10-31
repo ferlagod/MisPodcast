@@ -101,7 +101,7 @@ object LocalFolderPodcastImporter {
                         docFile = docFile,
                         fallbackArtwork = artworkUrl,
                         fallbackIndex = index + 1
-                    )
+                    ).copy(isDismissedFromNewReleases = true)
                 }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
             } else {
                 emptyList()

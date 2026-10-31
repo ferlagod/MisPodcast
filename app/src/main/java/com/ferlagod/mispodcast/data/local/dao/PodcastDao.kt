@@ -254,8 +254,11 @@ interface PodcastDao {
         WHERE p.isSubscribed = 1 
           AND e.isPlayed = 0 
           AND e.isDismissedFromNewReleases = 0
-          AND p.subscribedAt > 0 
-          AND e.pubDate > p.subscribedAt
+          AND (
+              p.isLocalFolder = 1 
+              OR p.subscribedAt <= 0 
+              OR e.pubDate >= p.subscribedAt
+          )
         ORDER BY e.pubDate DESC 
         LIMIT :limit
     """)
@@ -268,8 +271,11 @@ interface PodcastDao {
         WHERE p.isSubscribed = 1 
           AND e.isPlayed = 0 
           AND e.isDismissedFromNewReleases = 0
-          AND p.subscribedAt > 0 
-          AND e.pubDate > p.subscribedAt
+          AND (
+              p.isLocalFolder = 1 
+              OR p.subscribedAt <= 0 
+              OR e.pubDate >= p.subscribedAt
+          )
         ORDER BY e.pubDate DESC 
         LIMIT :limit
     """)
@@ -302,8 +308,11 @@ interface PodcastDao {
             WHERE p.isSubscribed = 1 
               AND e.isPlayed = 0 
               AND e.isDismissedFromNewReleases = 0
-              AND p.subscribedAt > 0 
-              AND e.pubDate > p.subscribedAt
+              AND (
+                  p.isLocalFolder = 1 
+                  OR p.subscribedAt <= 0 
+                  OR e.pubDate >= p.subscribedAt
+              )
         )
     """)
     /**

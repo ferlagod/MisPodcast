@@ -193,12 +193,12 @@ class PodcastRepository(
         try {
             val parsedFeed = feedParser.fetchAndParseFeed(feedUrl)
             val existing = podcastDao.getPodcastByIdOrFeedUrl(feedUrl, feedUrl)
-            val maxEpisodePubDate = parsedFeed.episodes.maxOfOrNull { it.pubDate } ?: 0L
+            val isNewSubscription = existing == null || !existing.isSubscribed
             val now = System.currentTimeMillis()
             val subscribedAt = if (existing != null && existing.isSubscribed && existing.subscribedAt > 0L) {
                 existing.subscribedAt
             } else {
-                kotlin.math.max(now, maxEpisodePubDate)
+                now
             }
 
             val podcastEntity = parsedFeed.toPodcastEntity(isSubscribed = true, subscribedAt = subscribedAt).let { entity ->
@@ -215,7 +215,14 @@ class PodcastRepository(
                     entity.copy(autoEnqueueRule = "DEFAULT")
                 }
             }
-            val episodeEntities = parsedFeed.episodes.map { it.toEpisodeEntity(podcastEntity.id) }
+            val episodeEntities = parsedFeed.episodes.map { 
+                val entity = it.toEpisodeEntity(podcastEntity.id)
+                if (isNewSubscription) {
+                    entity.copy(isDismissedFromNewReleases = true)
+                } else {
+                    entity
+                }
+            }
 
             podcastDao.insertPodcast(podcastEntity)
             podcastDao.insertEpisodes(episodeEntities)
