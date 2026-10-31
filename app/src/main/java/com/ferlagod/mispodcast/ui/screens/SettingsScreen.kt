@@ -938,7 +938,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Versión 1.0.0 • Licencia GNU GPL v3 • ferlagod",
+                                text = "Versión 1.0.2 • Licencia GNU GPL v3 • ferlagod",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

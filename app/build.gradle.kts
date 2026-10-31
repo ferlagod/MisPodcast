@@ -13,8 +13,8 @@ android {
         applicationId = "com.ferlagod.mispodcast"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10010019
-        versionName = "1.0.1"
+        versionCode = 10010020
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += setOf("en", "es", "fr", "de", "it", "pt")

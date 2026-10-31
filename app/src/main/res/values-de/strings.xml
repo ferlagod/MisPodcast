@@ -199,7 +199,7 @@
     <string name="about_website">Webseite</string>
     <string name="about_github">GitHub</string>
     <string name="about_app_description">Ihr moderner Podcast-Player und -Manager mit von Apple Podcasts inspiriertem Design, Podcasting 2.0, Trends und Empfehlungen direkt von Apple Podcasts und Cloud-Synchronisation.</string>
-    <string name="about_version_license">Version 1.0.0 • GNU GPL v3 Lizenz</string>
+    <string name="about_version_license">Version 1.0.2 • GNU GPL v3 Lizenz</string>
     <string name="about_license_title">Lizenz &amp; Philosophie</string>
     <string name="about_license_description">Mis Podcast wird als freie Software unter den Bedingungen der GNU General Public License Version 3 (GNU GPL v3) verbreitet. Sie haben die Freiheit, den Quellcode zu nutzen, zu studieren, zu teilen und zu verändern. Es enthält keine invasive Werbung, Telemetrie oder Tracker von Drittanbietern.</string>
     <string name="about_view_license">GNU GPL v3 Lizenz anzeigen</string>

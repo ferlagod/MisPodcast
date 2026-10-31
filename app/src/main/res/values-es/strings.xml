@@ -199,7 +199,7 @@
     <string name="about_website">Sitio Web</string>
     <string name="about_github">GitHub</string>
     <string name="about_app_description">Tu gestor y reproductor de podcasts moderno con diseño estilo Apple Podcasts, Podcasting 2.0, tendencias y recomendaciones directas de Apple Podcasts y sincronización en la nube.</string>
-    <string name="about_version_license">Versión 1.0.0 • Licencia GNU GPL v3</string>
+    <string name="about_version_license">Versión 1.0.2 • Licencia GNU GPL v3</string>
     <string name="about_license_title">Licencia y Filosofía</string>
     <string name="about_license_description">Mis Podcast se distribuye como software libre bajo los términos de la Licencia Pública General de GNU versión 3 (GNU GPL v3). Eres libre de usar, estudiar, compartir y modificar el código fuente respetando las 4 libertades esenciales. No incluye anuncios invasivos, telemetría ni rastreadores de terceros.</string>
     <string name="about_view_license">Ver Licencia GNU GPL v3</string>
