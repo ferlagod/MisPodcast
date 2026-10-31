@@ -264,17 +264,9 @@ fun NavGraph(
                         val rawPodcastId = backStackEntry.arguments?.getString("podcastId").orEmpty()
                         val rawFeedUrl = backStackEntry.arguments?.getString("feedUrl").orEmpty()
 
-                        val podcastId = if (rawPodcastId.contains("%")) {
-                            try { java.net.URLDecoder.decode(rawPodcastId, "UTF-8") } catch (_: Exception) { rawPodcastId }
-                        } else rawPodcastId
-
-                        val feedUrl = if (rawFeedUrl.contains("%")) {
-                            try { java.net.URLDecoder.decode(rawFeedUrl, "UTF-8") } catch (_: Exception) { rawFeedUrl }
-                        } else rawFeedUrl
-
                         PodcastDetailScreen(
-                            podcastId = podcastId,
-                            feedUrl = feedUrl,
+                            podcastId = rawPodcastId,
+                            feedUrl = rawFeedUrl,
                             podcastViewModel = podcastViewModel,
                             playerViewModel = playerViewModel,
                             onNavigateBack = { navController.popBackStack() }

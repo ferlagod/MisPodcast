@@ -72,6 +72,12 @@ interface PodcastDao {
     @Query("SELECT * FROM episodes WHERE podcastId IN (:candidates) ORDER BY pubDate DESC")
     fun getEpisodesForCandidatesFlow(candidates: List<String>): Flow<List<EpisodeEntity>>
 
+    @Query("SELECT * FROM podcasts WHERE isLocalFolder = 1")
+    suspend fun getAllLocalFolderPodcasts(): List<PodcastEntity>
+
+    @Query("SELECT * FROM podcasts WHERE isLocalFolder = 1")
+    fun getAllLocalFolderPodcastsFlow(): Flow<List<PodcastEntity>>
+
     @Query("SELECT * FROM podcasts WHERE isSubscribed = 1 ORDER BY subscribedAt DESC")
     fun getSubscribedPodcastsFlow(): Flow<List<PodcastEntity>>
 

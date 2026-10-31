@@ -171,10 +171,41 @@ object LocalFolderPodcastImporter {
             }
 
             val candidates = com.ferlagod.mispodcast.data.repository.PodcastRepository.buildCandidateKeys(podcastId, podcastId)
-            val podcast = (if (candidates.isNotEmpty()) podcastDao.findPodcastByCandidates(candidates) else null)
+            var podcast = (if (candidates.isNotEmpty()) podcastDao.findPodcastByCandidates(candidates) else null)
                 ?: podcastDao.getPodcastById(podcastId)
                 ?: podcastDao.getPodcastByIdOrFeedUrl(podcastId, podcastId)
-                ?: return@withContext Result.failure(IllegalArgumentException("Podcast no encontrado en la base de datos."))
+
+            if (podcast == null) {
+                val allLocal = podcastDao.getAllLocalFolderPodcasts()
+                val decodedTarget = try { java.net.URLDecoder.decode(podcastId, "UTF-8") } catch (_: Exception) { podcastId }
+                val cleanTarget = decodedTarget
+                    .removePrefix("antennapod_local:")
+                    .removePrefix("local://")
+                    .removePrefix("local:")
+                    .trim()
+
+                podcast = allLocal.firstOrNull { p ->
+                    val pDecodedId = try { java.net.URLDecoder.decode(p.id, "UTF-8") } catch (_: Exception) { p.id }
+                    val pDecodedFeed = try { java.net.URLDecoder.decode(p.feedUrl, "UTF-8") } catch (_: Exception) { p.feedUrl }
+                    val pDecodedPath = try { java.net.URLDecoder.decode(p.localFolderPath.orEmpty(), "UTF-8") } catch (_: Exception) { p.localFolderPath.orEmpty() }
+
+                    p.id == podcastId ||
+                    p.feedUrl == podcastId ||
+                    pDecodedId == decodedTarget ||
+                    pDecodedFeed == decodedTarget ||
+                    pDecodedPath == decodedTarget ||
+                    (cleanTarget.isNotBlank() && (
+                        pDecodedId.contains(cleanTarget) ||
+                        cleanTarget.contains(pDecodedId) ||
+                        p.title.equals(cleanTarget, ignoreCase = true) ||
+                        p.title.contains(cleanTarget, ignoreCase = true)
+                    ))
+                }
+            }
+
+            if (podcast == null) {
+                return@withContext Result.failure(IllegalArgumentException("Podcast no encontrado en la base de datos."))
+            }
 
             val rootFolder = DocumentFile.fromTreeUri(context, newTreeUri)
                 ?: return@withContext Result.failure(IllegalArgumentException("No se pudo acceder a la carpeta seleccionada."))
@@ -386,10 +417,39 @@ object LocalFolderPodcastImporter {
     ): Int = withContext(Dispatchers.IO) {
         try {
             val candidates = com.ferlagod.mispodcast.data.repository.PodcastRepository.buildCandidateKeys(podcastId, podcastId)
-            val podcast = (if (candidates.isNotEmpty()) podcastDao.findPodcastByCandidates(candidates) else null)
+            var podcast = (if (candidates.isNotEmpty()) podcastDao.findPodcastByCandidates(candidates) else null)
                 ?: podcastDao.getPodcastById(podcastId)
-                ?: return@withContext 0
-            if (!podcast.isLocalFolder || podcast.localFolderPath.isNullOrBlank()) return@withContext 0
+                ?: podcastDao.getPodcastByIdOrFeedUrl(podcastId, podcastId)
+
+            if (podcast == null) {
+                val allLocal = podcastDao.getAllLocalFolderPodcasts()
+                val decodedTarget = try { java.net.URLDecoder.decode(podcastId, "UTF-8") } catch (_: Exception) { podcastId }
+                val cleanTarget = decodedTarget
+                    .removePrefix("antennapod_local:")
+                    .removePrefix("local://")
+                    .removePrefix("local:")
+                    .trim()
+
+                podcast = allLocal.firstOrNull { p ->
+                    val pDecodedId = try { java.net.URLDecoder.decode(p.id, "UTF-8") } catch (_: Exception) { p.id }
+                    val pDecodedFeed = try { java.net.URLDecoder.decode(p.feedUrl, "UTF-8") } catch (_: Exception) { p.feedUrl }
+                    val pDecodedPath = try { java.net.URLDecoder.decode(p.localFolderPath.orEmpty(), "UTF-8") } catch (_: Exception) { p.localFolderPath.orEmpty() }
+
+                    p.id == podcastId ||
+                    p.feedUrl == podcastId ||
+                    pDecodedId == decodedTarget ||
+                    pDecodedFeed == decodedTarget ||
+                    pDecodedPath == decodedTarget ||
+                    (cleanTarget.isNotBlank() && (
+                        pDecodedId.contains(cleanTarget) ||
+                        cleanTarget.contains(pDecodedId) ||
+                        p.title.equals(cleanTarget, ignoreCase = true) ||
+                        p.title.contains(cleanTarget, ignoreCase = true)
+                    ))
+                }
+            }
+
+            if (podcast == null || !podcast.isLocalFolder || podcast.localFolderPath.isNullOrBlank()) return@withContext 0
 
             val path = podcast.localFolderPath
             if (!path.startsWith("content://")) return@withContext 0

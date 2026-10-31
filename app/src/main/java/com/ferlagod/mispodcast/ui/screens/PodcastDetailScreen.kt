@@ -100,6 +100,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -185,6 +186,8 @@ fun PodcastDetailScreen(
         }
     }
 
+    val currentPodcastId by rememberUpdatedState(roomPodcast?.id ?: effectivePodcastId)
+
     val reconnectFolderLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { treeUri: Uri? ->
@@ -192,7 +195,7 @@ fun PodcastDetailScreen(
             coroutineScope.launch {
                 isLoadingFeed = true
                 feedError = null
-                val result = podcastViewModel.reconnectLocalFolderPodcast(effectivePodcastId, treeUri)
+                val result = podcastViewModel.reconnectLocalFolderPodcast(currentPodcastId, treeUri)
                 isLoadingFeed = false
                 result.onSuccess { count ->
                     Toast.makeText(context, "¡Carpeta reconectada con éxito! ($count audios sincronizados)", Toast.LENGTH_LONG).show()
@@ -212,7 +215,7 @@ fun PodcastDetailScreen(
                 isLoadingFeed = true
                 feedError = null
                 try {
-                    val addedCount = podcastViewModel.rescanLocalFolderPodcast(effectivePodcastId)
+                    val addedCount = podcastViewModel.rescanLocalFolderPodcast(currentPodcastId)
                     isLoadingFeed = false
                     val msg = if (addedCount > 0) "¡Se han detectado $addedCount nuevos audios!" else "Carpeta al día (sin nuevos audios)"
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
