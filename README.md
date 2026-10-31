@@ -5,7 +5,7 @@
   # Mis Podcast
 
   **El gestor y reproductor de podcasts moderno, libre y privado para Android.**  
-  *Inspirado en el diseño fluido y limpio de Apple Podcasts con toda la potencia del Software Libre.*
+  *Con toda la potencia del Software Libre.*
 
   [![Licencia: GNU GPL v3](https://img.shields.io/badge/Licencia-GNU%20GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
   [![Android](https://img.shields.io/badge/Plataforma-Android%208.0%2B%20(API%2026%2B)-green.svg)](https://android.com)

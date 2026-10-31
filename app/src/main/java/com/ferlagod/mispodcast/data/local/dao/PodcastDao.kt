@@ -63,6 +63,15 @@ interface PodcastDao {
     @Query("SELECT * FROM podcasts WHERE id = :podcastId OR feedUrl = :feedUrl LIMIT 1")
     suspend fun getPodcastByIdOrFeedUrl(podcastId: String, feedUrl: String): PodcastEntity?
 
+    @Query("SELECT * FROM podcasts WHERE id IN (:candidates) OR feedUrl IN (:candidates) OR localFolderPath IN (:candidates) LIMIT 1")
+    suspend fun findPodcastByCandidates(candidates: List<String>): PodcastEntity?
+
+    @Query("SELECT * FROM podcasts WHERE id IN (:candidates) OR feedUrl IN (:candidates) OR localFolderPath IN (:candidates) LIMIT 1")
+    fun findPodcastByCandidatesFlow(candidates: List<String>): Flow<PodcastEntity?>
+
+    @Query("SELECT * FROM episodes WHERE podcastId IN (:candidates) ORDER BY pubDate DESC")
+    fun getEpisodesForCandidatesFlow(candidates: List<String>): Flow<List<EpisodeEntity>>
+
     @Query("SELECT * FROM podcasts WHERE isSubscribed = 1 ORDER BY subscribedAt DESC")
     fun getSubscribedPodcastsFlow(): Flow<List<PodcastEntity>>
 

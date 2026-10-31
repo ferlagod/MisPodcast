@@ -2048,6 +2048,38 @@ class RegressionTests {
         )
         assertTrue(pLocal.isLocalFolder)
     }
+
+    @Test
+    fun testAntennaPodLocalFolderCandidateKeys() {
+        // Verifica que se generen todas las variantes necesarias para emparejar carpetas locales de AntennaPod
+        val apUrl = "antennapod_local:content://com.android.externalstorage.documents/tree/primary%3APodcasts"
+        val candidates = com.ferlagod.mispodcast.data.repository.PodcastRepository.buildCandidateKeys(apUrl, apUrl)
+
+        assertTrue(candidates.contains(apUrl))
+        assertTrue(candidates.contains("content://com.android.externalstorage.documents/tree/primary%3APodcasts"))
+        assertTrue(candidates.contains("content://com.android.externalstorage.documents/tree/primary:Podcasts"))
+        assertTrue(candidates.contains("local://content://com.android.externalstorage.documents/tree/primary%3APodcasts"))
+        assertTrue(candidates.contains("local:content://com.android.externalstorage.documents/tree/primary%3APodcasts"))
+    }
+
+    @Test
+    fun testLocalFolderEpisodeNormalizationAndMatching() {
+        val normFn = com.ferlagod.mispodcast.data.local.LocalFolderPodcastImporter::normalizeForMatching
+
+        // 1. Pistas numeradas vs títulos limpios
+        assertEquals("elprincipito", normFn("01 - El Principito.mp3"))
+        assertEquals("elprincipito", normFn("01. El Principito.mp3"))
+        assertEquals("elprincipito", normFn("[01] El Principito.m4a"))
+        assertEquals("elprincipito", normFn("El Principito"))
+
+        // 2. Acentos y caracteres especiales
+        assertEquals("capitulo1introduccion", normFn("01 - Capítulo 1: Introducción.mp3"))
+        assertEquals("capitulo1introduccion", normFn("Capitulo 1 - Introduccion"))
+
+        // 3. Separadores por guiones bajos
+        assertEquals("audioepisodiofinal", normFn("audio_episodio_final.ogg"))
+        assertEquals("audioepisodiofinal", normFn("Audio - Episodio Final"))
+    }
 }
 
 

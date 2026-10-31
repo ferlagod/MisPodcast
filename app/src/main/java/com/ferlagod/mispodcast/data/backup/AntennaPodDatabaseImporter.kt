@@ -259,6 +259,7 @@ object AntennaPodDatabaseImporter {
             val durationExpr = if ("duration" in mediaCols) "m.duration" else "0"
             val positionExpr = if ("position" in mediaCols) "m.position" else "0"
             val urlExpr = if ("download_url" in mediaCols) "m.download_url" else "''"
+            val fileUrlExpr = if ("file_url" in mediaCols) "m.file_url" else "''"
             val sizeExpr = if ("filesize" in mediaCols) "m.filesize" else "0"
             val completionExpr = if ("playback_completion_date" in mediaCols) "m.playback_completion_date" else "0"
             val playedExpr = if ("played_duration" in mediaCols) "m.played_duration" else "0"
@@ -278,6 +279,7 @@ object AntennaPodDatabaseImporter {
                     $durationExpr AS m_duration,
                     $positionExpr AS m_position,
                     $urlExpr AS m_url,
+                    $fileUrlExpr AS m_file_url,
                     $sizeExpr AS m_size,
                     $completionExpr AS m_completion,
                     $playedExpr AS m_played,
@@ -304,6 +306,7 @@ object AntennaPodDatabaseImporter {
                 val durIdx = cursor.getColumnIndex("m_duration")
                 val posIdx = cursor.getColumnIndex("m_position")
                 val urlIdx = cursor.getColumnIndex("m_url")
+                val fileUrlIdx = cursor.getColumnIndex("m_file_url")
                 val sizeIdx = cursor.getColumnIndex("m_size")
                 val compIdx = cursor.getColumnIndex("m_completion")
                 val playedDurIdx = cursor.getColumnIndex("m_played")
@@ -318,7 +321,8 @@ object AntennaPodDatabaseImporter {
                     val rawPubDate = if (pubDateIdx != -1) cursor.getLong(pubDateIdx) else 0L
                     val readStatus = if (readIdx != -1) cursor.getInt(readIdx) else 0
                     val guid = if (guidIdx != -1) cursor.getString(guidIdx)?.trim().orEmpty() else ""
-                    val audioUrl = if (urlIdx != -1) cursor.getString(urlIdx)?.trim().orEmpty() else ""
+                    val rawAudioUrl = if (urlIdx != -1) cursor.getString(urlIdx)?.trim().orEmpty() else ""
+                    val rawFileUrl = if (fileUrlIdx != -1) cursor.getString(fileUrlIdx)?.trim().orEmpty() else ""
                     val epImage = if (imageIdx != -1) cursor.getString(imageIdx) else null
                     val epDesc = if (descIdx != -1) cursor.getString(descIdx) else null
 
@@ -329,10 +333,30 @@ object AntennaPodDatabaseImporter {
                     val playedDuration = if (playedDurIdx != -1) cursor.getLong(playedDurIdx).coerceAtLeast(0L) else 0L
                     val lastPlayedTime = if (lastPlayedIdx != -1) cursor.getLong(lastPlayedIdx).coerceAtLeast(0L) else 0L
 
+                    val effectiveAudioUrl = when {
+                        rawAudioUrl.isNotBlank() -> rawAudioUrl
+                        rawFileUrl.isNotBlank() -> rawFileUrl
+                        else -> ""
+                    }
+
+                    val isLocalAudio = podcast.isLocalFolder ||
+                            effectiveAudioUrl.startsWith("content:", ignoreCase = true) ||
+                            effectiveAudioUrl.startsWith("file:", ignoreCase = true) ||
+                            effectiveAudioUrl.startsWith("/") ||
+                            rawFileUrl.isNotBlank()
+
+                    val localFilePath = when {
+                        rawFileUrl.isNotBlank() -> rawFileUrl
+                        isLocalAudio && effectiveAudioUrl.isNotBlank() -> effectiveAudioUrl
+                        else -> null
+                    }
+                    val isDownloaded = isLocalAudio || !localFilePath.isNullOrBlank()
+
                     // ID coherente con el parser RSS de MisPodcast
                     val episodeId = when {
                         guid.isNotBlank() -> guid
-                        audioUrl.isNotBlank() -> "${podcast.id}_${audioUrl.hashCode()}"
+                        effectiveAudioUrl.isNotBlank() -> "${podcast.id}_${effectiveAudioUrl.hashCode()}"
+                        rawFileUrl.isNotBlank() -> "${podcast.id}_${rawFileUrl.hashCode()}"
                         else -> "antennapod_item_$apItemId"
                     }
                     apItemIdToEpisodeId[apItemId] = episodeId
@@ -362,15 +386,15 @@ object AntennaPodDatabaseImporter {
                         podcastId = podcast.id,
                         title = epTitle?.takeIf { it.isNotBlank() } ?: "Episodio sin título",
                         description = epDesc.orEmpty(),
-                        audioUrl = audioUrl,
+                        audioUrl = effectiveAudioUrl,
                         imageUrl = epImage?.takeIf { it.isNotBlank() } ?: podcast.artworkUrl,
                         pubDate = pubDate,
                         duration = duration,
                         currentPositionMs = currentPositionMs,
                         isPlayed = isPlayed,
                         isFavorite = isFavorite,
-                        isDownloaded = false,
-                        localFilePath = null,
+                        isDownloaded = isDownloaded,
+                        localFilePath = localFilePath,
                         fileSizeBytes = fileSize,
                         isDismissedFromNewReleases = true
                     )

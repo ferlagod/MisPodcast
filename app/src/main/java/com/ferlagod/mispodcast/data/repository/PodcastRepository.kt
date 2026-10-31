@@ -392,13 +392,52 @@ class PodcastRepository(
 
     fun getSubscribedPodcasts(): Flow<List<PodcastEntity>> = podcastDao.getSubscribedPodcastsFlow()
 
+    companion object {
+        fun buildCandidateKeys(podcastId: String?, feedUrl: String?): List<String> {
+            val results = LinkedHashSet<String>()
+            val inputs = listOfNotNull(podcastId?.trim(), feedUrl?.trim()).filter { it.isNotBlank() }
+            for (key in inputs) {
+                results.add(key)
+                if (key.contains("%")) {
+                    try { results.add(java.net.URLDecoder.decode(key, "UTF-8")) } catch (_: Exception) {}
+                }
+                try { results.add(android.net.Uri.encode(key)) } catch (_: Exception) {}
+                val stripped = key
+                    .removePrefix("antennapod_local:")
+                    .removePrefix("local://")
+                    .removePrefix("local:")
+                if (stripped != key && stripped.isNotBlank()) {
+                    results.add(stripped)
+                    results.add("antennapod_local:$stripped")
+                    results.add("local://$stripped")
+                    results.add("local:$stripped")
+                    if (stripped.contains("%")) {
+                        try { results.add(java.net.URLDecoder.decode(stripped, "UTF-8")) } catch (_: Exception) {}
+                    }
+                }
+            }
+            return results.toList()
+        }
+    }
+
     fun getPodcastById(podcastId: String): Flow<PodcastEntity?> = podcastDao.getPodcastFlow(podcastId)
 
-    fun getPodcastByIdOrFeedUrl(podcastId: String, feedUrl: String): Flow<PodcastEntity?> =
-        podcastDao.getPodcastByIdOrFeedUrlFlow(podcastId, feedUrl)
+    fun getPodcastByIdOrFeedUrl(podcastId: String, feedUrl: String): Flow<PodcastEntity?> {
+        val candidates = buildCandidateKeys(podcastId, feedUrl)
+        return if (candidates.isEmpty()) {
+            podcastDao.getPodcastByIdOrFeedUrlFlow(podcastId, feedUrl)
+        } else {
+            podcastDao.findPodcastByCandidatesFlow(candidates)
+        }
+    }
 
     suspend fun getPodcastDirect(podcastId: String, feedUrl: String): PodcastEntity? = withContext(Dispatchers.IO) {
-        podcastDao.getPodcastByIdOrFeedUrl(podcastId, feedUrl)
+        val candidates = buildCandidateKeys(podcastId, feedUrl)
+        if (candidates.isEmpty()) {
+            podcastDao.getPodcastByIdOrFeedUrl(podcastId, feedUrl)
+        } else {
+            podcastDao.findPodcastByCandidates(candidates)
+        }
     }
 
     suspend fun fetchAndStorePodcast(feedUrl: String): Result<PodcastEntity> = withContext(Dispatchers.IO) {
@@ -428,8 +467,14 @@ class PodcastRepository(
         }
     }
 
-    fun getEpisodesForPodcast(podcastId: String): Flow<List<EpisodeEntity>> =
-        podcastDao.getEpisodesForPodcastFlow(podcastId)
+    fun getEpisodesForPodcast(podcastId: String): Flow<List<EpisodeEntity>> {
+        val candidates = buildCandidateKeys(podcastId, null)
+        return if (candidates.isEmpty()) {
+            podcastDao.getEpisodesForPodcastFlow(podcastId)
+        } else {
+            podcastDao.getEpisodesForCandidatesFlow(candidates)
+        }
+    }
 
     suspend fun getEpisodeById(episodeId: String): EpisodeEntity? = withContext(Dispatchers.IO) {
         podcastDao.getEpisodeById(episodeId)

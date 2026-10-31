@@ -141,6 +141,16 @@ object LocalFolderPodcastImporter {
         }
     }
 
+    fun normalizeForMatching(text: String): String {
+        return text.lowercase()
+            .substringBeforeLast('.')
+            .replace(Regex("""^\[?\d+\]?[\s.\-_]+"""), "")
+            .replace(Regex("""[_\-.]+"""), " ")
+            .let { java.text.Normalizer.normalize(it, java.text.Normalizer.Form.NFD) }
+            .replace(Regex("""\p{M}"""), "")
+            .replace(Regex("""[^a-z0-9]"""), "")
+    }
+
     /**
      * Reconecta un podcast local a una nueva ubicación física en el dispositivo (migraciones, OPML, AntennaPod),
      * actualizando `localFolderPath` en Room y re-enlazando los episodios existentes y nuevos.
@@ -160,7 +170,10 @@ object LocalFolderPodcastImporter {
                 Log.w(TAG, "No se pudo tomar permiso persistente: ${e.message}")
             }
 
-            val podcast = podcastDao.getPodcastById(podcastId)
+            val candidates = com.ferlagod.mispodcast.data.repository.PodcastRepository.buildCandidateKeys(podcastId, podcastId)
+            val podcast = (if (candidates.isNotEmpty()) podcastDao.findPodcastByCandidates(candidates) else null)
+                ?: podcastDao.getPodcastById(podcastId)
+                ?: podcastDao.getPodcastByIdOrFeedUrl(podcastId, podcastId)
                 ?: return@withContext Result.failure(IllegalArgumentException("Podcast no encontrado en la base de datos."))
 
             val rootFolder = DocumentFile.fromTreeUri(context, newTreeUri)
@@ -174,7 +187,7 @@ object LocalFolderPodcastImporter {
                 podcast.artworkUrl
             }
 
-            // 2. Actualizar ruta en PodcastEntity
+            // 2. Actualizar ruta en PodcastEntity conservando su id original
             val updatedPodcast = podcast.copy(
                 isLocalFolder = true,
                 localFolderPath = newTreeUri.toString(),
@@ -185,48 +198,168 @@ object LocalFolderPodcastImporter {
 
             // 3. Escanear audios en la nueva carpeta
             val audioFiles = scanAudioFilesRecursively(rootFolder)
-            val existingEpisodes = podcastDao.getEpisodesForPodcastFlow(podcastId).firstOrNull() ?: emptyList()
+            val targetPodcastId = podcast.id
+            val existingEpisodes = podcastDao.getEpisodesForPodcastFlow(targetPodcastId).firstOrNull() ?: emptyList()
 
-            val audioFilesByName = audioFiles.associateBy { it.name?.lowercase().orEmpty() }
-
+            val availableFiles = audioFiles.toMutableList()
             val episodesToUpdateOrInsert = mutableListOf<EpisodeEntity>()
+            val matchedEpisodeIds = mutableSetOf<String>()
             var reconnectedCount = 0
 
-            // A. Re-enlazar episodios existentes buscando coincidencia por nombre de archivo o título
-            for (ep in existingEpisodes) {
-                val oldFileName = Uri.parse(ep.audioUrl).lastPathSegment?.substringAfterLast('/')?.lowercase().orEmpty()
-                val matchedFile = audioFilesByName[oldFileName]
-                    ?: audioFiles.firstOrNull { doc ->
-                        val docBase = doc.name?.substringBeforeLast('.')?.lowercase().orEmpty()
-                        val epTitle = ep.title.lowercase()
-                        docBase.isNotBlank() && (docBase == epTitle || epTitle.contains(docBase))
+            // Helper para extraer el nombre de archivo previo
+            fun getOldFileName(ep: EpisodeEntity): String {
+                val fromAudio = ep.audioUrl.takeIf { it.isNotBlank() }?.let { url ->
+                    try {
+                        Uri.parse(url).lastPathSegment?.substringAfterLast('/')
+                    } catch (_: Exception) {
+                        url.substringAfterLast('/')
                     }
+                }
+                val fromLocal = ep.localFilePath?.substringAfterLast('/')
+                val rawName = fromLocal ?: fromAudio.orEmpty()
+                return try {
+                    if (rawName.contains("%")) java.net.URLDecoder.decode(rawName, "UTF-8") else rawName
+                } catch (_: Exception) {
+                    rawName
+                }
+            }
 
-                if (matchedFile != null) {
-                    val updatedEp = ep.copy(
-                        audioUrl = matchedFile.uri.toString(),
-                        localFilePath = matchedFile.uri.toString(),
-                        isDownloaded = true,
-                        fileSizeBytes = matchedFile.length()
+            // A. Re-enlazar episodios existentes mediante coincidencia en varios niveles
+            // Pase 1: Coincidencia exacta por nombre de archivo o base sin extensión
+            for (ep in existingEpisodes) {
+                val oldFile = getOldFileName(ep).lowercase()
+                val oldBase = oldFile.substringBeforeLast('.')
+                if (oldFile.isNotBlank()) {
+                    val matchIndex = availableFiles.indexOfFirst { doc ->
+                        val docName = doc.name?.lowercase().orEmpty()
+                        val docBase = docName.substringBeforeLast('.')
+                        docName == oldFile || (oldBase.isNotBlank() && docBase == oldBase)
+                    }
+                    if (matchIndex != -1) {
+                        val matchedDoc = availableFiles.removeAt(matchIndex)
+                        episodesToUpdateOrInsert.add(
+                            ep.copy(
+                                audioUrl = matchedDoc.uri.toString(),
+                                localFilePath = matchedDoc.uri.toString(),
+                                isDownloaded = true,
+                                fileSizeBytes = matchedDoc.length()
+                            )
+                        )
+                        matchedEpisodeIds.add(ep.id)
+                        reconnectedCount++
+                    }
+                }
+            }
+
+            // Pase 2: Coincidencia exacta por título del episodio vs nombre base del archivo
+            for (ep in existingEpisodes) {
+                if (ep.id in matchedEpisodeIds) continue
+                val epTitle = ep.title.trim().lowercase()
+                val matchIndex = availableFiles.indexOfFirst { doc ->
+                    val docBase = doc.name?.substringBeforeLast('.')?.trim()?.lowercase().orEmpty()
+                    docBase.isNotBlank() && docBase == epTitle
+                }
+                if (matchIndex != -1) {
+                    val matchedDoc = availableFiles.removeAt(matchIndex)
+                    episodesToUpdateOrInsert.add(
+                        ep.copy(
+                            audioUrl = matchedDoc.uri.toString(),
+                            localFilePath = matchedDoc.uri.toString(),
+                            isDownloaded = true,
+                            fileSizeBytes = matchedDoc.length()
+                        )
                     )
-                    episodesToUpdateOrInsert.add(updatedEp)
+                    matchedEpisodeIds.add(ep.id)
                     reconnectedCount++
-                } else {
-                    episodesToUpdateOrInsert.add(ep)
+                }
+            }
+
+            // Pase 3: Coincidencia normalizada (omitiendo números de pista tipo '01 - ', espacios, acentos, etc.)
+            for (ep in existingEpisodes) {
+                if (ep.id in matchedEpisodeIds) continue
+                val epTitleNorm = normalizeForMatching(ep.title)
+                val epFileNorm = normalizeForMatching(getOldFileName(ep))
+
+                val matchIndex = availableFiles.indexOfFirst { doc ->
+                    val docNorm = normalizeForMatching(doc.name.orEmpty())
+                    docNorm.isNotBlank() && ((epTitleNorm.isNotBlank() && docNorm == epTitleNorm) || (epFileNorm.isNotBlank() && docNorm == epFileNorm))
+                }
+                if (matchIndex != -1) {
+                    val matchedDoc = availableFiles.removeAt(matchIndex)
+                    episodesToUpdateOrInsert.add(
+                        ep.copy(
+                            audioUrl = matchedDoc.uri.toString(),
+                            localFilePath = matchedDoc.uri.toString(),
+                            isDownloaded = true,
+                            fileSizeBytes = matchedDoc.length()
+                        )
+                    )
+                    matchedEpisodeIds.add(ep.id)
+                    reconnectedCount++
+                }
+            }
+
+            // Pase 4: Coincidencia por contención de texto significativo
+            for (ep in existingEpisodes) {
+                if (ep.id in matchedEpisodeIds) continue
+                val epTitleNorm = normalizeForMatching(ep.title)
+                if (epTitleNorm.length >= 4) {
+                    val matchIndex = availableFiles.indexOfFirst { doc ->
+                        val docNorm = normalizeForMatching(doc.name.orEmpty())
+                        docNorm.length >= 4 && (docNorm.contains(epTitleNorm) || epTitleNorm.contains(docNorm))
+                    }
+                    if (matchIndex != -1) {
+                        val matchedDoc = availableFiles.removeAt(matchIndex)
+                        episodesToUpdateOrInsert.add(
+                            ep.copy(
+                                audioUrl = matchedDoc.uri.toString(),
+                                localFilePath = matchedDoc.uri.toString(),
+                                isDownloaded = true,
+                                fileSizeBytes = matchedDoc.length()
+                            )
+                        )
+                        matchedEpisodeIds.add(ep.id)
+                        reconnectedCount++
+                    }
+                }
+            }
+
+            // Pase 5: Si la cantidad de episodios no emparejados coincide con los archivos restantes
+            val remainingEpisodes = existingEpisodes.filter { it.id !in matchedEpisodeIds }
+            if (remainingEpisodes.isNotEmpty() && remainingEpisodes.size == availableFiles.size) {
+                val sortedRemainingEps = remainingEpisodes.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+                val sortedRemainingFiles = availableFiles.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name.orEmpty() })
+                sortedRemainingEps.forEachIndexed { idx, ep ->
+                    val matchedDoc = sortedRemainingFiles[idx]
+                    episodesToUpdateOrInsert.add(
+                        ep.copy(
+                            audioUrl = matchedDoc.uri.toString(),
+                            localFilePath = matchedDoc.uri.toString(),
+                            isDownloaded = true,
+                            fileSizeBytes = matchedDoc.length()
+                        )
+                    )
+                    matchedEpisodeIds.add(ep.id)
+                    reconnectedCount++
+                }
+                availableFiles.clear()
+            } else {
+                for (ep in remainingEpisodes) {
+                    if (ep.id !in matchedEpisodeIds) {
+                        episodesToUpdateOrInsert.add(ep)
+                    }
                 }
             }
 
             // B. Añadir audios nuevos que no estaban registrados previamente
-            val existingUris = episodesToUpdateOrInsert.map { it.audioUrl }.toSet()
-            val newAudioFiles = audioFiles.filter { it.uri.toString() !in existingUris }
-            val newEpisodes = newAudioFiles.mapIndexed { index, docFile ->
+            val newEpisodes = availableFiles.mapIndexed { index, docFile ->
                 extractEpisodeMetadata(
                     context = context,
-                    podcastId = podcastId,
+                    podcastId = targetPodcastId,
                     docFile = docFile,
                     fallbackArtwork = podcast.artworkUrl,
                     fallbackIndex = existingEpisodes.size + index + 1
-                )
+                ).copy(isDismissedFromNewReleases = true)
             }
             episodesToUpdateOrInsert.addAll(newEpisodes)
 
@@ -236,7 +369,7 @@ object LocalFolderPodcastImporter {
             }
 
             Log.d(TAG, "Reconexión completada: $reconnectedCount audios re-enlazados y ${newEpisodes.size} nuevos audios añadidos.")
-            Result.success(episodesToUpdateOrInsert.size)
+            Result.success(reconnectedCount + newEpisodes.size)
         } catch (e: Exception) {
             Log.e(TAG, "Error reconectando carpeta local", e)
             Result.failure(e)
@@ -252,7 +385,10 @@ object LocalFolderPodcastImporter {
         podcastDao: PodcastDao
     ): Int = withContext(Dispatchers.IO) {
         try {
-            val podcast = podcastDao.getPodcastById(podcastId) ?: return@withContext 0
+            val candidates = com.ferlagod.mispodcast.data.repository.PodcastRepository.buildCandidateKeys(podcastId, podcastId)
+            val podcast = (if (candidates.isNotEmpty()) podcastDao.findPodcastByCandidates(candidates) else null)
+                ?: podcastDao.getPodcastById(podcastId)
+                ?: return@withContext 0
             if (!podcast.isLocalFolder || podcast.localFolderPath.isNullOrBlank()) return@withContext 0
 
             val path = podcast.localFolderPath
@@ -274,7 +410,7 @@ object LocalFolderPodcastImporter {
                 }
             }
 
-            val existingEpisodes = podcastDao.getEpisodesForPodcastFlow(podcastId).firstOrNull() ?: emptyList()
+            val existingEpisodes = podcastDao.getEpisodesForPodcastFlow(podcast.id).firstOrNull() ?: emptyList()
             val existingUris = existingEpisodes.map { it.audioUrl }.toSet()
 
             val audioFiles = scanAudioFilesRecursively(rootFolder)
@@ -285,11 +421,11 @@ object LocalFolderPodcastImporter {
             val newEpisodes = newAudioFiles.mapIndexed { index, docFile ->
                 extractEpisodeMetadata(
                     context = context,
-                    podcastId = podcastId,
+                    podcastId = podcast.id,
                     docFile = docFile,
                     fallbackArtwork = podcast.artworkUrl,
                     fallbackIndex = existingEpisodes.size + index + 1
-                )
+                ).copy(isDismissedFromNewReleases = true)
             }
 
             podcastDao.insertEpisodes(newEpisodes)
