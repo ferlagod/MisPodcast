@@ -41,6 +41,7 @@
     <string name="download">Herunterladen</string>
     <string name="downloading">Wird heruntergeladen…</string>
     <string name="downloaded">Heruntergeladen</string>
+    <string name="download_waiting">Wartet auf WLAN oder Laden</string>
     <string name="delete_download">Download löschen</string>
     <string name="clear">Löschen</string>
     <string name="clear_queue">Warteschlange leeren</string>

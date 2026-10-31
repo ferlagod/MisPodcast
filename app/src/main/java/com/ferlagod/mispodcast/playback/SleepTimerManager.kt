@@ -106,6 +106,13 @@ class SleepTimerManager(
     val state: StateFlow<SleepTimerState> = _state.asStateFlow()
 
     private var onPauseAction: (() -> Unit)? = null
+    private var onVolumeAction: ((Float) -> Unit)? = null
+
+    // La cuenta atrás solo avanza mientras suena audio (como en AntennaPod)
+    @Volatile
+    private var isPlaybackActive: Boolean = false
+    @Volatile
+    private var currentFadeVolume: Float = 1f
 
     private val sensorManager: SensorManager? by lazy {
         context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
@@ -121,6 +128,8 @@ class SleepTimerManager(
         private const val TAG = "SleepTimerManager"
         private const val SHAKE_THRESHOLD_G = 2.4f // Umbral de aceleración G para detectar agitación intencional
         private const val SHAKE_DEBOUNCE_MS = 1500L // Intervalo mínimo entre agitaciones consecutivas
+        private const val TICK_MS = 250L
+        const val FADE_OUT_MS = 15_000L // Bajada gradual de volumen antes de pausar
         const val DEFAULT_EXTEND_MINUTES = 15
 
         @Volatile
@@ -138,6 +147,31 @@ class SleepTimerManager(
      */
     fun registerPauseAction(action: () -> Unit) {
         this.onPauseAction = action
+    }
+
+    /**
+     * Registra la acción que ajusta el volumen del reproductor (0..1) para el fundido de salida.
+     */
+    fun registerVolumeAction(action: (Float) -> Unit) {
+        this.onVolumeAction = action
+    }
+
+    /**
+     * Informa de si el reproductor está sonando; con la reproducción en pausa la cuenta atrás se detiene.
+     */
+    fun setPlaybackActive(isPlaying: Boolean) {
+        isPlaybackActive = isPlaying
+    }
+
+    private fun applyFadeVolume(volume: Float) {
+        val clamped = volume.coerceIn(0f, 1f)
+        if (kotlin.math.abs(clamped - currentFadeVolume) < 0.01f) return
+        currentFadeVolume = clamped
+        try {
+            onVolumeAction?.invoke(clamped)
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudo ajustar el volumen del fundido: ${e.message}")
+        }
     }
 
     /**
@@ -208,6 +242,7 @@ class SleepTimerManager(
                 if (countdownJob?.isActive != true) {
                     startCountdownTicker()
                 }
+                applyFadeVolume(1f)
                 Log.i(TAG, "Temporizador prolongado +$additionalMinutes min (quedan ${newRemaining / 1000}s).")
             }
             is SleepTimerMode.EndOfEpisode, SleepTimerMode.Off -> {
@@ -222,6 +257,7 @@ class SleepTimerManager(
     fun cancelTimer() {
         countdownJob?.cancel()
         countdownJob = null
+        applyFadeVolume(1f)
         _state.update {
             it.copy(
                 isActive = false,
@@ -256,9 +292,15 @@ class SleepTimerManager(
     private fun startCountdownTicker() {
         countdownJob?.cancel()
         countdownJob = scope.launch {
+            var lastTick = System.nanoTime() / 1_000_000L
             while (isActive && _state.value.isActive && _state.value.mode is SleepTimerMode.Minutes) {
-                delay(1000L)
-                val currentRemaining = _state.value.remainingMillis - 1000L
+                delay(TICK_MS)
+                val now = System.nanoTime() / 1_000_000L
+                val elapsed = now - lastTick
+                lastTick = now
+                if (!isPlaybackActive) continue
+
+                val currentRemaining = _state.value.remainingMillis - elapsed
                 if (currentRemaining <= 0L) {
                     _state.update { it.copy(remainingMillis = 0L) }
                     Log.i(TAG, "Temporizador de minutos agotado: pausando reproducción.")
@@ -266,6 +308,9 @@ class SleepTimerManager(
                     break
                 } else {
                     _state.update { it.copy(remainingMillis = currentRemaining) }
+                    if (currentRemaining <= FADE_OUT_MS) {
+                        applyFadeVolume(currentRemaining.toFloat() / FADE_OUT_MS)
+                    }
                 }
             }
         }

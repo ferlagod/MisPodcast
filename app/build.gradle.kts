@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -13,10 +15,21 @@ android {
         applicationId = "com.ferlagod.mispodcast"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10010020
+        versionCode = 10010022
         versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Credenciales opcionales de Podcast Index (https://api.podcastindex.org), leídas de
+        // local.properties o variables de entorno. Si faltan, la búsqueda usa solo Apple Podcasts.
+        val localProps = Properties().apply {
+            val f = rootProject.file("local.properties")
+            if (f.exists()) f.inputStream().use { load(it) }
+        }
+        fun secretOf(name: String): String =
+            (localProps.getProperty(name) ?: System.getenv(name) ?: "").replace("\"", "")
+        buildConfigField("String", "PODCASTINDEX_API_KEY", "\"${secretOf("PODCASTINDEX_API_KEY")}\"")
+        buildConfigField("String", "PODCASTINDEX_API_SECRET", "\"${secretOf("PODCASTINDEX_API_SECRET")}\"")
         resourceConfigurations += setOf("en", "es", "fr", "de", "it", "pt")
     }
 

@@ -62,5 +62,7 @@ data class PodcastEntity(
     val skipEndingSeconds: Int = 0, // Segundos a saltar al final del episodio (créditos / patrocinadores)
     val autoDownloadEnabled: Boolean? = null, // null hereda la configuración global, true fuerza descarga, false la desactiva
     val episodeSortOrder: String = "NEWEST_FIRST", // "NEWEST_FIRST" (recientes) o "OLDEST_FIRST" (cronológico para series narrativas)
-    val autoEnqueueRule: String = "DISABLED" // "DISABLED", "TOP" (siguiente en reproducirse) o "BOTTOM" (al final de la cola)
+    val autoEnqueueRule: String = "DISABLED", // "DISABLED", "TOP" (siguiente en reproducirse) o "BOTTOM" (al final de la cola)
+    val newEpisodeNotifications: Boolean = true, // Notificar episodios nuevos de este podcast
+    val autoDeleteRule: String = "DEFAULT" // "DEFAULT" (ajuste global), "NEVER" o "AFTER_PLAYED"
 )

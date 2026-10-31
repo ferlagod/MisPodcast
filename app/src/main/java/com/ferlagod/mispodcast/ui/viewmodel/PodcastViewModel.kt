@@ -126,6 +126,9 @@ class PodcastViewModel @JvmOverloads constructor(
     val globalStats: StateFlow<GlobalStats> = repository.getGlobalStats()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GlobalStats())
 
+    val timeSavedMs: StateFlow<Long> = preferencesManager.timeSavedMsFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
+
     // ==========================================
     // RESUMEN ANUAL "WRAPPED"
     // ==========================================
@@ -463,13 +466,26 @@ class PodcastViewModel @JvmOverloads constructor(
         }
     }
 
-    fun sortQueue(sortOption: QueueSortOption) {
-        val currentQueue = queue.value
-        if (currentQueue.size <= 2) return
+    /**
+     * Separa el episodio activo del resto de la cola con el mismo criterio que la pantalla de cola:
+     * el episodio en reproducción (aunque no esté arriba) o, si no hay ninguno, el primero.
+     */
+    private fun splitActiveFromQueue(
+        currentQueue: List<QueueEpisodeItem>,
+        activeEpisodeId: String?
+    ): Pair<QueueEpisodeItem?, List<QueueEpisodeItem>> {
+        val activeId = activeEpisodeId ?: currentQueue.firstOrNull()?.episode?.id
+        val active = currentQueue.firstOrNull { it.episode.id == activeId }
+        return active to currentQueue.filter { it.episode.id != activeId }
+    }
 
-        // Regla inamovible: el primer elemento (episodio activo) permanece SIEMPRE en posición 0
-        val currentActive = currentQueue.first()
-        val subsequent = currentQueue.drop(1)
+    fun sortQueue(sortOption: QueueSortOption, activeEpisodeId: String? = null) {
+        val currentQueue = queue.value
+        if (currentQueue.size < 2) return
+
+        // El episodio activo queda en cabeza y el resto se ordena según el criterio elegido
+        val (currentActive, subsequent) = splitActiveFromQueue(currentQueue, activeEpisodeId)
+        if (subsequent.size < 2) return
 
         val sortedSubsequent = when (sortOption) {
             QueueSortOption.DURATION_ASC -> subsequent.sortedBy { it.episode.duration }
@@ -482,7 +498,7 @@ class PodcastViewModel @JvmOverloads constructor(
             QueueSortOption.DATE_ASC -> subsequent.sortedBy { it.episode.pubDate }
         }
 
-        val newOrderedIds = listOf(currentActive.episode.id) + sortedSubsequent.map { it.episode.id }
+        val newOrderedIds = listOfNotNull(currentActive?.episode?.id) + sortedSubsequent.map { it.episode.id }
 
         viewModelScope.launch {
             repository.reorderQueue(newOrderedIds)
@@ -533,16 +549,22 @@ class PodcastViewModel @JvmOverloads constructor(
         return item.episode.duration * 16L
     }
 
-    fun moveSubsequentQueueItem(fromIndex: Int, toIndex: Int) {
+    fun moveSubsequentQueueItem(fromIndex: Int, toIndex: Int, activeEpisodeId: String? = null) {
         val currentQueue = queue.value
-        if (currentQueue.size <= 2) return
-        val currentActive = currentQueue.first()
-        val subsequent = currentQueue.drop(1).toMutableList()
+        if (currentQueue.size < 2) return
+        val (currentActive, others) = splitActiveFromQueue(currentQueue, activeEpisodeId)
+        val subsequent = others.toMutableList()
 
         if (fromIndex in subsequent.indices && toIndex in subsequent.indices && fromIndex != toIndex) {
             val item = subsequent.removeAt(fromIndex)
             subsequent.add(toIndex, item)
-            val newOrderedIds = listOf(currentActive.episode.id) + subsequent.map { it.episode.id }
+            // El episodio activo conserva su posición original en la cola
+            val reordered = subsequent.map { it.episode.id }.toMutableList()
+            if (currentActive != null) {
+                val activeIndex = currentQueue.indexOf(currentActive).coerceIn(0, reordered.size)
+                reordered.add(activeIndex, currentActive.episode.id)
+            }
+            val newOrderedIds = reordered.toList()
             viewModelScope.launch {
                 repository.reorderQueue(newOrderedIds)
             }
@@ -619,10 +641,14 @@ class PodcastViewModel @JvmOverloads constructor(
         skipEndingSeconds: Int,
         autoDownloadEnabled: Boolean?,
         episodeSortOrder: String,
-        autoEnqueueRule: String = "DISABLED"
+        autoEnqueueRule: String = "DISABLED",
+        newEpisodeNotifications: Boolean = true,
+        autoDeleteRule: String = "DEFAULT"
     ) {
         viewModelScope.launch {
             repository.updatePodcastSettings(
+                newEpisodeNotifications = newEpisodeNotifications,
+                autoDeleteRule = autoDeleteRule,
                 podcastId = podcastId,
                 customSpeed = customSpeed,
                 skipIntroSeconds = skipIntroSeconds,

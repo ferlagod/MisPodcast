@@ -31,6 +31,7 @@ import com.ferlagod.mispodcast.data.local.entities.ListeningHistoryEntity
 import com.ferlagod.mispodcast.data.local.entities.PlaybackStatsEntity
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
+import com.ferlagod.mispodcast.data.local.model.EpisodeOwner
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
 import com.ferlagod.mispodcast.data.local.model.GlobalStats
 import com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem
@@ -141,7 +142,9 @@ interface PodcastDao {
             skipEndingSeconds = :skipEndingSeconds,
             autoDownloadEnabled = :autoDownloadEnabled,
             episodeSortOrder = :episodeSortOrder,
-            autoEnqueueRule = :autoEnqueueRule
+            autoEnqueueRule = :autoEnqueueRule,
+            newEpisodeNotifications = :newEpisodeNotifications,
+            autoDeleteRule = :autoDeleteRule
         WHERE id = :podcastId
     """)
     suspend fun updatePodcastSettings(
@@ -151,7 +154,9 @@ interface PodcastDao {
         skipEndingSeconds: Int,
         autoDownloadEnabled: Boolean?,
         episodeSortOrder: String,
-        autoEnqueueRule: String = "DISABLED"
+        autoEnqueueRule: String = "DISABLED",
+        newEpisodeNotifications: Boolean = true,
+        autoDeleteRule: String = "DEFAULT"
     ): Int
 
     @Query("UPDATE podcasts SET autoEnqueueRule = :rule WHERE id = :podcastId")
@@ -173,6 +178,102 @@ interface PodcastDao {
 
     @Upsert
     suspend fun insertOrReplaceEpisodes(episodes: List<EpisodeEntity>)
+
+    @Query("SELECT id, podcastId FROM episodes WHERE id IN (:ids)")
+    suspend fun getEpisodeOwners(ids: List<String>): List<EpisodeOwner>
+
+    @Query("SELECT id FROM episodes WHERE podcastId = :podcastId")
+    suspend fun getEpisodeIdsForPodcast(podcastId: String): List<String>
+
+    @Query("SELECT audioUrl FROM episodes WHERE podcastId = :podcastId")
+    suspend fun getAudioUrlsForPodcast(podcastId: String): List<String>
+
+    /**
+     * Actualiza los metadatos editoriales de un episodio ya guardado con los del feed, sin tocar
+     * nunca el estado del usuario (posición, escuchado, favorito, descarga) ni la fecha de publicación.
+     * Solo escribe si algo cambió, para no disparar invalidaciones de Room innecesarias.
+     */
+    @Query("""
+        UPDATE episodes
+        SET title = :title,
+            description = :description,
+            audioUrl = :audioUrl,
+            imageUrl = :imageUrl,
+            duration = CASE WHEN :duration > 0 THEN :duration ELSE duration END,
+            chaptersUrl = COALESCE(:chaptersUrl, chaptersUrl),
+            transcriptUrl = COALESCE(:transcriptUrl, transcriptUrl),
+            soundbites = COALESCE(:soundbites, soundbites)
+        WHERE id = :id AND podcastId = :podcastId AND (
+            title != :title OR description != :description OR audioUrl != :audioUrl OR imageUrl != :imageUrl
+            OR (:duration > 0 AND duration != :duration)
+            OR (:chaptersUrl IS NOT NULL AND IFNULL(chaptersUrl, '') != :chaptersUrl)
+            OR (:transcriptUrl IS NOT NULL AND IFNULL(transcriptUrl, '') != :transcriptUrl)
+            OR (:soundbites IS NOT NULL AND IFNULL(soundbites, '') != :soundbites)
+        )
+    """)
+    suspend fun updateEpisodeFeedMetadata(
+        id: String,
+        podcastId: String,
+        title: String,
+        description: String,
+        audioUrl: String,
+        imageUrl: String,
+        duration: Long,
+        chaptersUrl: String?,
+        transcriptUrl: String?,
+        soundbites: String?
+    ): Int
+
+    /**
+     * Si el guid de un episodio ya pertenece a otro podcast (feeds que usan guids como "1", "2"...),
+     * le asigna un ID determinista con espacio de nombres para no descartarlo en silencio.
+     */
+    suspend fun resolveEpisodeIdCollisions(episodes: List<EpisodeEntity>): List<EpisodeEntity> {
+        if (episodes.isEmpty()) return episodes
+        val owners = HashMap<String, String>()
+        episodes.map { it.id }.distinct().chunked(500).forEach { chunk ->
+            getEpisodeOwners(chunk).forEach { owners[it.id] = it.podcastId }
+        }
+        return episodes.map { ep ->
+            val owner = owners[ep.id]
+            if (owner != null && owner != ep.podcastId) ep.copy(id = "${ep.podcastId}::${ep.id}") else ep
+        }
+    }
+
+    /**
+     * Guarda los episodios de un feed: inserta los nuevos y actualiza los metadatos de los existentes.
+     * Omite duplicados del mismo audio guardados con otro ID (p. ej. importados de AntennaPod).
+     *
+     * @return los episodios realmente insertados como nuevos.
+     */
+    @Transaction
+    suspend fun upsertFeedEpisodes(podcastId: String, parsed: List<EpisodeEntity>): List<EpisodeEntity> {
+        if (parsed.isEmpty()) return emptyList()
+        val clean = com.ferlagod.mispodcast.util.AudioTrackingSanitizer::cleanAudioUrl
+        val existingIds = getEpisodeIdsForPodcast(podcastId).toHashSet()
+        val existingUrls = getAudioUrlsForPodcast(podcastId).mapTo(HashSet()) { clean(it) }
+        val candidates = resolveEpisodeIdCollisions(parsed)
+            .filter { it.id in existingIds || clean(it.audioUrl) !in existingUrls }
+
+        val results = insertEpisodesIgnore(candidates)
+        val inserted = candidates.filterIndexed { index, _ -> results.getOrNull(index)?.let { it != -1L } == true }
+        val insertedIds = inserted.mapTo(HashSet()) { it.id }
+        candidates.filter { it.id !in insertedIds }.forEach { ep ->
+            updateEpisodeFeedMetadata(
+                id = ep.id,
+                podcastId = ep.podcastId,
+                title = ep.title,
+                description = ep.description,
+                audioUrl = ep.audioUrl,
+                imageUrl = ep.imageUrl,
+                duration = ep.duration,
+                chaptersUrl = ep.chaptersUrl,
+                transcriptUrl = ep.transcriptUrl,
+                soundbites = ep.soundbites
+            )
+        }
+        return inserted
+    }
 
     @Upsert
     suspend fun insertOrUpdateEpisode(episode: EpisodeEntity)
@@ -527,13 +628,9 @@ interface PodcastDao {
 
     @Transaction
     suspend fun reorderQueue(orderedEpisodeIds: List<String>) {
+        // Solo cambia el orden: la marca de reproducción activa la gestiona setCurrentPlaybackInQueue
         orderedEpisodeIds.forEachIndexed { index, episodeId ->
             updateQueuePosition(episodeId, index)
-            if (index == 0) {
-                setEpisodeAsCurrentlyPlaying(episodeId)
-            } else {
-                updateQueueItemPositionAndPlaying(episodeId, index, false)
-            }
         }
     }
 

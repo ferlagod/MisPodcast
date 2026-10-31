@@ -101,6 +101,7 @@ class PodcastPlaybackService : MediaLibraryService() {
     private var currentPodcastId: String? = null
     private var currentPodcastTitle: String? = null
     private var appliedDefaultSpeed: Float? = null
+    private var currentPodcastHasCustomSpeed = false
 
     companion object {
         private const val TAG = "PodcastPlaybackService"
@@ -148,9 +149,14 @@ class PodcastPlaybackService : MediaLibraryService() {
 
         createNotificationChannel()
         initializePlayer()
+        // El temporizador expira en un hilo de fondo: ExoPlayer solo admite llamadas desde el hilo principal
         sleepTimerManager.registerPauseAction {
-            player.pause()
+            serviceScope.launch(Dispatchers.Main) { player.pause() }
         }
+        sleepTimerManager.registerVolumeAction { volume ->
+            serviceScope.launch(Dispatchers.Main) { player.volume = volume }
+        }
+        sleepTimerManager.setPlaybackActive(player.isPlaying)
         initializeMediaLibrarySession()
         observeUserSettings()
         progressTracker.startPeriodicSaver(
@@ -195,10 +201,14 @@ class PodcastPlaybackService : MediaLibraryService() {
                     playbackController.skipBackMs = s.skipBackSeconds * 1000L
                     playbackController.skipForwardMs = s.skipForwardSeconds * 1000L
 
-                    if (appliedDefaultSpeed == null && s.defaultSpeed > 0f) {
+                    // Aplicar la velocidad global al arrancar y cada vez que el usuario la cambie,
+                    // salvo que el podcast en curso tenga su propia velocidad personalizada
+                    if (s.defaultSpeed > 0f && s.defaultSpeed != appliedDefaultSpeed) {
                         appliedDefaultSpeed = s.defaultSpeed
-                        player.playbackParameters = PlaybackParameters(s.defaultSpeed)
-                        playbackController.setSpeedIndexFromFloat(s.defaultSpeed)
+                        if (!currentPodcastHasCustomSpeed) {
+                            player.playbackParameters = PlaybackParameters(s.defaultSpeed)
+                            playbackController.setSpeedIndexFromFloat(s.defaultSpeed)
+                        }
                     }
 
                     mediaLibrarySession.setCustomLayout(
@@ -268,6 +278,7 @@ class PodcastPlaybackService : MediaLibraryService() {
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
+                sleepTimerManager.setPlaybackActive(isPlaying)
                 if (!isPlaying) {
                     progressTracker.saveCurrentPlaybackPosition(
                         player = player,
@@ -314,6 +325,17 @@ class PodcastPlaybackService : MediaLibraryService() {
                     val newPodcastTitle = mediaItem.mediaMetadata.artist?.toString()
                         ?: mediaItem.mediaMetadata.albumTitle?.toString()
 
+                    val finishedNaturally = reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO &&
+                        !previousEpisodeId.isNullOrBlank() && previousEpisodeId != newEpisodeId
+                    if (!previousEpisodeId.isNullOrBlank() && previousEpisodeId != newEpisodeId) {
+                        progressTracker.flushPendingListenedTime(
+                            episodeId = previousEpisodeId,
+                            podcastId = previousPodcastId,
+                            podcastTitle = currentPodcastTitle ?: "Podcast",
+                            isCompleted = finishedNaturally
+                        )
+                    }
+
                     currentPlayingEpisodeId = newEpisodeId
                     currentPodcastId = newPodcastId
                     currentPodcastTitle = newPodcastTitle
@@ -321,15 +343,13 @@ class PodcastPlaybackService : MediaLibraryService() {
                     chapterRepository.setActiveEpisodeId(newEpisodeId)
                     syncWidgetState()
 
-                    if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO &&
-                        !previousEpisodeId.isNullOrBlank() &&
-                        previousEpisodeId != newEpisodeId
-                    ) {
-                        progressTracker.handleEpisodeCompleted(previousEpisodeId)
+                    if (finishedNaturally) {
+                        progressTracker.handleEpisodeCompleted(previousEpisodeId!!)
                         if (sleepTimerManager.state.value.isActive && sleepTimerManager.state.value.mode is SleepTimerMode.EndOfEpisode) {
+                            // Pausar sin cortar el resto: el siguiente episodio debe quedar listo
+                            // (capítulos, velocidad y posición reanudada) para cuando se pulse play
                             sleepTimerManager.onEpisodeEnded()
                             player.pause()
-                            return
                         }
                     }
 
@@ -348,7 +368,23 @@ class PodcastPlaybackService : MediaLibraryService() {
                         }
 
                         withContext(Dispatchers.Main) {
+                            // Si el usuario ya cambió de episodio mientras se consultaba Room, no aplicar nada
+                            if (player.currentMediaItem?.mediaId != mediaItem.mediaId) return@withContext
+
                             playbackController.setChapters(chapters)
+
+                            // Los episodios siguientes de la lista de ExoPlayer arrancan en 0: reanudar
+                            // desde la posición guardada al avanzar automáticamente o con "siguiente"
+                            val autoAdvanced = reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO ||
+                                reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
+                            if (autoAdvanced && ep != null && ep.currentPositionMs > 0L &&
+                                (ep.duration <= 0L || ep.currentPositionMs < ep.duration - 5000L) &&
+                                player.currentPosition < 2000L
+                            ) {
+                                player.seekTo(ep.currentPositionMs)
+                            }
+
+                            currentPodcastHasCustomSpeed = podcast?.customSpeed != null && podcast.customSpeed > 0f
                             if (podcast?.customSpeed != null && podcast.customSpeed > 0f) {
                                 player.playbackParameters = PlaybackParameters(podcast.customSpeed)
                                 playbackController.setSpeedIndexFromFloat(podcast.customSpeed)
@@ -459,10 +495,39 @@ class PodcastPlaybackService : MediaLibraryService() {
         serviceScope.launch {
             database.podcastDao().getQueueFlow()
                 .distinctUntilChanged()
-                .collect {
+                .collect { queue ->
                     mediaLibrarySession.notifyChildrenChanged(MEDIA_ID_QUEUE, 0, null)
+                    syncUpcomingPlaylist(queue)
                 }
         }
+    }
+
+    /**
+     * Mantiene los elementos posteriores al actual en la lista de ExoPlayer alineados con la cola
+     * de Room, para que reordenar, añadir o quitar episodios se respete en el avance automático.
+     */
+    private fun syncUpcomingPlaylist(queue: List<com.ferlagod.mispodcast.data.local.model.QueueItemEntityWithEpisode>) {
+        if (player.mediaItemCount == 0) return
+        val currentId = player.currentMediaItem?.mediaId ?: return
+        // Mismo orden que muestra la pantalla de cola: el resto de la cola, sin el episodio activo
+        val desired = queue.filter { it.episode.id != currentId }
+
+        val currentIndex = player.currentMediaItemIndex
+        val upcomingIds = (currentIndex + 1 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }
+        if (upcomingIds == desired.map { it.episode.id }) return
+
+        if (player.mediaItemCount > currentIndex + 1) {
+            player.removeMediaItems(currentIndex + 1, player.mediaItemCount)
+        }
+        player.addMediaItems(
+            desired.map {
+                autoBrowseTree.buildPlayableMediaItem(
+                    episode = it.episode,
+                    podcastTitle = it.podcastTitle,
+                    podcastArtworkUrl = it.podcastArtworkUrl
+                )
+            }
+        )
     }
 
     private inner class MediaLibrarySessionCallback : MediaLibrarySession.Callback {
@@ -639,8 +704,11 @@ class PodcastPlaybackService : MediaLibraryService() {
         ): ListenableFuture<MutableList<MediaItem>> {
             val future = SettableFuture.create<MutableList<MediaItem>>()
             serviceScope.launch(Dispatchers.IO) {
-                val updatedList = playbackController.resolveMediaItemsForAdd(mediaItems).toMutableList()
-                future.set(updatedList)
+                try {
+                    future.set(playbackController.resolveMediaItemsForAdd(mediaItems).toMutableList())
+                } catch (_: Exception) {
+                    future.set(mediaItems)
+                }
             }
             return future
         }

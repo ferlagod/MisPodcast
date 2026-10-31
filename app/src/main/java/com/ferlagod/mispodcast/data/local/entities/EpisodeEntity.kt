@@ -71,5 +71,6 @@ data class EpisodeEntity(
     val fundingUrl: String? = null,
     val valueForValueInfo: String? = null,
     val persons: String? = null, // Serializado como JSON String
-    val isDismissedFromNewReleases: Boolean = false
+    val isDismissedFromNewReleases: Boolean = false,
+    val soundbites: String? = null // Podcasting 2.0 <podcast:soundbite>, serializado como JSON
 )

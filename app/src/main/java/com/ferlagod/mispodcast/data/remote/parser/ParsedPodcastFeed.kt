@@ -37,7 +37,8 @@ data class ParsedEpisode(
     val transcriptUrl: String? = null,
     val fundingUrl: String? = null,
     val valueForValueInfo: String? = null,
-    val persons: List<PodcastPerson> = emptyList()
+    val persons: List<PodcastPerson> = emptyList(),
+    val soundbites: List<PodcastSoundbite> = emptyList()
 )
 
 data class ParsedPodcastFeed(

@@ -47,7 +47,7 @@ import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
         PlaybackStatsEntity::class,
         com.ferlagod.mispodcast.data.local.entities.BookmarkEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 abstract class PodcastDatabase : RoomDatabase() {
@@ -66,6 +66,12 @@ abstract class PodcastDatabase : RoomDatabase() {
          * Todas delegan en [ensureAllTablesAndColumns] para garantizar de forma acumulativa
          * que cualquier usuario con cualquier versión previa conserve intactos todos sus datos.
          */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                ensureAllTablesAndColumns(db)
+            }
+        }
+
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 ensureAllTablesAndColumns(db)
@@ -236,6 +242,7 @@ abstract class PodcastDatabase : RoomDatabase() {
                     DATABASE_NAME
                 )
                     .addMigrations(
+                        MIGRATION_10_11,
                         MIGRATION_9_10,
                         MIGRATION_1_10,
                         MIGRATION_8_9,
@@ -328,6 +335,8 @@ abstract class PodcastDatabase : RoomDatabase() {
             addColumnIfNotExists(db, "podcasts", "autoDownloadEnabled", "INTEGER DEFAULT NULL")
             addColumnIfNotExists(db, "podcasts", "episodeSortOrder", "TEXT NOT NULL DEFAULT 'NEWEST_FIRST'")
             addColumnIfNotExists(db, "podcasts", "autoEnqueueRule", "TEXT NOT NULL DEFAULT 'DISABLED'")
+            addColumnIfNotExists(db, "podcasts", "newEpisodeNotifications", "INTEGER NOT NULL DEFAULT 1")
+            addColumnIfNotExists(db, "podcasts", "autoDeleteRule", "TEXT NOT NULL DEFAULT 'DEFAULT'")
             db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_podcasts_feedUrl` ON `podcasts` (`feedUrl`)")
 
             // 2. Columnas e índices de episodios (Archivos locales, tamaños, marca temporal de reproducción y Podcasting 2.0)
@@ -340,6 +349,7 @@ abstract class PodcastDatabase : RoomDatabase() {
             addColumnIfNotExists(db, "episodes", "persons", "TEXT DEFAULT NULL")
             addColumnIfNotExists(db, "episodes", "positionUpdatedAt", "INTEGER NOT NULL DEFAULT 0")
             addColumnIfNotExists(db, "episodes", "isDismissedFromNewReleases", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(db, "episodes", "soundbites", "TEXT DEFAULT NULL")
 
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_podcastId` ON `episodes` (`podcastId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_pubDate` ON `episodes` (`pubDate`)")

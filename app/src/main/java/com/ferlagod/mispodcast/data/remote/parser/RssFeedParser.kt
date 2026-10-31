@@ -159,6 +159,11 @@ class RssFeedParser(
         var itemFundingUrl: String? = null
         var itemValueForValue: String? = null
         val itemPersons = mutableListOf<PodcastPerson>()
+        val itemSoundbites = mutableListOf<PodcastSoundbite>()
+        var itemAltAudioUrl = ""
+        var itemAltAudioType = ""
+        var inAlternateEnclosure = false
+        var alternateEnclosureType = ""
 
         while (eventType != XmlPullParser.END_DOCUMENT) {
             val tagName = parser.name?.lowercase(Locale.ROOT) ?: ""
@@ -184,6 +189,10 @@ class RssFeedParser(
                             itemFundingUrl = null
                             itemValueForValue = null
                             itemPersons.clear()
+                            itemSoundbites.clear()
+                            itemAltAudioUrl = ""
+                            itemAltAudioType = ""
+                            inAlternateEnclosure = false
                         }
 
                         inItem -> {
@@ -203,7 +212,7 @@ class RssFeedParser(
                                     val url = parser.getAttributeValueSafe("url")
                                     val type = parser.getAttributeValueSafe("type")
                                     val length = parser.getAttributeValueSafe("length")
-                                    if (url.isNotBlank()) itemAudioUrl = com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(url)
+                                    if (url.isNotBlank()) itemAudioUrl = url
                                     if (type.isNotBlank()) itemAudioType = type
                                     itemAudioLength = length.toLongOrNull() ?: 0L
                                 }
@@ -254,6 +263,31 @@ class RssFeedParser(
                                         } catch (_: Exception) {
                                             "type=$type;method=$method"
                                         }
+                                    }
+                                }
+                                "podcast:soundbite" -> {
+                                    val start = parser.getAttributeValueSafe("starttime").ifBlank { parser.getAttributeValueSafe("startTime") }
+                                    val dur = parser.getAttributeValueSafe("duration")
+                                    val title = parser.nextTextSafe().trim()
+                                    val startMs = start.toDoubleOrNull()?.let { (it * 1000).toLong() }
+                                    val durMs = dur.toDoubleOrNull()?.let { (it * 1000).toLong() }
+                                    if (startMs != null && startMs >= 0L && durMs != null && durMs > 0L) {
+                                        itemSoundbites.add(PodcastSoundbite(startMs, durMs, title.ifBlank { null }))
+                                    }
+                                }
+                                // Alternativa cuando el episodio no trae <enclosure> clásico
+                                "podcast:alternateenclosure" -> {
+                                    inAlternateEnclosure = true
+                                    alternateEnclosureType = parser.getAttributeValueSafe("type")
+                                }
+                                "podcast:source" -> {
+                                    val uri = parser.getAttributeValueSafe("uri")
+                                    val isAudio = alternateEnclosureType.isBlank() || alternateEnclosureType.startsWith("audio", ignoreCase = true)
+                                    if (inAlternateEnclosure && isAudio && itemAltAudioUrl.isBlank() &&
+                                        (uri.startsWith("https://", ignoreCase = true) || uri.startsWith("http://", ignoreCase = true))
+                                    ) {
+                                        itemAltAudioUrl = uri
+                                        itemAltAudioType = alternateEnclosureType
                                     }
                                 }
                                 "podcast:person" -> {
@@ -334,11 +368,18 @@ class RssFeedParser(
 
                 XmlPullParser.END_TAG -> {
                     when {
+                        tagName == "podcast:alternateenclosure" -> inAlternateEnclosure = false
                         tagName == "item" || tagName == "entry" -> {
                             inItem = false
+                            if (itemAudioUrl.isBlank() && itemAltAudioUrl.isNotBlank()) {
+                                itemAudioUrl = itemAltAudioUrl
+                                if (itemAltAudioType.isNotBlank()) itemAudioType = itemAltAudioType
+                            }
                             if (itemAudioUrl.isNotBlank()) {
+                                // ID estable sobre la URL limpia (compatible con los ya guardados); la URL
+                                // original se conserva y se limpia al reproducir/descargar si el ajuste lo pide
                                 val finalId = itemGuid.ifBlank {
-                                    "${feedUrl}_${itemAudioUrl.hashCode()}"
+                                    "${feedUrl}_${com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(itemAudioUrl).hashCode()}"
                                 }
                                 val finalImage = itemImageUrl.ifBlank { channelArtworkUrl }
 
@@ -357,7 +398,8 @@ class RssFeedParser(
                                         transcriptUrl = itemTranscriptUrl,
                                         fundingUrl = itemFundingUrl,
                                         valueForValueInfo = itemValueForValue,
-                                        persons = itemPersons.toList()
+                                        persons = itemPersons.toList(),
+                                        soundbites = itemSoundbites.toList()
                                     )
                                 )
                             }

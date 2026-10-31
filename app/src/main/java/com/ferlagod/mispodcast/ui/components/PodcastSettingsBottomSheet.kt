@@ -45,6 +45,8 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
@@ -102,7 +104,9 @@ fun PodcastSettingsBottomSheet(
         skipEndingSeconds: Int,
         autoDownloadEnabled: Boolean?,
         episodeSortOrder: String,
-        autoEnqueueRule: String
+        autoEnqueueRule: String,
+        newEpisodeNotifications: Boolean,
+        autoDeleteRule: String
     ) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -113,6 +117,8 @@ fun PodcastSettingsBottomSheet(
     var currentAutoDownload by remember { mutableStateOf(podcast.autoDownloadEnabled) }
     var currentSortOrder by remember { mutableStateOf(podcast.episodeSortOrder) }
     var currentAutoEnqueue by remember { mutableStateOf(podcast.autoEnqueueRule) }
+    var currentNotifications by remember { mutableStateOf(podcast.newEpisodeNotifications) }
+    var currentAutoDelete by remember { mutableStateOf(podcast.autoDeleteRule) }
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -324,6 +330,59 @@ fun PodcastSettingsBottomSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Borrado automático de descargas al terminar de escuchar
+            SettingsSection(
+                icon = Icons.Default.Delete,
+                title = "Borrar descargas tras escuchar",
+                description = "Libera espacio eliminando el audio descargado cuando terminas un episodio."
+            ) {
+                val deleteOptions = listOf(
+                    "DEFAULT" to "Ajuste global",
+                    "AFTER_PLAYED" to "Borrar siempre",
+                    "NEVER" to "Conservar"
+                )
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    deleteOptions.forEach { (opt, label) ->
+                        ChoiceChip(
+                            label = label,
+                            isSelected = currentAutoDelete == opt,
+                            onClick = { currentAutoDelete = opt }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Notificaciones de episodios nuevos de este podcast
+            SettingsSection(
+                icon = Icons.Default.Notifications,
+                title = "Notificar episodios nuevos",
+                description = "Recibe un aviso cuando este programa publique (si las notificaciones globales están activas)."
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ChoiceChip(
+                        label = "Notificar",
+                        isSelected = currentNotifications,
+                        onClick = { currentNotifications = true }
+                    )
+                    ChoiceChip(
+                        label = "Silenciar",
+                        isSelected = !currentNotifications,
+                        onClick = { currentNotifications = false }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             // SECCIÓN 5: ORDEN DE EPISODIOS
             SettingsSection(
                 icon = Icons.AutoMirrored.Filled.Sort,
@@ -426,7 +485,9 @@ fun PodcastSettingsBottomSheet(
                             currentSkipEnding,
                             currentAutoDownload,
                             currentSortOrder,
-                            currentAutoEnqueue
+                            currentAutoEnqueue,
+                            currentNotifications,
+                            currentAutoDelete
                         )
                         onDismissRequest()
                     },

@@ -41,6 +41,7 @@
     <string name="download">Scarica</string>
     <string name="downloading">Download in corso…</string>
     <string name="downloaded">Scaricato</string>
+    <string name="download_waiting">In attesa di Wi-Fi o ricarica</string>
     <string name="delete_download">Elimina download</string>
     <string name="clear">Cancella</string>
     <string name="clear_queue">Svuota coda</string>

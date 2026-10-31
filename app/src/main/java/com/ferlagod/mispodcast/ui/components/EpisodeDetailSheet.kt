@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -83,6 +84,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -91,6 +96,8 @@ import coil.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
+import com.ferlagod.mispodcast.data.remote.parser.PodcastSoundbite
+import com.ferlagod.mispodcast.util.TimestampParser
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.AccentRed
 import com.ferlagod.mispodcast.ui.theme.LogoOceanBlue
@@ -118,7 +125,8 @@ fun EpisodeDetailSheet(
     onToggleFavorite: () -> Unit,
     onDownloadClick: () -> Unit,
     onTogglePlayed: (() -> Unit)? = null,
-    onShareClick: (() -> Unit)? = null
+    onShareClick: (() -> Unit)? = null,
+    onSeekToPosition: ((Long) -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
@@ -445,13 +453,66 @@ fun EpisodeDetailSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Marcas de tiempo de las notas ("12:34") pulsables para saltar a ese punto
+            val linkColor = MaterialTheme.colorScheme.primary
+            val annotatedDescription = remember(cleanDescription, episode.duration, onSeekToPosition != null, linkColor) {
+                buildAnnotatedString {
+                    append(cleanDescription)
+                    if (onSeekToPosition != null) {
+                        TimestampParser.findTimestamps(cleanDescription, episode.duration).forEach { ts ->
+                            addLink(
+                                LinkAnnotation.Clickable(
+                                    tag = "ts_${ts.positionMs}",
+                                    styles = TextLinkStyles(SpanStyle(color = linkColor, fontWeight = FontWeight.SemiBold)),
+                                    linkInteractionListener = { onSeekToPosition(ts.positionMs) }
+                                ),
+                                ts.start,
+                                ts.end
+                            )
+                        }
+                    }
+                }
+            }
             SelectionContainer {
                 Text(
-                    text = cleanDescription,
+                    text = annotatedDescription,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 22.sp
                 )
+            }
+
+            // Fragmentos destacados (Podcasting 2.0 <podcast:soundbite>)
+            val soundbites = remember(episode.soundbites) { PodcastSoundbite.decode(episode.soundbites) }
+            if (soundbites.isNotEmpty() && onSeekToPosition != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Momentos destacados",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    soundbites.forEach { bite ->
+                        AssistChip(
+                            onClick = { onSeekToPosition(bite.startTimeMs) },
+                            label = {
+                                Text(
+                                    text = "${TimestampParser.format(bite.startTimeMs)} · ${bite.title ?: "Fragmento de ${bite.durationMs / 1000} s"}",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        )
+                    }
+                }
             }
 
             // Metadatos Podcasting 2.0 (si existen enlaces externos como transcripciones o financiación)

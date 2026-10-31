@@ -84,6 +84,9 @@ class RoomMigrationTests {
     @Test
     fun testMigrationVersionDefinitions() {
         // Migración acumulativa directa v1 -> v10
+        assertEquals(10, PodcastDatabase.MIGRATION_10_11.startVersion)
+        assertEquals(11, PodcastDatabase.MIGRATION_10_11.endVersion)
+
         assertEquals(1, PodcastDatabase.MIGRATION_1_10.startVersion)
         assertEquals(10, PodcastDatabase.MIGRATION_1_10.endVersion)
 

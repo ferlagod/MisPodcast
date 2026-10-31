@@ -29,6 +29,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 import androidx.annotation.StringRes
@@ -152,6 +153,7 @@ class UserPreferencesManager(private val context: Context) {
         private val KEY_DEFAULT_AUTO_ENQUEUE_RULE = stringPreferencesKey("default_auto_enqueue_rule")
         private val KEY_SUBSCRIPTION_SORT_OPTION = stringPreferencesKey("subscription_sort_option")
         private val KEY_LAST_SYNC = longPreferencesKey("last_sync_timestamp")
+        private val KEY_TIME_SAVED = longPreferencesKey("time_saved_ms")
 
         @Volatile
         private var INSTANCE: UserPreferencesManager? = null
@@ -285,6 +287,19 @@ class UserPreferencesManager(private val context: Context) {
 
     suspend fun setDefaultAutoEnqueueRule(rule: String) {
         context.dataStore.edit { it[KEY_DEFAULT_AUTO_ENQUEUE_RULE] = rule }
+    }
+
+    /**
+     * Tiempo acumulado que el usuario se ha ahorrado gracias a la velocidad y al recorte de silencios.
+     * Va aparte de [userSettingsFlow] para no provocar emisiones de ajustes cada pocos segundos.
+     */
+    val timeSavedMsFlow: Flow<Long> = context.dataStore.data
+        .map { it[KEY_TIME_SAVED] ?: 0L }
+        .distinctUntilChanged()
+
+    suspend fun addTimeSaved(deltaMs: Long) {
+        if (deltaMs <= 0L) return
+        context.dataStore.edit { it[KEY_TIME_SAVED] = (it[KEY_TIME_SAVED] ?: 0L) + deltaMs }
     }
 
     suspend fun setLastSyncTimestamp(timestamp: Long) {

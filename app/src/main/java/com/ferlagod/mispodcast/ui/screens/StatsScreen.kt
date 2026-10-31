@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Podcasts
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -149,6 +150,7 @@ fun StatsScreen(
     onNavigateBack: () -> Unit
 ) {
     val globalStats by podcastViewModel.globalStats.collectAsState()
+    val timeSavedMs by podcastViewModel.timeSavedMs.collectAsState()
     val podcastStats by podcastViewModel.podcastStats.collectAsState()
     val wrappedData by podcastViewModel.wrappedData.collectAsState()
     val selectedWrappedYear by podcastViewModel.selectedWrappedYear.collectAsState()
@@ -334,6 +336,21 @@ fun StatsScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+
+            item {
+                val savedText = remember(timeSavedMs) {
+                    val totalMin = timeSavedMs / 60_000L
+                    if (totalMin >= 60) String.format(Locale.getDefault(), "%.1f h", timeSavedMs / 3_600_000.0) else "$totalMin min"
+                }
+                StatCard(
+                    title = "Tiempo ahorrado",
+                    value = savedText,
+                    subtitle = "Gracias a la velocidad y al recorte de silencios",
+                    icon = Icons.Filled.Speed,
+                    iconBgColor = AccentGreen,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             item {

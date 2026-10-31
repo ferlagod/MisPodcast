@@ -62,7 +62,8 @@ class PodcastRepository(
     private val podcastDao: PodcastDao,
     private val searchService: ApplePodcastSearchService = ApplePodcastSearchService.create(),
     private val feedParser: RssFeedParser = RssFeedParser(),
-    private val preferencesManager: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager? = null
+    private val preferencesManager: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager? = null,
+    private val podcastIndexService: com.ferlagod.mispodcast.data.remote.api.PodcastIndexSearchService? = null
 ) {
 
     // ==========================================
@@ -74,12 +75,22 @@ class PodcastRepository(
         country: String = "ES",
         lang: String? = null
     ): Result<List<ApplePodcastDto>> = withContext(Dispatchers.IO) {
-        try {
-            val response = searchService.searchPodcasts(term = term, country = country, lang = lang)
-            Result.success(response.results)
-        } catch (e: Exception) {
-            Result.failure(e)
+        val appleResult = runCatching { searchService.searchPodcasts(term = term, country = country, lang = lang).results }
+        // Podcast Index es opcional y complementario: sus fallos nunca bloquean la búsqueda
+        val indexResults = if (podcastIndexService?.isConfigured == true) {
+            runCatching { podcastIndexService.searchByTerm(term) }.getOrDefault(emptyList())
+        } else emptyList()
+
+        val apple = appleResult.getOrNull()
+        if (apple == null && indexResults.isEmpty()) {
+            return@withContext Result.failure(appleResult.exceptionOrNull() ?: Exception("Sin resultados"))
         }
+        val seenFeeds = HashSet<String>()
+        val merged = (apple.orEmpty() + indexResults).filter { dto ->
+            val key = dto.feedUrl?.trim()?.lowercase()?.removeSuffix("/")?.substringAfter("://")
+            key.isNullOrBlank() || seenFeeds.add(key)
+        }
+        Result.success(merged)
     }
 
     suspend fun getPodcastsByGenre(
@@ -209,7 +220,9 @@ class PodcastRepository(
                         skipEndingSeconds = existing.skipEndingSeconds,
                         autoDownloadEnabled = existing.autoDownloadEnabled,
                         episodeSortOrder = existing.episodeSortOrder,
-                        autoEnqueueRule = existing.autoEnqueueRule
+                        autoEnqueueRule = existing.autoEnqueueRule,
+                        newEpisodeNotifications = existing.newEpisodeNotifications,
+                        autoDeleteRule = existing.autoDeleteRule
                     )
                 } else {
                     entity.copy(autoEnqueueRule = "DEFAULT")
@@ -225,7 +238,7 @@ class PodcastRepository(
             }
 
             podcastDao.insertPodcast(podcastEntity)
-            podcastDao.insertEpisodes(episodeEntities)
+            podcastDao.upsertFeedEpisodes(podcastEntity.id, episodeEntities)
 
             Result.success(podcastEntity)
         } catch (e: Exception) {
@@ -238,33 +251,26 @@ class PodcastRepository(
             val podcast = podcastDao.getPodcastById(podcastId)
                 ?: return@withContext Result.failure(Exception("Podcast no encontrado en local"))
             val parsedFeed = feedParser.fetchAndParseFeed(podcast.feedUrl)
-            val existingEpisodes = podcastDao.getEpisodesForPodcast(podcast.id)
-            val existingIds = existingEpisodes.map { it.id }.toSet()
-            val existingAudioUrls = existingEpisodes.map { it.audioUrl }.toSet()
 
-            val newEpisodes = parsedFeed.episodes
-                .filter { !existingIds.contains(it.id) && !existingAudioUrls.contains(it.audioUrl) }
-                .map { it.toEpisodeEntity(podcast.id) }
-
-            val updatedPodcast = parsedFeed.toPodcastEntity(
-                isSubscribed = podcast.isSubscribed,
-                subscribedAt = podcast.subscribedAt
-            ).copy(
-                id = podcast.id,
-                isLocalFolder = podcast.isLocalFolder,
-                localFolderPath = podcast.localFolderPath,
-                lastUpdated = System.currentTimeMillis(),
-                customSpeed = podcast.customSpeed,
-                skipIntroSeconds = podcast.skipIntroSeconds,
-                skipEndingSeconds = podcast.skipEndingSeconds,
-                autoDownloadEnabled = podcast.autoDownloadEnabled,
-                episodeSortOrder = podcast.episodeSortOrder,
-                autoEnqueueRule = podcast.autoEnqueueRule
+            // Partir de la fila actual (no de la leída antes de la descarga del feed) para no
+            // revertir bajas ni ajustes hechos mientras tanto, y conservar todos sus campos propios
+            val currentPodcast = podcastDao.getPodcastById(podcast.id) ?: podcast
+            val updatedPodcast = currentPodcast.copy(
+                title = parsedFeed.title.ifBlank { currentPodcast.title },
+                author = parsedFeed.author.ifBlank { currentPodcast.author },
+                description = parsedFeed.description.ifBlank { currentPodcast.description },
+                artworkUrl = parsedFeed.artworkUrl.ifBlank { currentPodcast.artworkUrl },
+                category = parsedFeed.category.ifBlank { currentPodcast.category },
+                link = parsedFeed.link.ifBlank { currentPodcast.link },
+                fundingUrl = parsedFeed.fundingUrl ?: currentPodcast.fundingUrl,
+                fundingText = parsedFeed.fundingText ?: currentPodcast.fundingText,
+                valueForValueInfo = parsedFeed.valueForValueInfo ?: currentPodcast.valueForValueInfo,
+                lastUpdated = System.currentTimeMillis()
             )
             val episodeEntities = parsedFeed.episodes.map { it.toEpisodeEntity(podcast.id) }
 
             podcastDao.insertPodcast(updatedPodcast)
-            podcastDao.insertEpisodes(episodeEntities)
+            val newEpisodes = podcastDao.upsertFeedEpisodes(podcast.id, episodeEntities)
 
             if (newEpisodes.isNotEmpty()) {
                 val defaultGlobal = preferencesManager?.userSettingsFlow?.firstOrNull()?.defaultAutoEnqueueRule ?: "DISABLED"
@@ -296,9 +302,13 @@ class PodcastRepository(
         skipEndingSeconds: Int,
         autoDownloadEnabled: Boolean?,
         episodeSortOrder: String,
-        autoEnqueueRule: String = "DISABLED"
+        autoEnqueueRule: String = "DISABLED",
+        newEpisodeNotifications: Boolean = true,
+        autoDeleteRule: String = "DEFAULT"
     ): Int = withContext(Dispatchers.IO) {
         podcastDao.updatePodcastSettings(
+            newEpisodeNotifications = newEpisodeNotifications,
+            autoDeleteRule = autoDeleteRule,
             podcastId = podcastId,
             customSpeed = customSpeed,
             skipIntroSeconds = skipIntroSeconds,
@@ -338,16 +348,12 @@ class PodcastRepository(
 
                 try {
                     val parsedFeed = feedParser.fetchAndParseFeed(feedUrl)
-                    val existingEpisodes = podcastDao.getEpisodesForPodcast(podcast.id)
-                    val existingIds = existingEpisodes.map { it.id }.toSet()
-                    val existingAudioUrls = existingEpisodes.map { it.audioUrl }.toSet()
-
-                    val newEpisodes = parsedFeed.episodes
-                        .filter { !existingIds.contains(it.id) && !existingAudioUrls.contains(it.audioUrl) }
-                        .map { it.toEpisodeEntity(podcast.id) }
+                    val newEpisodes = podcastDao.upsertFeedEpisodes(
+                        podcast.id,
+                        parsedFeed.episodes.map { it.toEpisodeEntity(podcast.id) }
+                    )
 
                     if (newEpisodes.isNotEmpty()) {
-                        podcastDao.insertEpisodes(newEpisodes)
                         newEpisodesCount += newEpisodes.size
 
                         val defaultGlobal = preferencesManager?.userSettingsFlow?.firstOrNull()?.defaultAutoEnqueueRule ?: "DISABLED"
@@ -367,7 +373,8 @@ class PodcastRepository(
                         }
                     }
 
-                    val updatedPodcast = podcast.copy(
+                    val currentPodcast = podcastDao.getPodcastById(podcast.id) ?: continue
+                    val updatedPodcast = currentPodcast.copy(
                         title = parsedFeed.title.ifBlank { podcast.title },
                         author = parsedFeed.author.ifBlank { podcast.author },
                         description = parsedFeed.description.ifBlank { podcast.description },
@@ -459,7 +466,7 @@ class PodcastRepository(
             val episodeEntities = parsedFeed.episodes.map { it.toEpisodeEntity(podcastEntity.id) }
 
             podcastDao.insertPodcast(podcastEntity)
-            podcastDao.insertEpisodes(episodeEntities)
+            podcastDao.upsertFeedEpisodes(podcastEntity.id, episodeEntities)
 
             Result.success(podcastEntity)
         } catch (e: Exception) {

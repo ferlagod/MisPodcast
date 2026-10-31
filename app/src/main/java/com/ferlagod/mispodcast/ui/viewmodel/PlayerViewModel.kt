@@ -350,7 +350,7 @@ class PlayerViewModel @JvmOverloads constructor(
                 }
                 // 4. Fallback a audioUrl de internet si no está descargado o el archivo físico no existe
                 else -> {
-                    val cleanUrl = com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(freshEpisode.audioUrl)
+                    val cleanUrl = com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanIfEnabled(freshEpisode.audioUrl)
                     Uri.parse(cleanUrl)
                 }
             }
@@ -381,6 +381,28 @@ class PlayerViewModel @JvmOverloads constructor(
                 controller.seekTo(resumePositionMs)
             }
             controller.play()
+        }
+    }
+
+    /**
+     * Reproduce un episodio a partir de una posición concreta (marcas de tiempo de las notas,
+     * fragmentos destacados). Si ya es el episodio en curso, solo salta.
+     */
+    fun playEpisodeFrom(
+        episode: EpisodeEntity,
+        podcastTitle: String,
+        podcastArtwork: String,
+        positionMs: Long
+    ) {
+        val controller = mediaController
+        if (controller?.currentMediaItem?.mediaId == episode.id) {
+            seekTo(positionMs)
+            controller.play()
+            return
+        }
+        viewModelScope.launch {
+            repository.updatePlaybackPosition(episode.id, positionMs)
+            playEpisode(episode.copy(currentPositionMs = positionMs, isPlayed = false), podcastTitle, podcastArtwork)
         }
     }
 

@@ -22,6 +22,7 @@ import android.content.Context
 import androidx.media3.common.Player
 import com.ferlagod.mispodcast.data.download.DownloadCleaner
 import com.ferlagod.mispodcast.data.local.PodcastDatabase
+import com.ferlagod.mispodcast.data.preferences.UserPreferencesManager
 import com.ferlagod.mispodcast.sync.NextcloudSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +51,11 @@ class ProgressTracker(
 
     private var progressTrackingJob: Job? = null
     private var lastContinuousSyncTimeMs: Long = 0L
-    private var lastRecordedPositionMs: Long = 0L
+    // Tiempo de contenido escuchado de verdad (excluye saltos y la posición previa al reanudar)
+    private var lastTickPositionMs: Long = -1L
+    private var pendingListenedMs: Long = 0L
+    private var lastTickWallMs: Long = 0L
+    private var pendingTimeSavedMs: Long = 0L
 
     companion object {
         /**
@@ -74,11 +79,31 @@ class ProgressTracker(
             var counter = 0
             while (isActive) {
                 delay(1000)
+                if (!player.isPlaying) {
+                    lastTickPositionMs = -1L
+                }
+                val nowWall = System.nanoTime() / 1_000_000L
+                val wallElapsed = nowWall - lastTickWallMs
+                lastTickWallMs = nowWall
                 if (player.isPlaying) {
                     val currentPos = player.currentPosition
                     val duration = player.duration
                     val podcastId = currentPodcastSupplier()
                     val episodeId = currentEpisodeSupplier()
+
+                    // Solo cuenta el avance natural entre ticks; un salto mayor es un seek
+                    if (lastTickPositionMs >= 0L) {
+                        val advanced = currentPos - lastTickPositionMs
+                        val maxNatural = (1000L * player.playbackParameters.speed * 2.5f).toLong() + 500L
+                        if (advanced in 1..maxNatural) {
+                            pendingListenedMs += advanced
+                            // Contenido avanzado por encima del tiempo real = ahorro (velocidad + silencios)
+                            if (wallElapsed in 1..5_000L && advanced > wallElapsed) {
+                                pendingTimeSavedMs += advanced - wallElapsed
+                            }
+                        }
+                    }
+                    lastTickPositionMs = currentPos
 
                     // Comprobación de salto de créditos / patrocinadores al final del episodio
                     if (podcastId != null && episodeId != null && duration > 0L) {
@@ -131,23 +156,22 @@ class ProgressTracker(
             return
         }
 
-        var deltaToRecord = 0L
-        if (podcastId != null && currentPos > lastRecordedPositionMs) {
-            val delta = currentPos - lastRecordedPositionMs
-            if (delta > 1000) {
-                deltaToRecord = delta
-                lastRecordedPositionMs = currentPos
-            }
-        }
+        val deltaToRecord = if (podcastId != null) takePendingListenedTime() else 0L
+        val savedToRecord = if (pendingTimeSavedMs >= 30_000L || !player.isPlaying || isCompleted) {
+            pendingTimeSavedMs.also { pendingTimeSavedMs = 0L }
+        } else 0L
 
         val saveAction: suspend () -> Unit = {
+            if (savedToRecord > 0L) {
+                UserPreferencesManager.getInstance(context).addTimeSaved(savedToRecord)
+            }
             database.podcastDao().updatePlaybackPosition(targetEpisodeId, currentPos)
 
             if (isCompleted || (duration > 0 && currentPos >= duration - 2000)) {
                 database.podcastDao().markEpisodeAsPlayed(targetEpisodeId, true)
             }
 
-            if (podcastId != null && deltaToRecord > 0) {
+            if (podcastId != null && (deltaToRecord > 0 || isCompleted)) {
                 database.podcastDao().recordListenedDuration(
                     podcastId = podcastId,
                     podcastTitle = podcastTitle,
@@ -181,11 +205,41 @@ class ProgressTracker(
         }
     }
 
+    private fun takePendingListenedTime(): Long {
+        val pending = pendingListenedMs
+        pendingListenedMs = 0L
+        return pending
+    }
+
+    /**
+     * Registra en estadísticas e historial el tiempo pendiente del episodio que acaba de dejar de sonar
+     * (cambio de episodio), ya que el reproductor ya no expone su posición.
+     */
+    fun flushPendingListenedTime(
+        episodeId: String,
+        podcastId: String?,
+        podcastTitle: String,
+        isCompleted: Boolean
+    ) {
+        val delta = takePendingListenedTime()
+        if (podcastId == null || (delta <= 0L && !isCompleted)) return
+        applicationScope.launch {
+            database.podcastDao().recordListenedDuration(
+                podcastId = podcastId,
+                podcastTitle = podcastTitle,
+                episodeId = episodeId,
+                additionalDurationMs = delta,
+                isCompleted = isCompleted
+            )
+        }
+    }
+
     /**
      * Reinicia el tracking para un nuevo episodio.
      */
     fun resetRecordedPosition() {
-        lastRecordedPositionMs = 0L
+        lastTickPositionMs = -1L
+        pendingListenedMs = 0L
     }
 
     /**

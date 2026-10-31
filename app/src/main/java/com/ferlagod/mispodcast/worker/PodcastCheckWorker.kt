@@ -175,11 +175,8 @@ class PodcastCheckWorker(
                                         val parsedFeed = result.feed
                                         val episodeEntities = parsedFeed.episodes.map { it.toEpisodeEntity(podcast.id) }
 
-                                        // Inserción directa eficiente con IGNORE (evita cargar miles de episodios a memoria)
-                                        val insertResults = podcastDao.insertEpisodesIgnore(episodeEntities)
-                                        val newlyInserted = episodeEntities.filterIndexed { index, _ ->
-                                            insertResults.getOrNull(index) != null && insertResults[index] != -1L
-                                        }
+                                        // Inserta los nuevos y actualiza metadatos de los existentes (URL de audio, título...)
+                                        val newlyInserted = podcastDao.upsertFeedEpisodes(podcast.id, episodeEntities)
 
                                         // Baseline y corte temporal de seguridad:
                                         // 1. Si podcast.lastUpdated <= 0L, es la sincronización inicial tras suscripción o importación.
@@ -188,7 +185,10 @@ class PodcastCheckWorker(
                                         //    estrictamente posterior a lastUpdated y emitidos en las últimas 48 horas son considerados novedades.
                                         val isFirstSync = podcast.lastUpdated <= 0L
                                         val now = System.currentTimeMillis()
-                                        val maxEpisodeAgeMs = 48L * 3600L * 1000L // Máximo 48 horas
+                                        // Ventana mínima de 48 h, ampliada hasta 14 días si el dispositivo
+                                        // llevaba más tiempo sin comprobar (apagado, sin red, Doze...)
+                                        val sinceLastCheckMs = now - podcast.lastUpdated
+                                        val maxEpisodeAgeMs = sinceLastCheckMs.coerceIn(48L * 3600L * 1000L, 14L * 24L * 3600L * 1000L)
                                         val oldestAllowedDate = now - maxEpisodeAgeMs
 
                                         val genuinelyNewEpisodes = if (isFirstSync) {
@@ -233,8 +233,10 @@ class PodcastCheckWorker(
                                             }
                                         }
 
-                                        // Actualizar metadatos, timestamp y cabeceras ETag / Last-Modified
-                                        val updatedPodcast = podcast.copy(
+                                        // Actualizar metadatos, timestamp y cabeceras ETag / Last-Modified sobre
+                                        // la fila actual: el usuario pudo darse de baja o cambiar ajustes mientras tanto
+                                        val currentPodcast = podcastDao.getPodcastById(podcast.id) ?: return@withPermit
+                                        val updatedPodcast = currentPodcast.copy(
                                             title = parsedFeed.title.ifBlank { podcast.title },
                                             author = parsedFeed.author.ifBlank { podcast.author },
                                             description = parsedFeed.description.ifBlank { podcast.description },
@@ -255,10 +257,11 @@ class PodcastCheckWorker(
             }
 
             // Emitir notificación consolidada si hay novedades y están habilitadas
-            if (settings.newEpisodeNotifications && discoveredNewEpisodes.isNotEmpty()) {
+            val notifiable = discoveredNewEpisodes.filterKeys { it.newEpisodeNotifications }
+            if (settings.newEpisodeNotifications && notifiable.isNotEmpty()) {
                 NotificationHelper.notifyBatchNewEpisodes(
                     context = applicationContext,
-                    podcastsWithEpisodes = discoveredNewEpisodes
+                    podcastsWithEpisodes = notifiable
                 )
             }
 

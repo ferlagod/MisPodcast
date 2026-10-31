@@ -49,3 +49,11 @@ data class HistoryEpisodeItem(
     @Embedded
     val episode: EpisodeEntity
 )
+
+/**
+ * Proyección mínima para detectar colisiones de ID de episodio entre podcasts.
+ */
+data class EpisodeOwner(
+    val id: String,
+    val podcastId: String
+)

@@ -29,6 +29,15 @@ package com.ferlagod.mispodcast.util
  */
 object AudioTrackingSanitizer {
 
+    /** Refleja el ajuste "Protección de privacidad (antirrastreo)"; lo actualiza [com.ferlagod.mispodcast.MisPodcastApplication]. */
+    @Volatile
+    var isEnabled: Boolean = true
+
+    /**
+     * Aplica [cleanAudioUrl] solo si el usuario tiene activada la protección antirrastreo.
+     */
+    fun cleanIfEnabled(rawUrl: String): String = if (isEnabled) cleanAudioUrl(rawUrl) else rawUrl
+
     /** Lista de hosts o dominios de seguimiento publicitario conocidos en la industria. */
     private val TRACKER_HOSTS = listOf(
         "dts.podtrac.com",

@@ -98,7 +98,7 @@ class AutoBrowseTree(
                 Uri.parse(episode.audioUrl)
             }
             else -> {
-                val cleanUrl = AudioTrackingSanitizer.cleanAudioUrl(episode.audioUrl)
+                val cleanUrl = AudioTrackingSanitizer.cleanIfEnabled(episode.audioUrl)
                 Uri.parse(cleanUrl)
             }
         }
@@ -246,7 +246,7 @@ class AutoBrowseTree(
                             items.add(
                                 MediaItem.Builder()
                                     .setMediaId(ep.audioUrl)
-                                    .setUri(Uri.parse(ep.audioUrl))
+                                    .setUri(Uri.parse(AudioTrackingSanitizer.cleanIfEnabled(ep.audioUrl)))
                                     .setMediaMetadata(mediaMetadata)
                                     .build()
                             )
@@ -545,7 +545,7 @@ class AutoBrowseTree(
 
                     return@withContext MediaItem.Builder()
                         .setMediaId(firstEpisode.audioUrl)
-                        .setUri(Uri.parse(AudioTrackingSanitizer.cleanAudioUrl(firstEpisode.audioUrl)))
+                        .setUri(Uri.parse(AudioTrackingSanitizer.cleanIfEnabled(firstEpisode.audioUrl)))
                         .setMediaMetadata(mediaMetadata)
                         .build()
                 }

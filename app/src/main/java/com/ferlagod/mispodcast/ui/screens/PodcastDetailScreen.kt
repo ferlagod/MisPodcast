@@ -52,6 +52,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -90,6 +91,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -272,6 +274,11 @@ fun PodcastDetailScreen(
         } else {
             roomEpisodes.sortedWith(compareByDescending<EpisodeEntity> { it.pubDate }.thenByDescending { it.id })
         }
+    }
+
+    var episodeFilter by rememberSaveable { mutableStateOf(EpisodeFilter.ALL) }
+    val filteredEpisodes = remember(sortedEpisodes, episodeFilter, downloadStates) {
+        sortedEpisodes.filter { episodeFilter.matches(it, downloadStates[it.id]) }
     }
 
     var selectedEpisodeId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -516,7 +523,10 @@ fun PodcastDetailScreen(
                                 ) {
                                     episodesListContent(
                                         podcast = podcast,
-                                        sortedEpisodes = sortedEpisodes,
+                                        sortedEpisodes = filteredEpisodes,
+                                        totalEpisodeCount = sortedEpisodes.size,
+                                        episodeFilter = episodeFilter,
+                                        onFilterChange = { episodeFilter = it },
                                         downloadStates = downloadStates,
                                         isPlaying = isPlaying,
                                         currentEpisodePlaying = currentEpisodePlaying,
@@ -570,7 +580,10 @@ fun PodcastDetailScreen(
 
                                 episodesListContent(
                                     podcast = podcast,
-                                    sortedEpisodes = sortedEpisodes,
+                                    sortedEpisodes = filteredEpisodes,
+                                    totalEpisodeCount = sortedEpisodes.size,
+                                    episodeFilter = episodeFilter,
+                                    onFilterChange = { episodeFilter = it },
                                     downloadStates = downloadStates,
                                     isPlaying = isPlaying,
                                     currentEpisodePlaying = currentEpisodePlaying,
@@ -603,6 +616,9 @@ fun PodcastDetailScreen(
                     isPlaying = isEpPlaying,
                     downloadState = epDownloadState,
                     onDismiss = { selectedEpisodeId = null },
+                    onSeekToPosition = { pos ->
+                        playerViewModel.playEpisodeFrom(ep, effectiveTitle, effectiveArtwork, pos)
+                    },
                     onPlayClick = {
                         if (isEpPlaying) {
                             playerViewModel.togglePlayPause()
@@ -644,21 +660,24 @@ fun PodcastDetailScreen(
                 )
             }
 
-            if (showPodcastSettingsSheet && roomPodcast != null) {
+            val settingsPodcast = roomPodcast
+            if (showPodcastSettingsSheet && settingsPodcast != null) {
                 PodcastSettingsBottomSheet(
-                    podcast = roomPodcast!!,
+                    podcast = settingsPodcast,
                     onDismissRequest = { showPodcastSettingsSheet = false },
-                    onSaveSettings = { speed, skipIntro, skipEnding, autoDownload, sortOrder, autoEnqueue ->
+                    onSaveSettings = { speed, skipIntro, skipEnding, autoDownload, sortOrder, autoEnqueue, notify, autoDelete ->
                         podcastViewModel.updatePodcastSettings(
-                            podcastId = roomPodcast!!.id,
+                            podcastId = settingsPodcast.id,
                             customSpeed = speed,
                             skipIntroSeconds = skipIntro,
                             skipEndingSeconds = skipEnding,
                             autoDownloadEnabled = autoDownload,
                             episodeSortOrder = sortOrder,
-                            autoEnqueueRule = autoEnqueue
+                            autoEnqueueRule = autoEnqueue,
+                            newEpisodeNotifications = notify,
+                            autoDeleteRule = autoDelete
                         )
-                        Toast.makeText(context, "Ajustes de '${roomPodcast!!.title}' guardados", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Ajustes de '${settingsPodcast.title}' guardados", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -684,6 +703,9 @@ fun PodcastDetailScreen(
 private fun LazyListScope.episodesListContent(
     podcast: PodcastEntity,
     sortedEpisodes: List<EpisodeEntity>,
+    totalEpisodeCount: Int,
+    episodeFilter: EpisodeFilter,
+    onFilterChange: (EpisodeFilter) -> Unit,
     downloadStates: Map<String, EpisodeDownloadState>,
     isPlaying: Boolean,
     currentEpisodePlaying: EpisodeEntity?,
@@ -713,7 +735,8 @@ private fun LazyListScope.episodesListContent(
                 )
                 val sortText = if (podcast.episodeSortOrder == "OLDEST_FIRST") "Orden cronológico (viejo→nuevo)" else "Más recientes primero"
                 Text(
-                    text = "${sortedEpisodes.size} disponibles • $sortText",
+                    text = if (episodeFilter == EpisodeFilter.ALL) "$totalEpisodeCount disponibles • $sortText"
+                        else "${sortedEpisodes.size} de $totalEpisodeCount • ${episodeFilter.label}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -737,7 +760,41 @@ private fun LazyListScope.episodesListContent(
         }
     }
 
-    if (sortedEpisodes.isEmpty()) {
+    if (totalEpisodeCount > 0) {
+        item {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = 4.dp)
+            ) {
+                items(EpisodeFilter.entries) { filter ->
+                    FilterChip(
+                        selected = episodeFilter == filter,
+                        onClick = { onFilterChange(filter) },
+                        label = { Text(filter.label) }
+                    )
+                }
+            }
+        }
+    }
+
+    if (totalEpisodeCount > 0 && sortedEpisodes.isEmpty()) {
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Ningún episodio coincide con el filtro \"${episodeFilter.label}\".",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    } else if (sortedEpisodes.isEmpty()) {
         item {
             if (podcast.isLocalFolder) {
                 Card(
@@ -1492,5 +1549,26 @@ private fun EpisodeDetailItem(
                 }
             }
         }
+    }
+}
+
+/**
+ * Filtros rápidos de la lista de episodios de un podcast.
+ */
+enum class EpisodeFilter(val label: String) {
+    ALL("Todos"),
+    UNPLAYED("Sin escuchar"),
+    IN_PROGRESS("En curso"),
+    DOWNLOADED("Descargados"),
+    FAVORITES("Favoritos"),
+    SHORT("Cortos (<30 min)");
+
+    fun matches(episode: EpisodeEntity, downloadState: EpisodeDownloadState?): Boolean = when (this) {
+        ALL -> true
+        UNPLAYED -> !episode.isPlayed && episode.currentPositionMs <= 0L
+        IN_PROGRESS -> !episode.isPlayed && episode.currentPositionMs > 0L
+        DOWNLOADED -> episode.isDownloaded || downloadState?.status == com.ferlagod.mispodcast.data.download.DownloadStatus.DOWNLOADED
+        FAVORITES -> episode.isFavorite
+        SHORT -> episode.duration in 1L until 30L * 60L * 1000L
     }
 }

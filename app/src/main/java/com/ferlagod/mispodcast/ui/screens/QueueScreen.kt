@@ -228,7 +228,7 @@ fun QueueScreen(
                                             },
                                             onClick = {
                                                 showSortMenu = false
-                                                podcastViewModel.sortQueue(sortOption)
+                                                podcastViewModel.sortQueue(sortOption, currentEpisode?.id)
                                             }
                                         )
                                     }
@@ -767,7 +767,7 @@ fun QueueScreen(
                                         IconButton(
                                             onClick = {
                                                 if (index > 0) {
-                                                    podcastViewModel.moveSubsequentQueueItem(index, index - 1)
+                                                    podcastViewModel.moveSubsequentQueueItem(index, index - 1, currentEpisode?.id)
                                                 }
                                             },
                                             enabled = index > 0,
@@ -784,7 +784,7 @@ fun QueueScreen(
                                         IconButton(
                                             onClick = {
                                                 if (index < subsequentItems.lastIndex) {
-                                                    podcastViewModel.moveSubsequentQueueItem(index, index + 1)
+                                                    podcastViewModel.moveSubsequentQueueItem(index, index + 1, currentEpisode?.id)
                                                 }
                                             },
                                             enabled = index < subsequentItems.lastIndex,
@@ -830,10 +830,10 @@ fun QueueScreen(
                                                         dragAccumulatedY += dragAmount
                                                         val thresholdPx = 70.dp.toPx()
                                                         if (dragAccumulatedY > thresholdPx && index < subsequentItems.lastIndex) {
-                                                            podcastViewModel.moveSubsequentQueueItem(index, index + 1)
+                                                            podcastViewModel.moveSubsequentQueueItem(index, index + 1, currentEpisode?.id)
                                                             dragAccumulatedY = 0f
                                                         } else if (dragAccumulatedY < -thresholdPx && index > 0) {
-                                                            podcastViewModel.moveSubsequentQueueItem(index, index - 1)
+                                                            podcastViewModel.moveSubsequentQueueItem(index, index - 1, currentEpisode?.id)
                                                             dragAccumulatedY = 0f
                                                         }
                                                     }
@@ -861,6 +861,9 @@ fun QueueScreen(
             isPlaying = isItemPlaying,
             downloadState = epDownloadState,
             onDismiss = { selectedEpisodeId = null },
+            onSeekToPosition = { pos ->
+                playerViewModel.playEpisodeFrom(item.episode, item.podcastTitle, item.podcastArtworkUrl, pos)
+            },
             onPlayClick = {
                 if (isItemPlaying) {
                     playerViewModel.togglePlayPause()

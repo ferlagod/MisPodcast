@@ -28,6 +28,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import kotlinx.coroutines.flow.first
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.DownloadCleaner
 import com.ferlagod.mispodcast.data.download.DownloadStatus
@@ -86,7 +87,9 @@ class EpisodeDownloadWorker(
 
         val sanitizedTitle = EpisodeDownloadManager.sanitizeFileName(episodeTitle)
         val tempFile = File(targetDir, "${sanitizedTitle}_${episodeId.hashCode()}.tmp")
-        val cleanAudioUrl = com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(audioUrl)
+        val stripTrackers = (container?.preferencesManager ?: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager.getInstance(applicationContext))
+            .userSettingsFlow.first().stripAudioTrackers
+        val cleanAudioUrl = if (stripTrackers) com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(audioUrl) else audioUrl
 
         try {
             downloadManager.reportProgress(episodeId, DownloadStatus.DOWNLOADING, 0f)
@@ -158,6 +161,11 @@ class EpisodeDownloadWorker(
                 }
             }
 
+            // Una conexión cortada sin excepción deja un archivo incompleto: reintentar con Range
+            if (totalBytes > 0L && bytesCopied < totalBytes) {
+                throw IOException("Descarga incompleta ($bytesCopied de $totalBytes bytes) para $audioUrl")
+            }
+
             // Detección dinámica de extensión (no solo mp3)
             val extension = determineExtension(audioUrl, contentType)
             val targetFile = File(targetDir, "${sanitizedTitle}_${episodeId.hashCode()}.$extension")
@@ -166,7 +174,9 @@ class EpisodeDownloadWorker(
                 if (targetFile.exists()) {
                     targetFile.delete()
                 }
-                tempFile.renameTo(targetFile)
+                if (!tempFile.renameTo(targetFile)) {
+                    throw IOException("No se pudo mover ${tempFile.name} a ${targetFile.name}")
+                }
             }
 
             // Actualizar Room con isDownloaded = true, la ruta y el tamaño en bytes

@@ -21,6 +21,9 @@ package com.ferlagod.mispodcast
 import android.app.Application
 import com.ferlagod.mispodcast.di.AppContainer
 import com.ferlagod.mispodcast.di.DefaultAppContainer
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 /**
  * Clase [Application] principal de Mis Podcast.
@@ -40,6 +43,16 @@ class MisPodcastApplication : Application() {
         super.onCreate()
         instance = this
         container = DefaultAppContainer(this)
+        observePrivacySettings()
+    }
+
+    private fun observePrivacySettings() {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default).launch {
+            container.preferencesManager.userSettingsFlow
+                .map { it.stripAudioTrackers }
+                .distinctUntilChanged()
+                .collect { com.ferlagod.mispodcast.util.AudioTrackingSanitizer.isEnabled = it }
+        }
     }
 
     companion object {

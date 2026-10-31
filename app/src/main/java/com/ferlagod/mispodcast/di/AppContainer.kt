@@ -100,7 +100,12 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             podcastDao = database.podcastDao(),
             searchService = applePodcastSearchService,
             feedParser = rssFeedParser,
-            preferencesManager = preferencesManager
+            preferencesManager = preferencesManager,
+            podcastIndexService = com.ferlagod.mispodcast.data.remote.api.PodcastIndexSearchService(
+                okHttpClient = okHttpClient,
+                apiKey = com.ferlagod.mispodcast.BuildConfig.PODCASTINDEX_API_KEY,
+                apiSecret = com.ferlagod.mispodcast.BuildConfig.PODCASTINDEX_API_SECRET
+            )
         )
     }
 

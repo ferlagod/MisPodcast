@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit
  */
 enum class DownloadStatus {
     NOT_DOWNLOADED,
+    QUEUED, // En cola de WorkManager esperando red, Wi-Fi o carga
     DOWNLOADING,
     DOWNLOADED
 }
@@ -129,11 +130,11 @@ class EpisodeDownloadManager private constructor(
         }
 
         val currentState = getDownloadState(episode)
-        if (currentState.status == DownloadStatus.DOWNLOADING || currentState.status == DownloadStatus.DOWNLOADED) {
+        if (currentState.status == DownloadStatus.QUEUED || currentState.status == DownloadStatus.DOWNLOADING || currentState.status == DownloadStatus.DOWNLOADED) {
             return
         }
 
-        reportProgress(episode.id, DownloadStatus.DOWNLOADING, 0f)
+        reportProgress(episode.id, DownloadStatus.QUEUED, 0f)
 
         scope.launch {
             try {
@@ -154,7 +155,9 @@ class EpisodeDownloadManager private constructor(
                         )
                     }
                 }
-                podcastDao.insertOrUpdateEpisode(episode)
+                // Solo insertar si no existe: el objeto recibido puede estar desactualizado (o venir
+                // recién parseado del feed) y sobrescribiría la posición, "escuchado" y favoritos
+                podcastDao.insertEpisodes(listOf(episode))
 
                 // 2. Comprobar preferencias de red y energía
                 val settings = preferencesManager.userSettingsFlow.first()

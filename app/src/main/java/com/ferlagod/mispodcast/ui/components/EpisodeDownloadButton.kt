@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,7 +58,7 @@ fun EpisodeDownloadButton(
     IconButton(
         onClick = onDownloadClick,
         modifier = modifier.size(36.dp),
-        enabled = downloadState.status != DownloadStatus.DOWNLOADING
+        enabled = downloadState.status != DownloadStatus.DOWNLOADING && downloadState.status != DownloadStatus.QUEUED
     ) {
         AnimatedContent(
             targetState = downloadState.status,
@@ -83,6 +84,14 @@ fun EpisodeDownloadButton(
                             modifier = Modifier.size(20.dp)
                         )
                     }
+                }
+                DownloadStatus.QUEUED -> {
+                    Icon(
+                        imageVector = Icons.Filled.HourglassTop,
+                        contentDescription = stringResource(R.string.download_waiting),
+                        tint = blueColor.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
                 DownloadStatus.DOWNLOADED -> {
                     Icon(

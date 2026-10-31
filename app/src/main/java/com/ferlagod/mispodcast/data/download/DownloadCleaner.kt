@@ -57,10 +57,14 @@ object DownloadCleaner {
     suspend fun onEpisodeCompleted(context: Context, dao: PodcastDao, episodeId: String) =
         withContext(Dispatchers.IO) {
             try {
-                val settings = UserPreferencesManager.getInstance(context).userSettingsFlow.first()
-                if (!settings.deleteAfterPlayed) return@withContext
                 val episode = dao.getEpisodeById(episodeId) ?: return@withContext
                 if (episode.isFavorite) return@withContext
+                val shouldDelete = when (dao.getPodcastById(episode.podcastId)?.autoDeleteRule) {
+                    "NEVER" -> false
+                    "AFTER_PLAYED" -> true
+                    else -> UserPreferencesManager.getInstance(context).userSettingsFlow.first().deleteAfterPlayed
+                }
+                if (!shouldDelete) return@withContext
                 deleteDownloadedFile(context, dao, episode)
             } catch (e: Exception) {
                 Log.w(TAG, "No se pudo aplicar 'borrar tras escuchar' a $episodeId: ${e.message}")

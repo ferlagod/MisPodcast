@@ -41,6 +41,7 @@
     <string name="download">Descargar</string>
     <string name="downloading">Descargando…</string>
     <string name="downloaded">Descargado</string>
+    <string name="download_waiting">En espera de Wi-Fi o carga</string>
     <string name="delete_download">Eliminar descarga</string>
     <string name="clear">Limpiar</string>
     <string name="clear_queue">Limpiar cola</string>
