@@ -87,6 +87,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -367,18 +368,18 @@ fun EpisodeDetailSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Fila de acciones secundarias
+            // Acciones secundarias en dos filas
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 // Cola
                 ActionIconButton(
                     icon = Icons.AutoMirrored.Filled.QueueMusic,
                     label = stringResource(R.string.add_to_queue),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    onClick = onAddToQueue
+                    onClick = onAddToQueue,
+                    modifier = Modifier.weight(1f)
                 )
 
                 // Favorito
@@ -386,13 +387,18 @@ fun EpisodeDetailSheet(
                     icon = if (episode.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     label = if (episode.isFavorite) stringResource(R.string.favorite) else stringResource(R.string.mark_favorite),
                     tint = if (episode.isFavorite) AccentRed else MaterialTheme.colorScheme.onSurfaceVariant,
-                    onClick = onToggleFavorite
+                    onClick = onToggleFavorite,
+                    modifier = Modifier.weight(1f)
                 )
 
                 // Descarga
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable(onClick = onDownloadClick)
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onDownloadClick)
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {
                     EpisodeDownloadButton(
                         downloadState = downloadState,
@@ -401,28 +407,40 @@ fun EpisodeDetailSheet(
                     Text(
                         text = stringResource(R.string.download),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                 }
+            }
 
-                // Estado de Escuchado
-                if (onTogglePlayed != null) {
-                    ActionIconButton(
-                        icon = if (episode.isPlayed) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                        label = if (episode.isPlayed) stringResource(R.string.mark_as_played) else stringResource(R.string.mark_as_unplayed),
-                        tint = if (episode.isPlayed) AccentGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                        onClick = onTogglePlayed
-                    )
-                }
+            if (onTogglePlayed != null || onShareClick != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Estado de Escuchado: la etiqueta indica la acción que se realizará
+                    if (onTogglePlayed != null) {
+                        ActionIconButton(
+                            icon = if (episode.isPlayed) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                            label = if (episode.isPlayed) stringResource(R.string.mark_as_unplayed) else stringResource(R.string.mark_as_played),
+                            tint = if (episode.isPlayed) AccentGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = onTogglePlayed,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
 
-                // Compartir
-                if (onShareClick != null) {
-                    ActionIconButton(
-                        icon = Icons.Filled.Share,
-                        label = stringResource(R.string.share_episode),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        onClick = onShareClick
-                    )
+                    // Compartir
+                    if (onShareClick != null) {
+                        ActionIconButton(
+                            icon = Icons.Filled.Share,
+                            label = stringResource(R.string.share_episode),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = onShareClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
 
@@ -618,11 +636,12 @@ private fun ActionIconButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     tint: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 6.dp, vertical = 4.dp)
@@ -644,7 +663,8 @@ private fun ActionIconButton(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }
