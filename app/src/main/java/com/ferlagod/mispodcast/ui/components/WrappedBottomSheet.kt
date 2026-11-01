@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Headphones
-import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,6 +77,7 @@ import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.model.WrappedData
 import com.ferlagod.mispodcast.data.model.WrappedPodcastItem
+import com.ferlagod.mispodcast.ui.theme.isAppInDarkTheme
 import java.util.Locale
 
 /**
@@ -97,11 +97,12 @@ fun WrappedBottomSheet(
     onDismissRequest: () -> Unit
 ) {
     val context = LocalContext.current
+    val wrappedGold = wrappedGoldColor()
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = Color(0xFF13111C),
+        containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = null
     ) {
         Column(
@@ -121,7 +122,7 @@ fun WrappedBottomSheet(
                     Icon(
                         imageVector = Icons.Filled.AutoAwesome,
                         contentDescription = null,
-                        tint = Color(0xFFFFB800),
+                        tint = wrappedGold,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -129,14 +130,14 @@ fun WrappedBottomSheet(
                         text = stringResource(R.string.wrapped_modal_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 IconButton(onClick = onDismissRequest) {
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = stringResource(R.string.btn_close),
-                        tint = Color.White.copy(alpha = 0.7f)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -158,17 +159,17 @@ fun WrappedBottomSheet(
                             Text(
                                 text = label,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            containerColor = Color.White.copy(alpha = 0.08f),
-                            selectedContainerColor = Color(0xFF7C4DFF)
+                            containerColor = WrappedPurple.copy(alpha = 0.08f),
+                            selectedContainerColor = WrappedPurple
                         ),
                         border = FilterChipDefaults.filterChipBorder(
                             enabled = true,
                             selected = isSelected,
-                            borderColor = Color.White.copy(alpha = 0.15f),
+                            borderColor = MaterialTheme.colorScheme.outline,
                             selectedBorderColor = Color(0xFF9E7BFF)
                         )
                     )
@@ -184,7 +185,7 @@ fun WrappedBottomSheet(
                         .height(300.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF7C4DFF))
+                    CircularProgressIndicator(color = WrappedPurple)
                 }
             } else if (wrappedData == null || wrappedData.totalTimeListenedMs <= 0) {
                 // Estado vacío cuando aún no hay estadísticas
@@ -199,13 +200,13 @@ fun WrappedBottomSheet(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.08f)),
+                            .background(WrappedPurple.copy(alpha = 0.10f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Headphones,
                             contentDescription = null,
-                            tint = Color(0xFFFFB800),
+                            tint = wrappedGold,
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -214,14 +215,14 @@ fun WrappedBottomSheet(
                         text = stringResource(R.string.wrapped_empty_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(R.string.wrapped_empty_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -354,20 +355,14 @@ fun WrappedBottomSheet(
                                                     .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                                             )
                                         } else {
-                                            Box(
+                                            PodcastArtworkPlaceholder(
+                                                title = topPodcast.title,
                                                 modifier = Modifier
                                                     .size(76.dp)
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(Color.Black.copy(alpha = 0.3f)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Podcasts,
-                                                    contentDescription = null,
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(36.dp)
-                                                )
-                                            }
+                                                    .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                                                iconSize = 36.dp
+                                            )
                                         }
 
                                         Spacer(modifier = Modifier.width(16.dp))
@@ -377,7 +372,7 @@ fun WrappedBottomSheet(
                                                 text = stringResource(R.string.wrapped_top_podcast_badge),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color.Yellow,
+                                                color = Color(0xFFFFE082),
                                                 letterSpacing = 1.2.sp
                                             )
                                             Text(
@@ -411,15 +406,15 @@ fun WrappedBottomSheet(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B2E)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            colors = CardDefaults.cardColors(containerColor = WrappedPurple.copy(alpha = 0.10f)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Column(modifier = Modifier.padding(18.dp)) {
                                 Text(
                                     text = stringResource(R.string.wrapped_top_list_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -457,7 +452,7 @@ fun WrappedBottomSheet(
                                 .height(54.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF7C4DFF)
+                                containerColor = WrappedPurple
                             )
                         ) {
                             Icon(
@@ -491,7 +486,7 @@ private fun WrappedStatTile(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B2E))
+        colors = CardDefaults.cardColors(containerColor = WrappedPurple.copy(alpha = 0.10f))
     ) {
         Column(
             modifier = Modifier
@@ -503,19 +498,19 @@ private fun WrappedStatTile(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFFFFB800)
+                color = wrappedGoldColor()
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                color = Color.White.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -530,11 +525,13 @@ private fun WrappedRankingRow(
     item: WrappedPodcastItem,
     maxTime: Long
 ) {
+    val isDark = isAppInDarkTheme()
+    // Medallas en tonos más profundos en modo claro para mantener el contraste sobre fondo blanco
     val medalColor = when (rank) {
-        1 -> Color(0xFFFFD700)
-        2 -> Color(0xFFC0C0C0)
+        1 -> if (isDark) Color(0xFFFFD700) else Color(0xFFB8860B)
+        2 -> if (isDark) Color(0xFFC0C0C0) else Color(0xFF8E8E93)
         3 -> Color(0xFFCD7F32)
-        else -> Color.White.copy(alpha = 0.6f)
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     val progress = (item.timeListenedMs.toFloat() / maxTime.toFloat().coerceAtLeast(1f)).coerceIn(0.05f, 1f)
@@ -561,20 +558,13 @@ private fun WrappedRankingRow(
                     .clip(RoundedCornerShape(8.dp))
             )
         } else {
-            Box(
+            PodcastArtworkPlaceholder(
+                title = item.title,
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Podcasts,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+                    .clip(RoundedCornerShape(8.dp)),
+                iconSize = 20.dp
+            )
         }
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -588,7 +578,7 @@ private fun WrappedRankingRow(
                     text = item.title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -597,7 +587,7 @@ private fun WrappedRankingRow(
                 Text(
                     text = item.formattedHours,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFFFB800),
+                    color = wrappedGoldColor(),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -607,7 +597,7 @@ private fun WrappedRankingRow(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp))
-                    .background(Color.White.copy(alpha = 0.1f))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
             ) {
                 Box(
                     modifier = Modifier
@@ -616,7 +606,7 @@ private fun WrappedRankingRow(
                         .clip(RoundedCornerShape(3.dp))
                         .background(
                             Brush.horizontalGradient(
-                                colors = listOf(Color(0xFF7C4DFF), Color(0xFFFFB800))
+                                colors = listOf(WrappedPurple, Color(0xFFFFB800))
                             )
                         )
                 )
@@ -624,3 +614,11 @@ private fun WrappedRankingRow(
         }
     }
 }
+
+/** Morado de marca de Wrapped, legible con texto blanco en ambos modos. */
+private val WrappedPurple = Color(0xFF7C4DFF)
+
+/** Dorado de Wrapped para textos sobre la superficie: más profundo en modo claro para mantener el contraste. */
+@Composable
+private fun wrappedGoldColor(): Color =
+    if (isAppInDarkTheme()) Color(0xFFFFB800) else Color(0xFFA36F00)

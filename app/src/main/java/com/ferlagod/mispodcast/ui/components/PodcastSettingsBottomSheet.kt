@@ -560,7 +560,7 @@ private fun ChoiceChip(
 ) {
     Surface(
         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))

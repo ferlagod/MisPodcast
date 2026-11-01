@@ -150,12 +150,12 @@ fun TranscriptBottomSheet(
             ) {
                 Column {
                     Text(
-                        text = "Transcripción sincronizada",
+                        text = "Transcripción",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = if (isLoading) "Descargando texto..." else "${transcript.size} intervenciones temporizadas",
+                        text = if (isLoading) "Descargando texto…" else "${transcript.size} intervenciones temporizadas",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -206,7 +206,7 @@ fun TranscriptBottomSheet(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Buscar en la transcripción...",
+                            text = "Buscar en la transcripción…",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     },
@@ -270,7 +270,7 @@ fun TranscriptBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Procesando subtítulos y marcas temporales...",
+                            text = "Cargando transcripción…",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -303,7 +303,7 @@ fun TranscriptBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Este feed no proporciona archivo de subtítulos sincronizados (SRT, VTT o JSON).",
+                            text = "Este episodio no incluye transcripción.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

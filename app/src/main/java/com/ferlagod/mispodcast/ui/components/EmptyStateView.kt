@@ -19,7 +19,6 @@
 package com.ferlagod.mispodcast.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,18 +39,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
- * Ilustración estética y moderna para pantallas o listas en estado vacío.
- *
- * Sustituye los iconos planos y genéricos por una composición con círculos concéntricos
- * translúcidos, tipografía cuidada y botón de acción opcional.
+ * Estado vacío para pantallas o listas: icono sobre círculo tonal, título, explicación
+ * breve y botón de acción opcional.
  */
 @Composable
 fun EmptyStateView(
@@ -71,55 +66,26 @@ fun EmptyStateView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Composición concéntrica ilustrada
         Box(
             modifier = Modifier
-                .size(112.dp)
+                .size(88.dp)
                 .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            primaryColor.copy(alpha = 0.22f),
-                            primaryColor.copy(alpha = 0.08f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .border(
-                    width = 1.5.dp,
-                    color = primaryColor.copy(alpha = 0.25f),
-                    shape = CircleShape
-                ),
+                .background(primaryColor.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(76.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                primaryColor.copy(alpha = 0.35f),
-                                primaryColor.copy(alpha = 0.15f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = primaryColor,
-                    modifier = Modifier.size(40.dp)
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = primaryColor,
+                modifier = Modifier.size(40.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center

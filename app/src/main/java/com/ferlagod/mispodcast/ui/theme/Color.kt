@@ -69,3 +69,23 @@ val TextTertiaryDark = Color(0xFF48484A)
 val AccentGreen = Color(0xFF34C759)
 val AccentOrange = Color(0xFFFF9500)
 val AccentRed = Color(0xFFFF3B30)
+
+/**
+ * Paleta editorial para categorías y carátulas de respaldo.
+ *
+ * Tonos de saturación y luminosidad similares, afinados para convivir con el azul del logo
+ * y garantizar contraste con texto blanco.
+ */
+val EditorialTeal = Color(0xFF2F7D6D)
+val EditorialRose = Color(0xFFB4505F)
+val EditorialAmber = Color(0xFFB0692A)
+val EditorialOcean = LogoOceanBlue
+val EditorialOchre = Color(0xFF8A6A3B)
+val EditorialSlate = Color(0xFF3F5A6E)
+val EditorialPlum = Color(0xFF5B4B8A)
+val EditorialMoss = Color(0xFF4A7A45)
+
+val EditorialPalette = listOf(
+    EditorialOcean, EditorialTeal, EditorialRose, EditorialAmber,
+    EditorialSlate, EditorialPlum, EditorialOchre, EditorialMoss
+)

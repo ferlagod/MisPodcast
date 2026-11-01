@@ -200,7 +200,7 @@
     <string name="about_website">Site Web</string>
     <string name="about_github">GitHub</string>
     <string name="about_app_description">Seu reprodutor e gerenciador moderno de podcasts com design inspirado no Apple Podcasts, Podcasting 2.0, tendências e recomendações diretas do Apple Podcasts e sincronização em nuvem.</string>
-    <string name="about_version_license">Versão 1.0.2 • Licença GNU GPL v3</string>
+    <string name="about_version_license">Versão %1$s · Licença GNU GPL v3</string>
     <string name="about_license_title">Licença e Filosofia</string>
     <string name="about_license_description">O Mis Podcast é distribuído como software livre sob os termos da Licença Pública Geral GNU versão 3 (GNU GPL v3). Você é livre para usar, estudar, compartilhar e modificar o código-fonte respeitando as 4 liberdades essenciais. Não contém anúncios invasivos, telemetria ou rastreadores de terceiros.</string>
     <string name="about_view_license">Ver Licença GNU GPL v3</string>
@@ -244,7 +244,7 @@
     <string name="stats_wrapped_badge">RETROSPECTIVA ANUAL WRAPPED</string>
     <string name="stats_wrapped_title">Seu ano nos podcasts está pronto!</string>
     <string name="stats_wrapped_subtitle">Descubra o total de horas ouvidas, seu podcast #1 e sua personalidade de ouvinte.</string>
-    <string name="stats_wrapped_button">Ver meu Wrapped ✨</string>
+    <string name="stats_wrapped_button">Ver meu Wrapped</string>
     <string name="stats_view_wrapped_description">Ver o Wrapped</string>
     <string name="wrapped_modal_title">Mis Podcast Wrapped</string>
     <string name="wrapped_empty_title">Seu Wrapped ainda não tem dados</string>
@@ -256,7 +256,7 @@
     <string name="wrapped_stat_days_format">%1$.1f dias contínuos</string>
     <string name="wrapped_stat_full_episodes">Episódios inteiros</string>
     <string name="wrapped_stat_different">Diferentes</string>
-    <string name="wrapped_top_podcast_badge">🏆 SEU PODCAST #1</string>
+    <string name="wrapped_top_podcast_badge">SEU PODCAST #1</string>
     <string name="wrapped_top_podcast_format">%1$s ouvidas • %2$d%% do seu tempo</string>
     <string name="wrapped_top_list_title">Podcasts Mais Ouvidos</string>
     <string name="wrapped_share_button">Compartilhar meu Wrapped</string>

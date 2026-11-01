@@ -65,7 +65,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -79,9 +78,8 @@ import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption
 import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
+import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
 /**
  * Pantalla de biblioteca con la cuadrícula de todos los podcasts suscritos.
@@ -301,7 +299,7 @@ private fun SubscriptionGridCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -323,20 +321,15 @@ private fun SubscriptionGridCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Box(
+                    PodcastArtworkPlaceholder(
+                        title = podcast.title,
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (podcast.isLocalFolder) Icons.Default.FolderOpen else Icons.Filled.Podcasts,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(34.dp)
-                        )
-                    }
+                            .clip(RoundedCornerShape(12.dp)),
+                        icon = if (podcast.isLocalFolder) Icons.Default.FolderOpen else Icons.Filled.Podcasts,
+                        iconSize = 34.dp,
+                        showInitial = !podcast.isLocalFolder
+                    )
                 }
 
                 // Insignia sutil para podcasts locales (estilo AntennaPod / Apple)

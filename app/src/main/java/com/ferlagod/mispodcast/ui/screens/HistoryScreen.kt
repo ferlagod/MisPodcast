@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,7 +60,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -72,13 +70,12 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
 /**
  * Pantalla de historial de reproducción con el listado cronológico de episodios escuchados.
@@ -159,7 +156,7 @@ fun HistoryScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Los episodios que reproduzcas se guardarán automáticamente aquí para que recuerdes exactamente por dónde ibas.",
+                        text = "Aquí aparecerán los episodios que escuches.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -176,7 +173,7 @@ fun HistoryScreen(
             ) {
                 items(historyItems, key = { it.episode.id }) { item ->
                     val dateFormatted = remember(item.listenedAt) {
-                        val sdf = SimpleDateFormat("dd MMM • HH:mm", Locale.getDefault())
+                        val sdf = SimpleDateFormat("dd MMM · HH:mm", Locale.getDefault())
                         sdf.format(Date(item.listenedAt))
                     }
 
@@ -186,7 +183,7 @@ fun HistoryScreen(
                             .padding(vertical = 6.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -205,15 +202,12 @@ fun HistoryScreen(
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
-                                    Box(
+                                    PodcastArtworkPlaceholder(
+                                        title = item.podcastTitle,
                                         modifier = Modifier
                                             .size(52.dp)
                                             .clip(RoundedCornerShape(10.dp))
-                                            .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Filled.Podcasts, null, tint = Color.White)
-                                    }
+                                    )
                                 }
 
                                 Spacer(modifier = Modifier.width(14.dp))
@@ -227,7 +221,7 @@ fun HistoryScreen(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = "${item.podcastTitle} • $dateFormatted",
+                                        text = "${item.podcastTitle} · $dateFormatted",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )

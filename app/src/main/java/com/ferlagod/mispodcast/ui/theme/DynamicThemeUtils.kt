@@ -23,14 +23,17 @@ import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.drawable.toBitmap
@@ -133,6 +136,23 @@ suspend fun extractDominantColorFromUrl(
         fallbackColor
     }
 }
+
+/**
+ * Indica si el esquema de color activo es oscuro (oscuro, AMOLED o Material You oscuro).
+ *
+ * Se deriva del propio [MaterialTheme] para respetar la preferencia de tema de la app
+ * aunque difiera del modo del sistema.
+ */
+@Composable
+@ReadOnlyComposable
+fun isAppInDarkTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+/**
+ * Devuelve un color de contenido legible (blanco o casi negro) sobre este color de fondo.
+ * Útil para iconos y textos encima de colores extraídos de carátulas, cuyo brillo es impredecible.
+ */
+fun Color.readableContentColor(): Color =
+    if (luminance() > 0.4f) Color(0xFF111114) else Color.White
 
 /**
  * Tokens de referencia para la paleta base del reproductor y podcast.

@@ -200,7 +200,7 @@
     <string name="about_website">Website</string>
     <string name="about_github">GitHub</string>
     <string name="about_app_description">Your modern podcast player and manager with Apple Podcasts inspired design, Podcasting 2.0, direct Apple Podcasts trends and recommendations, and cloud sync.</string>
-    <string name="about_version_license">Version 1.0.2 • GNU GPL v3 License</string>
+    <string name="about_version_license">Version %1$s · GNU GPL v3 License</string>
     <string name="about_license_title">License &amp; Philosophy</string>
     <string name="about_license_description">Mis Podcast is distributed as free software under the terms of the GNU General Public License version 3 (GNU GPL v3). You are free to use, study, share, and modify the source code respecting the 4 essential freedoms. It contains no invasive ads, telemetry, or third-party trackers.</string>
     <string name="about_view_license">View GNU GPL v3 License</string>
@@ -244,7 +244,7 @@
     <string name="stats_wrapped_badge">WRAPPED ANNUAL REVIEW</string>
     <string name="stats_wrapped_title">Your year in podcasts is ready!</string>
     <string name="stats_wrapped_subtitle">Discover your total listening hours, top podcast, and listening personality.</string>
-    <string name="stats_wrapped_button">View my Wrapped ✨</string>
+    <string name="stats_wrapped_button">View my Wrapped</string>
     <string name="stats_view_wrapped_description">View Wrapped</string>
     <string name="wrapped_modal_title">Mis Podcast Wrapped</string>
     <string name="wrapped_empty_title">Your Wrapped has no data yet</string>
@@ -256,7 +256,7 @@
     <string name="wrapped_stat_days_format">%1$.1f continuous days</string>
     <string name="wrapped_stat_full_episodes">Full episodes</string>
     <string name="wrapped_stat_different">Different</string>
-    <string name="wrapped_top_podcast_badge">🏆 YOUR #1 PODCAST</string>
+    <string name="wrapped_top_podcast_badge">YOUR #1 PODCAST</string>
     <string name="wrapped_top_podcast_format">%1$s listened • %2$d%% of your time</string>
     <string name="wrapped_top_list_title">Most Listened Podcasts</string>
     <string name="wrapped_share_button">Share my Wrapped</string>

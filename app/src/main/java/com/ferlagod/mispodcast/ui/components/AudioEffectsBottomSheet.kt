@@ -128,13 +128,13 @@ fun AudioEffectsBottomSheet(
 
                 Column {
                     Text(
-                        text = "Efectos y Mejora de Audio",
+                        text = "Efectos de audio",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Procesamiento de sonido en tiempo real",
+                        text = "Se aplican a todos los episodios",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

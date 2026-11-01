@@ -159,7 +159,7 @@ fun PlaybackSpeedBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Ajuste fino de 0.5x a 3.0x en pasos de 0.1x",
+                            text = "De 0,5× a 3,0×",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -344,7 +344,7 @@ fun PlaybackSpeedBottomSheet(
                         Surface(
                             shape = RoundedCornerShape(10.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable { updateSpeed(speed) }

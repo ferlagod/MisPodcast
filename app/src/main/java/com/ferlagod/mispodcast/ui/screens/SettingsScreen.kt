@@ -113,6 +113,9 @@ import com.ferlagod.mispodcast.ui.viewmodel.SettingsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.LocalContentColor
+import com.ferlagod.mispodcast.ui.theme.AccentGreen
+import com.ferlagod.mispodcast.BuildConfig
 
 /**
  * Pantalla de configuración y ajustes generales de Mis Podcast.
@@ -370,7 +373,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.GraphicEq,
                             title = stringResource(R.string.settings_skip_silence),
-                            subtitle = "Acelera o recorta las pausas silenciosas al reproducir",
+                            subtitle = "Acorta los silencios durante la reproducción",
                             checked = settings.skipSilence,
                             onCheckedChange = { settingsViewModel.setSkipSilence(it) }
                         )
@@ -381,7 +384,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.RecordVoiceOver,
                             title = "Mejora de voz y volumen",
-                            subtitle = "Amplifica el volumen y resalta voces con compresión dinámica",
+                            subtitle = "Realza las voces y nivela el volumen",
                             checked = settings.voiceBoostEnabled,
                             onCheckedChange = { settingsViewModel.setVoiceBoostEnabled(it) }
                         )
@@ -414,7 +417,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.Headphones,
                             title = "Modo mono (un solo auricular)",
-                            subtitle = "Mezcla canales estéreo para no perder detalles con un solo auricular",
+                            subtitle = "Combina ambos canales en uno",
                             checked = settings.monoAudioEnabled,
                             onCheckedChange = { settingsViewModel.setMonoAudioEnabled(it) }
                         )
@@ -428,7 +431,7 @@ fun SettingsScreen(
                         )
                         SettingsDropdownRow(
                             icon = Icons.AutoMirrored.Filled.QueueMusic,
-                            title = "Auto-encolado de nuevos episodios",
+                            title = "Añadir episodios nuevos a la cola",
                             currentValue = autoEnqueueLabels[settings.defaultAutoEnqueueRule] ?: "Desactivado (manual)",
                             options = listOf("DISABLED", "TOP", "BOTTOM"),
                             onSelect = { settingsViewModel.setDefaultAutoEnqueueRule(it) },
@@ -445,7 +448,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.Download,
                             title = stringResource(R.string.settings_auto_download),
-                            subtitle = "Descargar automáticamente nuevos episodios detectados",
+                            subtitle = "Descarga los episodios nuevos al detectarlos",
                             checked = settings.autoDownloadNewEpisodes,
                             onCheckedChange = { settingsViewModel.setAutoDownloadNewEpisodes(it) }
                         )
@@ -455,7 +458,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.Wifi,
                             title = "Solo con conexión Wi-Fi",
-                            subtitle = "Evita el consumo de tarifa de datos móviles al descargar",
+                            subtitle = "No usa datos móviles para descargar",
                             checked = settings.downloadOnlyOnWifi,
                             onCheckedChange = { settingsViewModel.setDownloadOnlyOnWifi(it) }
                         )
@@ -465,7 +468,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.BatteryChargingFull,
                             title = "Solo mientras se carga",
-                            subtitle = "Pospone las descargas automáticas hasta conectar el cargador",
+                            subtitle = "Espera a que el teléfono esté cargando",
                             checked = settings.downloadOnlyWhenCharging,
                             onCheckedChange = { settingsViewModel.setDownloadOnlyWhenCharging(it) }
                         )
@@ -496,8 +499,8 @@ fun SettingsScreen(
 
                         SettingsSwitchRow(
                             icon = Icons.Filled.Security,
-                            title = "Protección de privacidad (antirrastreo)",
-                            subtitle = "Elimina redirecciones publicitarias y trackers de terceros (Podtrac, Chartable, etc.) en los audios",
+                            title = "Bloquear rastreadores",
+                            subtitle = "Quita las redirecciones de medición (Podtrac, Chartable…) de los enlaces de audio",
                             checked = settings.stripAudioTrackers,
                             onCheckedChange = { settingsViewModel.setStripAudioTrackers(it) }
                         )
@@ -547,7 +550,7 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "Sincroniza tus podcasts suscritos, cola de reproducción y progreso de episodios mediante WebDAV o GPodder Sync en tu nube privada Nextcloud.",
+                            text = "Sincroniza suscripciones, cola y progreso con tu servidor Nextcloud mediante WebDAV o gPodder Sync.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -625,7 +628,7 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp),
                                 color = if (isConnectionSuccess == true) {
-                                    Color(0xFFE8F5E9)
+                                    AccentGreen.copy(alpha = 0.16f)
                                 } else if (isConnectionSuccess == false) {
                                     MaterialTheme.colorScheme.errorContainer
                                 } else {
@@ -640,7 +643,7 @@ fun SettingsScreen(
                                         Icon(
                                             imageVector = Icons.Filled.CheckCircle,
                                             contentDescription = null,
-                                            tint = Color(0xFF2E7D32),
+                                            tint = AccentGreen,
                                             modifier = Modifier.size(20.dp)
                                         )
                                         Spacer(modifier = Modifier.width(10.dp))
@@ -650,7 +653,7 @@ fun SettingsScreen(
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Medium,
                                         color = if (isConnectionSuccess == true) {
-                                            Color(0xFF1B5E20)
+                                            MaterialTheme.colorScheme.onSurface
                                         } else if (isConnectionSuccess == false) {
                                             MaterialTheme.colorScheme.onErrorContainer
                                         } else {
@@ -703,7 +706,7 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Probando...")
+                                    Text("Probando…")
                                 } else {
                                     Text(stringResource(R.string.settings_test_connection), fontWeight = FontWeight.SemiBold)
                                 }
@@ -720,10 +723,10 @@ fun SettingsScreen(
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(16.dp),
                                         strokeWidth = 2.dp,
-                                        color = Color.White
+                                        color = LocalContentColor.current
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Sincronizando...")
+                                    Text("Sincronizando…")
                                 } else {
                                     Icon(Icons.Filled.CloudSync, null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -740,7 +743,7 @@ fun SettingsScreen(
                 SettingsSection(title = stringResource(R.string.settings_backup)) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Exporta tus suscripciones y el estado completo de reproducción para conservarlos o transferirlos a otro dispositivo.",
+                            text = "Guarda tus suscripciones y tu progreso, o pásalos a otro dispositivo.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -749,7 +752,7 @@ fun SettingsScreen(
 
                         // Respaldo OPML
                         Text(
-                            text = "Suscripciones (Formato estándar OPML)",
+                            text = "Suscripciones (OPML)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -793,7 +796,7 @@ fun SettingsScreen(
 
                         // Respaldo Base de Datos Completa
                         Text(
-                            text = "Base de datos completa (.ZIP / .DB AntennaPod)",
+                            text = "Copia completa (.zip / AntennaPod .db)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -876,7 +879,7 @@ fun SettingsScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Buscar episodios nuevos inmediatamente en segundo plano",
+                                    text = "Buscar episodios nuevos ahora",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -899,7 +902,7 @@ fun SettingsScreen(
                     SettingsSwitchRow(
                         icon = Icons.Filled.Notifications,
                         title = "Nuevos episodios",
-                        subtitle = "Mostrar avisos cuando se publiquen episodios de tus suscripciones",
+                        subtitle = "Avisar cuando tus suscripciones publiquen episodios",
                         checked = settings.newEpisodeNotifications,
                         onCheckedChange = { settingsViewModel.setNewEpisodeNotifications(it) }
                     )
@@ -938,7 +941,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Versión 1.0.2 • Licencia GNU GPL v3 • ferlagod",
+                                text = "Versión ${BuildConfig.VERSION_NAME} · GNU GPL v3",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -975,7 +978,7 @@ private fun SettingsSection(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             content()
         }
@@ -994,7 +997,7 @@ private fun ThemeOptionButton(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
         color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+        contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
     ) {
         Box(
             modifier = Modifier.padding(vertical = 10.dp),
@@ -1047,7 +1050,7 @@ private fun SettingsSwitchRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 checkedTrackColor = MaterialTheme.colorScheme.primary
             )
         )

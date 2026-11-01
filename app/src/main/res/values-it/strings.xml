@@ -200,7 +200,7 @@
     <string name="about_website">Sito Web</string>
     <string name="about_github">GitHub</string>
     <string name="about_app_description">Il tuo lettore e gestore moderno di podcast con design ispirato ad Apple Podcasts, Podcasting 2.0, tendenze e consigli diretti di Apple Podcasts e sincronizzazione cloud.</string>
-    <string name="about_version_license">Versione 1.0.2 • Licenza GNU GPL v3</string>
+    <string name="about_version_license">Versione %1$s · Licenza GNU GPL v3</string>
     <string name="about_license_title">Licenza e Filosofia</string>
     <string name="about_license_description">Mis Podcast è distribuito come software libero secondo i termini della GNU General Public License versione 3 (GNU GPL v3). Sei libero di utilizzare, studiare, condividere e modificare il codice sorgente rispettando le 4 libertà fondamentali. Non contiene pubblicità invasiva, telemetria o tracker di terze parti.</string>
     <string name="about_view_license">Visualizza Licenza GNU GPL v3</string>
@@ -244,7 +244,7 @@
     <string name="stats_wrapped_badge">RIEPILOGO ANNUALE WRAPPED</string>
     <string name="stats_wrapped_title">Il tuo anno nei podcast è pronto!</string>
     <string name="stats_wrapped_subtitle">Scopri le ore totali di ascolto, il tuo podcast #1 e il tuo profilo di ascoltatore.</string>
-    <string name="stats_wrapped_button">Guarda il mio Wrapped ✨</string>
+    <string name="stats_wrapped_button">Guarda il mio Wrapped</string>
     <string name="stats_view_wrapped_description">Guarda il Wrapped</string>
     <string name="wrapped_modal_title">Mis Podcast Wrapped</string>
     <string name="wrapped_empty_title">Il tuo Wrapped non ha ancora dati</string>
@@ -256,7 +256,7 @@
     <string name="wrapped_stat_days_format">%1$.1f giorni continui</string>
     <string name="wrapped_stat_full_episodes">Episodi interi</string>
     <string name="wrapped_stat_different">Diversi</string>
-    <string name="wrapped_top_podcast_badge">🏆 IL TUO PODCAST #1</string>
+    <string name="wrapped_top_podcast_badge">IL TUO PODCAST #1</string>
     <string name="wrapped_top_podcast_format">%1$s ascoltate • %2$d%% del tuo tempo</string>
     <string name="wrapped_top_list_title">Podcast più ascoltati</string>
     <string name="wrapped_share_button">Condividi il mio Wrapped</string>

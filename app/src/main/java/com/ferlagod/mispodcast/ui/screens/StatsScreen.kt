@@ -82,6 +82,7 @@ import com.ferlagod.mispodcast.ui.theme.AccentOrange
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import java.util.Locale
+import com.ferlagod.mispodcast.ui.theme.isAppInDarkTheme
 
 @Composable
 private fun StatCard(
@@ -98,7 +99,7 @@ private fun StatCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Box(
@@ -191,7 +192,7 @@ fun StatsScreen(
                         Icon(
                             imageVector = Icons.Filled.AutoAwesome,
                             contentDescription = stringResource(R.string.stats_view_wrapped_description),
-                            tint = Color(0xFFFFB800)
+                            tint = if (isAppInDarkTheme()) Color(0xFFFFB800) else Color(0xFFA36F00)
                         )
                     }
                 },
@@ -370,7 +371,7 @@ fun StatsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Row(

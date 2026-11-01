@@ -68,7 +68,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -81,10 +80,9 @@ import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.mapper.PodcastLanguageMapper
 import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import kotlinx.coroutines.launch
+import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
 /**
  * Pantalla de exploración temática por categorías (Tecnología, Historia, Ciencia, Noticias, etc.).
@@ -185,21 +183,13 @@ fun CategoryPodcastsScreen(
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.primary,
                             strokeWidth = 3.dp,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(40.dp)
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Text(
-                            text = "Cargando podcasts de $categoryName...",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            text = "Cargando $categoryName…",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Consultando Apple Podcasts en España en tiempo real.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -285,21 +275,21 @@ fun CategoryPodcastsScreen(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "APPLE PODCASTS (${regionDisplayName.uppercase()})",
+                                        text = "Apple Podcasts · $regionDisplayName",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                                 Text(
-                                    text = "Lo mejor en $categoryName",
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    text = "Más populares",
+                                    style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "${podcastItems.size} podcasts destacados en esta categoría",
+                                    text = "${podcastItems.size} podcasts",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -350,7 +340,7 @@ private fun CategoryPodcastRowCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -369,21 +359,14 @@ private fun CategoryPodcastRowCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Box(
+                    PodcastArtworkPlaceholder(
+                        title = podcast.collectionName.orEmpty(),
                         modifier = Modifier
                             .size(76.dp)
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Podcasts,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
+                            .clip(RoundedCornerShape(14.dp)),
+                        iconSize = 36.dp
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(14.dp))

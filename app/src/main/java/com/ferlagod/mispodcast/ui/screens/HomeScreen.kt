@@ -114,12 +114,31 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.max
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.TheaterComedy
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.offset
+import com.ferlagod.mispodcast.ui.theme.EditorialAmber
+import com.ferlagod.mispodcast.ui.theme.EditorialMoss
+import com.ferlagod.mispodcast.ui.theme.EditorialOcean
+import com.ferlagod.mispodcast.ui.theme.EditorialOchre
+import com.ferlagod.mispodcast.ui.theme.EditorialPlum
+import com.ferlagod.mispodcast.ui.theme.EditorialRose
+import com.ferlagod.mispodcast.ui.theme.EditorialSlate
+import com.ferlagod.mispodcast.ui.theme.EditorialTeal
+import com.ferlagod.mispodcast.ui.theme.readableContentColor
 
 /**
  * Modelo de datos para las categorías con iconos y colores temáticos.
  */
 data class CategoryChipData(
-    val emoji: String,
+    val icon: ImageVector,
     val name: String,
     val genreId: Int,
     val accentColor: Color
@@ -219,18 +238,17 @@ fun HomeScreen(
         }
     }
 
-    // Categorías con emoji y color propio
+    // Categorías con icono y tono de la paleta editorial
     val categoryChips = remember {
         listOf(
-            CategoryChipData("✨", "Para ti", 0, Color(0xFF6366F1)),
-            CategoryChipData("🔬", "Ciencia", 1533, Color(0xFF10B981)),
-            CategoryChipData("😂", "Comedia", 1303, Color(0xFFEC4899)),
-            CategoryChipData("📚", "Libros", 1301, Color(0xFFF97316)),
-            CategoryChipData("💻", "Tecnología", 1318, Color(0xFF0EA5E9)),
-            CategoryChipData("🏛️", "Historia", 1487, Color(0xFFF59E0B)),
-            CategoryChipData("📰", "Noticias", 1489, Color(0xFFEF4444)),
-            CategoryChipData("🎭", "Ficción", 1483, Color(0xFF8B5CF6)),
-            CategoryChipData("🏃", "Salud", 1512, Color(0xFF14B8A6))
+            CategoryChipData(Icons.Filled.Science, "Ciencia", 1533, EditorialTeal),
+            CategoryChipData(Icons.Filled.TheaterComedy, "Comedia", 1303, EditorialRose),
+            CategoryChipData(Icons.AutoMirrored.Filled.MenuBook, "Libros", 1301, EditorialAmber),
+            CategoryChipData(Icons.Filled.Memory, "Tecnología", 1318, EditorialOcean),
+            CategoryChipData(Icons.Filled.AccountBalance, "Historia", 1487, EditorialOchre),
+            CategoryChipData(Icons.Filled.Newspaper, "Noticias", 1489, EditorialSlate),
+            CategoryChipData(Icons.Filled.AutoStories, "Ficción", 1483, EditorialPlum),
+            CategoryChipData(Icons.Filled.Spa, "Salud", 1512, EditorialMoss)
         )
     }
 
@@ -325,45 +343,6 @@ fun HomeScreen(
                 }
             }
 
-            // 2. Chips de categoría con emoji y color propio
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(categoryChips) { chip ->
-                        val isSelected = chip.genreId == 0
-                        Surface(
-                            shape = RoundedCornerShape(22.dp),
-                            color = if (isSelected) chip.accentColor else chip.accentColor.copy(alpha = 0.14f),
-                            modifier = Modifier.clickable {
-                                if (chip.genreId > 0) {
-                                    onNavigateToCategory(chip.name, chip.genreId)
-                                }
-                            }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = chip.emoji,
-                                    fontSize = 14.sp
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = chip.name,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (isSelected) Color.White else chip.accentColor
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(14.dp))
-            }
-
             // 3. Hero "Continuar escuchando" a todo el ancho con portada de fondo y color dominante
             val firstQueueItem = queue.firstOrNull()
             val activeEpisode = currentPlayingEpisode ?: firstQueueItem?.episode ?: history.firstOrNull { !it.completed }?.episode
@@ -384,7 +363,7 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .clickable { playerViewModel.setExpanded(true) },
                             shape = RoundedCornerShape(24.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -526,12 +505,12 @@ fun HomeScreen(
                                             },
                                             modifier = Modifier
                                                 .size(52.dp)
-                                                .background(dominantHeroColor, RoundedCornerShape(18.dp))
+                                                .background(dominantHeroColor, CircleShape)
                                         ) {
                                             Icon(
                                                 imageVector = if (isPlaying && currentPlayingEpisode?.id == activeEpisode.id) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                                                 contentDescription = stringResource(if (isPlaying && currentPlayingEpisode?.id == activeEpisode.id) R.string.action_pause else R.string.action_play),
-                                                tint = Color.White,
+                                                tint = dominantHeroColor.readableContentColor(),
                                                 modifier = Modifier.size(28.dp)
                                             )
                                         }
@@ -656,7 +635,7 @@ fun HomeScreen(
                             .padding(horizontal = 20.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "✨ $msg",
+                            text = msg,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -1006,7 +985,7 @@ fun RecommendationCard(
                             Icon(
                                 imageVector = Icons.Filled.Add,
                                 contentDescription = stringResource(R.string.subscribe),
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -1045,7 +1024,7 @@ fun RecommendationCard(
 }
 
 /**
- * Tarjeta de categoría estilo editorial con gradiente y emoji grande.
+ * Tarjeta de categoría estilo editorial: color sólido con icono decorativo recortado.
  */
 @Composable
 fun CategoryCollectionCard(
@@ -1065,28 +1044,26 @@ fun CategoryCollectionCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            chip.accentColor,
-                            chip.accentColor.copy(alpha = 0.72f)
-                        )
-                    )
-                )
-                .padding(12.dp)
+                .background(chip.accentColor)
         ) {
-            Text(
-                text = chip.emoji,
-                fontSize = 28.sp,
-                modifier = Modifier.align(Alignment.TopEnd)
+            Icon(
+                imageVector = chip.icon,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.22f),
+                modifier = Modifier
+                    .size(64.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset(x = 12.dp, y = 12.dp)
             )
 
             Text(
                 text = chip.name,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.align(Alignment.BottomStart)
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(12.dp)
             )
         }
     }
@@ -1117,7 +1094,7 @@ fun EpisodeRowCard(
         colors = CardDefaults.cardColors(
             containerColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -1153,10 +1130,12 @@ fun EpisodeRowCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = item.podcastTitle.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = item.podcastTitle,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
                     )
                     if (isPlaying) {
@@ -1177,7 +1156,7 @@ fun EpisodeRowCard(
                 Spacer(modifier = Modifier.height(2.dp))
                 val durationMins = item.episode.duration / 60000
                 Text(
-                    text = "$dateFormatted • ${if (durationMins > 0) "$durationMins min" else "Audio"}",
+                    text = if (durationMins > 0) "$dateFormatted · $durationMins min" else dateFormatted,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

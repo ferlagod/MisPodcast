@@ -40,7 +40,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,7 +56,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -67,10 +65,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
-import com.ferlagod.mispodcast.ui.theme.AccentOrange
 import com.ferlagod.mispodcast.ui.theme.AccentRed
 import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
+import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
 /**
  * Pantalla de visualización de episodios marcados como favoritos por el usuario para su acceso rápido.
@@ -142,7 +140,7 @@ fun FavoritesScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Marca los episodios que más te gusten con el corazón para tenerlos siempre a mano aquí.",
+                        text = "Toca el corazón de un episodio para guardarlo aquí.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -164,7 +162,7 @@ fun FavoritesScreen(
                             .padding(vertical = 6.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -183,15 +181,12 @@ fun FavoritesScreen(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Box(
+                                PodcastArtworkPlaceholder(
+                                    title = item.podcastTitle,
                                     modifier = Modifier
                                         .size(54.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Brush.linearGradient(listOf(AccentRed, AccentOrange))),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Filled.Podcasts, null, tint = Color.White)
-                                }
+                                )
                             }
 
                             Spacer(modifier = Modifier.width(14.dp))

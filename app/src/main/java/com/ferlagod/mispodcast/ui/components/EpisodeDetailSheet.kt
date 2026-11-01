@@ -52,7 +52,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.AssistChip
@@ -78,7 +77,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -100,8 +98,6 @@ import com.ferlagod.mispodcast.data.remote.parser.PodcastSoundbite
 import com.ferlagod.mispodcast.util.TimestampParser
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.AccentRed
-import com.ferlagod.mispodcast.ui.theme.LogoOceanBlue
-import com.ferlagod.mispodcast.ui.theme.LogoOceanBlueLight
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -235,20 +231,13 @@ fun EpisodeDetailSheet(
                         )
                     }
                 } else {
-                    Box(
+                    PodcastArtworkPlaceholder(
+                        title = podcastTitle,
                         modifier = Modifier
                             .size(92.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Brush.linearGradient(listOf(LogoOceanBlue, LogoOceanBlueLight))),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Podcasts,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(42.dp)
-                        )
-                    }
+                            .clip(RoundedCornerShape(16.dp)),
+                        iconSize = 42.dp
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -360,7 +349,7 @@ fun EpisodeDetailSheet(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primary,
-                    contentColor = if (isPlaying) MaterialTheme.colorScheme.onPrimaryContainer else Color.White
+                    contentColor = if (isPlaying) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Icon(

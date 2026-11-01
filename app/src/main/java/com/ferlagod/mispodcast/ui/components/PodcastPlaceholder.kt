@@ -33,41 +33,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ferlagod.mispodcast.ui.theme.EditorialPalette
 import kotlin.math.abs
 
 /**
- * Genera un degradado armónico y único basado en el hash del título del podcast.
+ * Genera un degradado sutil y estable basado en el hash del título del podcast.
  *
- * Evita la monotonía del mismo degradado azul-gris en carátulas vacías o mientras cargan,
- * otorgando identidad visual propia a cada programa.
+ * Usa la paleta editorial de la app para que cada programa tenga identidad propia
+ * sin romper la coherencia cromática del conjunto.
  */
 @Composable
 fun rememberPodcastGradient(title: String): Brush {
     return remember(title) {
         val hash = abs(title.ifBlank { "Podcast" }.hashCode())
-        // Paletas armónicas de dos tonos vibrantes y elegantes
-        val palettes = listOf(
-            listOf(Color(0xFF4F46E5), Color(0xFF06B6D4)), // Indigo a Cian
-            listOf(Color(0xFF8B5CF6), Color(0xFFEC4899)), // Violeta a Rosa
-            listOf(Color(0xFF059669), Color(0xFF10B981)), // Esmeralda a Menta
-            listOf(Color(0xFFD97706), Color(0xFFF59E0B)), // Ámbar a Dorado
-            listOf(Color(0xFFDC2626), Color(0xFFFB923C)), // Coral a Naranja
-            listOf(Color(0xFF2563EB), Color(0xFF38BDF8)), // Azul Real a Celeste
-            listOf(Color(0xFF7C3AED), Color(0xFF6366F1)), // Púrpura profundo a Índigo
-            listOf(Color(0xFF0D9488), Color(0xFF14B8A6)), // Teal a Turquesa
-            listOf(Color(0xFFBE185D), Color(0xFFF43F5E)), // Borgoña a Frambuesa
-            listOf(Color(0xFF3B82F6), Color(0xFF818CF8)), // Azul Eléctrico a Lavanda
-            listOf(Color(0xFF0284C7), Color(0xFF2DD4BF)), // Océano a Aguamarina
-            listOf(Color(0xFFE11D48), Color(0xFFFDA4AF))  // Carmesí a Rosa suave
-        )
-        val selected = palettes[hash % palettes.size]
+        val base = EditorialPalette[hash % EditorialPalette.size]
         Brush.linearGradient(
-            colors = listOf(selected[0], selected[1])
+            colors = listOf(lerp(base, Color.White, 0.14f), base)
         )
     }
 }
@@ -102,7 +89,7 @@ fun PodcastArtworkPlaceholder(
                 text = initial,
                 color = Color.White.copy(alpha = 0.92f),
                 fontSize = (iconSize.value * 0.95f).sp,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.headlineMedium
             )
         } else {

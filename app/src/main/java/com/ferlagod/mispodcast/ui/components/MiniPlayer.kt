@@ -66,7 +66,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Replay30
 import androidx.compose.material.icons.filled.Replay5
@@ -115,9 +114,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.playback.PlaybackController
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
 import com.ferlagod.mispodcast.ui.theme.TabularTimeStyle
 import com.ferlagod.mispodcast.ui.theme.dynamicDarkColorSchemeFromSeed
+import com.ferlagod.mispodcast.ui.theme.dynamicLightColorSchemeFromSeed
+import com.ferlagod.mispodcast.ui.theme.isAppInDarkTheme
+import com.ferlagod.mispodcast.ui.theme.readableContentColor
 import com.ferlagod.mispodcast.ui.theme.rememberArtworkDominantColor
 import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 import java.util.Locale
@@ -208,7 +209,7 @@ fun MiniPlayer(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -252,20 +253,12 @@ fun MiniPlayer(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            Box(
+                            PodcastArtworkPlaceholder(
+                                title = podcastTitle,
                                 modifier = Modifier
                                     .size(46.dp)
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(Brush.linearGradient(listOf(dominantArtworkColor, IndigoSecondary))),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Podcasts,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -301,7 +294,7 @@ fun MiniPlayer(
                             Icon(
                                 imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                                 contentDescription = stringResource(if (isPlaying) R.string.action_pause else R.string.action_play),
-                                tint = Color.White,
+                                tint = dominantArtworkColor.readableContentColor(),
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -393,9 +386,20 @@ fun FullPlayerSheet(
     val artworkUrl = currentEpisode?.imageUrl?.ifBlank { podcastArtworkUrl } ?: podcastArtworkUrl
     val dominantArtworkColor = rememberArtworkDominantColor(artworkUrl = artworkUrl.ifBlank { null })
     val currentColorScheme = MaterialTheme.colorScheme
-    val dynamicColorScheme = remember(dominantArtworkColor, currentColorScheme) {
-        dynamicDarkColorSchemeFromSeed(dominantArtworkColor, currentColorScheme)
+    val isDarkTheme = isAppInDarkTheme()
+    val dynamicColorScheme = remember(dominantArtworkColor, currentColorScheme, isDarkTheme) {
+        if (isDarkTheme) {
+            dynamicDarkColorSchemeFromSeed(dominantArtworkColor, currentColorScheme)
+        } else {
+            dynamicLightColorSchemeFromSeed(dominantArtworkColor, currentColorScheme)
+        }
     }
+    // Acento derivado de la carátula con brillo ajustado al modo para garantizar legibilidad
+    val accentColor = dynamicColorScheme.primary
+    val onAccentColor = accentColor.readableContentColor()
+    // Negro inmersivo en modo oscuro / fondo claro de la app en modo claro
+    val playerBackgroundColor = if (isDarkTheme) Color.Black else dynamicColorScheme.background
+    val playerContentColor = if (isDarkTheme) Color.White else dynamicColorScheme.onBackground
 
     // Escala animada de la portada: 1.0f cuando reproduce, 0.88f cuando está pausado (estilo Apple Podcasts)
     val artworkScale by animateFloatAsState(
@@ -418,14 +422,15 @@ fun FullPlayerSheet(
         ModalBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
-            containerColor = Color.Black,
+            containerColor = playerBackgroundColor,
+            contentColor = playerContentColor,
             tonalElevation = 0.dp
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                // 1. FONDO: Portada desenfocada (blur 60dp en API 31+) con degradado oscuro inmersivo
+                // 1. FONDO: Portada desenfocada (blur 60dp en API 31+) con velo inmersivo del color de fondo
                 if (artworkUrl.isNotBlank()) {
                     val blurModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         Modifier.blur(60.dp)
@@ -443,17 +448,18 @@ fun FullPlayerSheet(
                     )
                 }
 
-                // Velo de degradado oscuro multicapa para máximo contraste y legibilidad
+                // Velo de degradado multicapa (oscuro o claro según el tema) para máximo contraste y legibilidad
+                val veilTopAlpha = if (isDarkTheme) 0.65f else 0.70f
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
                                 listOf(
-                                    Color.Black.copy(alpha = 0.65f),
-                                    Color.Black.copy(alpha = 0.82f),
-                                    Color.Black.copy(alpha = 0.96f),
-                                    Color.Black
+                                    playerBackgroundColor.copy(alpha = veilTopAlpha),
+                                    playerBackgroundColor.copy(alpha = 0.82f),
+                                    playerBackgroundColor.copy(alpha = 0.96f),
+                                    playerBackgroundColor
                                 )
                             )
                         )
@@ -478,7 +484,7 @@ fun FullPlayerSheet(
                             Icon(
                                 imageVector = Icons.Filled.KeyboardArrowDown,
                                 contentDescription = stringResource(R.string.player_close_description),
-                                tint = Color.White.copy(alpha = 0.9f),
+                                tint = playerContentColor.copy(alpha = 0.9f),
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -488,7 +494,7 @@ fun FullPlayerSheet(
                             text = podcastTitle,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = playerContentColor.copy(alpha = 0.7f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier
@@ -502,7 +508,7 @@ fun FullPlayerSheet(
                                 Icon(
                                     imageVector = Icons.Filled.MoreVert,
                                     contentDescription = "Más opciones",
-                                    tint = Color.White.copy(alpha = 0.9f),
+                                    tint = playerContentColor.copy(alpha = 0.9f),
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -513,7 +519,7 @@ fun FullPlayerSheet(
                                 DropdownMenuItem(
                                     text = { Text("Efectos de audio (Voz / Silencio)") },
                                     leadingIcon = {
-                                        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = dominantArtworkColor)
+                                        Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = accentColor)
                                     },
                                     onClick = {
                                         showMoreMenu = false
@@ -597,19 +603,11 @@ fun FullPlayerSheet(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Brush.linearGradient(listOf(dominantArtworkColor, IndigoSecondary))),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Podcasts,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(80.dp)
-                                    )
-                                }
+                                PodcastArtworkPlaceholder(
+                                    title = podcastTitle,
+                                    modifier = Modifier.fillMaxSize(),
+                                    iconSize = 80.dp
+                                )
                             }
                         }
                     }
@@ -623,7 +621,7 @@ fun FullPlayerSheet(
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        color = Color.White,
+                        color = playerContentColor,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp)
@@ -632,7 +630,7 @@ fun FullPlayerSheet(
                     Text(
                         text = podcastTitle,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = dominantArtworkColor,
+                        color = accentColor,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
@@ -647,7 +645,7 @@ fun FullPlayerSheet(
                         Spacer(modifier = Modifier.height(10.dp))
                         Surface(
                             shape = RoundedCornerShape(16.dp),
-                            color = dominantArtworkColor.copy(alpha = 0.22f),
+                            color = accentColor.copy(alpha = 0.22f),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { showChaptersSheet = true }
@@ -668,7 +666,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.Filled.SkipPrevious,
                                         contentDescription = stringResource(R.string.player_prev_chapter_description),
-                                        tint = dominantArtworkColor,
+                                        tint = accentColor,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -685,15 +683,15 @@ fun FullPlayerSheet(
                                         text = currentChapter?.title ?: "Capítulo",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color.White,
+                                        color = playerContentColor,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         textAlign = TextAlign.Center
                                     )
                                     Text(
-                                        text = "$chapterIndexText • Toca para lista",
+                                        text = chapterIndexText,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.7f),
+                                        color = playerContentColor.copy(alpha = 0.7f),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         textAlign = TextAlign.Center
@@ -710,7 +708,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.Filled.SkipNext,
                                         contentDescription = stringResource(R.string.player_next_chapter_description),
-                                        tint = dominantArtworkColor,
+                                        tint = accentColor,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -731,8 +729,8 @@ fun FullPlayerSheet(
                         isPlaying = isPlaying,
                         chapters = chapters,
                         totalDurationMs = durationMs,
-                        waveColor = dominantArtworkColor,
-                        trackColor = Color.White.copy(alpha = 0.22f),
+                        waveColor = accentColor,
+                        trackColor = playerContentColor.copy(alpha = 0.22f),
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -743,11 +741,11 @@ fun FullPlayerSheet(
                     ) {
                         Text(
                             text = formatTime(currentPosMs),
-                            style = TabularTimeStyle.copy(color = Color.White.copy(alpha = 0.75f))
+                            style = TabularTimeStyle.copy(color = playerContentColor.copy(alpha = 0.75f))
                         )
                         Text(
                             text = "-" + formatTime(max(0L, durationMs - currentPosMs)),
-                            style = TabularTimeStyle.copy(color = Color.White.copy(alpha = 0.75f))
+                            style = TabularTimeStyle.copy(color = playerContentColor.copy(alpha = 0.75f))
                         )
                     }
 
@@ -778,7 +776,7 @@ fun FullPlayerSheet(
                                 },
                                 contentDescription = stringResource(R.string.player_skip_backward_format, backSec),
                                 modifier = Modifier.size(36.dp),
-                                tint = Color.White
+                                tint = playerContentColor
                             )
                         }
 
@@ -791,12 +789,12 @@ fun FullPlayerSheet(
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(RoundedCornerShape(playButtonCornerRadius))
-                                .background(dominantArtworkColor)
+                                .background(accentColor)
                         ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                                 contentDescription = stringResource(if (isPlaying) R.string.action_pause else R.string.action_play),
-                                tint = Color.White,
+                                tint = onAccentColor,
                                 modifier = Modifier.size(40.dp)
                             )
                         }
@@ -817,7 +815,7 @@ fun FullPlayerSheet(
                                 },
                                 contentDescription = stringResource(R.string.player_skip_forward_format, forwardSec),
                                 modifier = Modifier.size(36.dp),
-                                tint = Color.White
+                                tint = playerContentColor
                             )
                         }
                     }
@@ -827,7 +825,7 @@ fun FullPlayerSheet(
                     // 6. FILA INFERIOR DE 5 ICONOS ESENCIALES (Velocidad, Temporizador, Clips, Transcripción, Cola)
                     Surface(
                         shape = RoundedCornerShape(22.dp),
-                        color = Color.White.copy(alpha = 0.08f),
+                        color = playerContentColor.copy(alpha = 0.08f),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
@@ -843,7 +841,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.Filled.Speed,
                                         contentDescription = stringResource(R.string.player_speed_description),
-                                        tint = if (playbackSpeed != 1.0f) dominantArtworkColor else Color.White.copy(alpha = 0.85f),
+                                        tint = if (playbackSpeed != 1.0f) accentColor else playerContentColor.copy(alpha = 0.85f),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -851,7 +849,7 @@ fun FullPlayerSheet(
                                         text = PlaybackController.formatSpeed(playbackSpeed),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (playbackSpeed != 1.0f) dominantArtworkColor else Color.White.copy(alpha = 0.75f)
+                                        color = if (playbackSpeed != 1.0f) accentColor else playerContentColor.copy(alpha = 0.75f)
                                     )
                                 }
                             }
@@ -862,7 +860,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.Filled.Bedtime,
                                         contentDescription = stringResource(R.string.player_sleep_timer_description),
-                                        tint = if (sleepTimerState.isActive) dominantArtworkColor else Color.White.copy(alpha = 0.85f),
+                                        tint = if (sleepTimerState.isActive) accentColor else playerContentColor.copy(alpha = 0.85f),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -870,7 +868,7 @@ fun FullPlayerSheet(
                                         text = if (sleepTimerState.isActive) sleepTimerState.formattedRemaining else "Apagar",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (sleepTimerState.isActive) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (sleepTimerState.isActive) dominantArtworkColor else Color.White.copy(alpha = 0.75f)
+                                        color = if (sleepTimerState.isActive) accentColor else playerContentColor.copy(alpha = 0.75f)
                                     )
                                 }
                             }
@@ -881,7 +879,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.Filled.Bookmark,
                                         contentDescription = stringResource(R.string.player_bookmarks_description),
-                                        tint = if (bookmarks.isNotEmpty()) dominantArtworkColor else Color.White.copy(alpha = 0.85f),
+                                        tint = if (bookmarks.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.85f),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -889,7 +887,7 @@ fun FullPlayerSheet(
                                         text = if (bookmarks.isNotEmpty()) "${bookmarks.size}" else "Clips",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (bookmarks.isNotEmpty()) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (bookmarks.isNotEmpty()) dominantArtworkColor else Color.White.copy(alpha = 0.75f)
+                                        color = if (bookmarks.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.75f)
                                     )
                                 }
                             }
@@ -904,7 +902,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.Filled.Subtitles,
                                         contentDescription = stringResource(R.string.player_transcript_description),
-                                        tint = if (hasTranscript) dominantArtworkColor else Color.White.copy(alpha = 0.35f),
+                                        tint = if (hasTranscript) accentColor else playerContentColor.copy(alpha = 0.35f),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -912,7 +910,7 @@ fun FullPlayerSheet(
                                         text = "Texto",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (hasTranscript) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (hasTranscript) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.35f)
+                                        color = if (hasTranscript) playerContentColor.copy(alpha = 0.85f) else playerContentColor.copy(alpha = 0.35f)
                                     )
                                 }
                             }
@@ -928,7 +926,7 @@ fun FullPlayerSheet(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.QueueMusic,
                                         contentDescription = "Cola",
-                                        tint = if (queueEpisodes.isNotEmpty()) dominantArtworkColor else Color.White.copy(alpha = 0.85f),
+                                        tint = if (queueEpisodes.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.85f),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -936,7 +934,7 @@ fun FullPlayerSheet(
                                         text = if (queueEpisodes.isNotEmpty()) "${queueEpisodes.size}" else "Cola",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (queueEpisodes.isNotEmpty()) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (queueEpisodes.isNotEmpty()) dominantArtworkColor else Color.White.copy(alpha = 0.75f)
+                                        color = if (queueEpisodes.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.75f)
                                     )
                                 }
                             }
@@ -956,7 +954,7 @@ fun FullPlayerSheet(
                         }
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = Color.White.copy(alpha = 0.10f),
+                            color = playerContentColor.copy(alpha = 0.10f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
@@ -964,13 +962,13 @@ fun FullPlayerSheet(
                                     text = "Notas del episodio",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = dominantArtworkColor
+                                    color = accentColor
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = cleanDescription,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.85f)
+                                    color = playerContentColor.copy(alpha = 0.85f)
                                 )
                             }
                         }

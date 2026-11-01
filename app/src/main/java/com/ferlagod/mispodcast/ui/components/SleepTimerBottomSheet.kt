@@ -80,7 +80,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -91,8 +90,6 @@ import androidx.compose.ui.unit.dp
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.playback.SleepTimerMode
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 
 /**
@@ -144,9 +141,7 @@ fun SleepTimerBottomSheet(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(listOf(RoyalBlueLight.copy(alpha = 0.2f), IndigoSecondary.copy(alpha = 0.2f)))
-                            ),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -165,7 +160,7 @@ fun SleepTimerBottomSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Detiene la reproducción para dormir plácidamente",
+                            text = "Pausa la reproducción automáticamente",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -282,7 +277,7 @@ fun SleepTimerBottomSheet(
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Apagar", color = Color.White)
+                                Text("Apagar", color = MaterialTheme.colorScheme.onError)
                             }
                         }
                     }
@@ -378,7 +373,7 @@ fun SleepTimerBottomSheet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Opción "Personalizado..." con control deslizante
+            // Opción "Personalizado…" con control deslizante
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -485,7 +480,7 @@ fun SleepTimerBottomSheet(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Agita el teléfono para añadir +15 min con confirmación por vibración háptica",
+                                text = "Agita el teléfono para añadir 15 minutos",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -498,7 +493,7 @@ fun SleepTimerBottomSheet(
                         checked = sleepTimerState.shakeToExtendEnabled,
                         onCheckedChange = { playerViewModel.setSleepTimerShakeToExtend(it) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary
                         )
                     )
@@ -536,7 +531,7 @@ private fun TimerOptionChip(
                 text = text,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )
         }
     }

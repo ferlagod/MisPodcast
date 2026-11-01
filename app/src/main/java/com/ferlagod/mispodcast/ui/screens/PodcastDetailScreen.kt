@@ -293,7 +293,6 @@ fun PodcastDetailScreen(
             else (listState.firstVisibleItemScrollOffset / 200f).coerceIn(0f, 1f)
         }
     }
-    val dominantScreenColor = rememberArtworkDominantColor(artworkUrl = roomPodcast?.artworkUrl?.ifBlank { null })
 
     Scaffold(
         topBar = {
@@ -415,14 +414,14 @@ fun PodcastDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Text(
-                            text = "Descargando y analizando feed...",
+                            text = "Cargando podcast…",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Importando episodios y metadatos de Podcasting 2.0",
+                            text = "Esto puede tardar unos segundos",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -735,8 +734,8 @@ private fun LazyListScope.episodesListContent(
                 )
                 val sortText = if (podcast.episodeSortOrder == "OLDEST_FIRST") "Orden cronológico (viejo→nuevo)" else "Más recientes primero"
                 Text(
-                    text = if (episodeFilter == EpisodeFilter.ALL) "$totalEpisodeCount disponibles • $sortText"
-                        else "${sortedEpisodes.size} de $totalEpisodeCount • ${episodeFilter.label}",
+                    text = if (episodeFilter == EpisodeFilter.ALL) "$totalEpisodeCount disponibles · $sortText"
+                        else "${sortedEpisodes.size} de $totalEpisodeCount · ${episodeFilter.label}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -1101,7 +1100,7 @@ private fun PodcastHeaderSection(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -1138,7 +1137,7 @@ private fun PodcastHeaderSection(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.onError
                         )
                     ) {
                         Icon(
@@ -1354,7 +1353,7 @@ private fun EpisodeDetailItem(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Metadatos: Fecha, duración, tamaño y badge local
@@ -1370,7 +1369,7 @@ private fun EpisodeDetailItem(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = " • ",
+                        text = " · ",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1384,7 +1383,7 @@ private fun EpisodeDetailItem(
 
                 if (fileSizeText.isNotBlank()) {
                     Text(
-                        text = " • ",
+                        text = " · ",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

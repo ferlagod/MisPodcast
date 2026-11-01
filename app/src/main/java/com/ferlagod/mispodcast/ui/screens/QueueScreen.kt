@@ -116,6 +116,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
+import com.ferlagod.mispodcast.ui.theme.AccentGreen
 
 /**
  * Pantalla de administración de la cola de reproducción.
@@ -273,7 +274,7 @@ fun QueueScreen(
                                         podcastViewModel.downloadEpisode(item.episode)
                                     }
                                 }
-                                Toast.makeText(context, "Descargando $undownloadedCount episodios...", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Descargando $undownloadedCount episodios…", Toast.LENGTH_SHORT).show()
                             },
                             label = { Text("Descargar todo ($undownloadedCount)") },
                             icon = {
@@ -347,14 +348,13 @@ fun QueueScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
                         ),
-                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary), // Borde azul corporativo
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
-                            // Cabecera de la tarjeta con badge azul corporativo y onda activa
+                            // Cabecera de la tarjeta con estado de reproducción y onda activa
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
@@ -367,30 +367,18 @@ fun QueueScreen(
                                     ) {
                                         AudioWaveIndicator(
                                             isPlaying = isAudioPlayingNow,
-                                            color = Color.White
+                                            color = MaterialTheme.colorScheme.onPrimary
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = if (isAudioPlayingNow) "REPRODUCIENDO AHORA" else "EN REPRODUCCIÓN (PAUSA)",
+                                            text = if (isAudioPlayingNow) "Reproduciendo" else "En pausa",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = Color.White,
+                                            color = MaterialTheme.colorScheme.onPrimary,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
                                 }
 
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                                ) {
-                                    Text(
-                                        text = "POSICIÓN 1",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
                             }
 
                             Spacer(modifier = Modifier.height(14.dp))
@@ -449,14 +437,6 @@ fun QueueScreen(
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    val currentFormatted = formatQueueDuration(if (isCurrentItemActive) currentPosMs else firstItem.episode.currentPositionMs)
-                                    val totalFormatted = formatQueueDuration(firstItem.episode.duration)
-                                    Text(
-                                        text = "$currentFormatted / $totalFormatted",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
                                 }
 
                                 val activeDownloadState = downloadStates[firstItem.episode.id] ?: podcastViewModel.getEpisodeDownloadState(firstItem.episode)
@@ -464,7 +444,7 @@ fun QueueScreen(
                                     downloadState = activeDownloadState,
                                     onDownloadClick = {
                                         podcastViewModel.downloadEpisode(firstItem.episode)
-                                        Toast.makeText(context, "Descargando episodio...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Descargando episodio…", Toast.LENGTH_SHORT).show()
                                     }
                                 )
 
@@ -486,7 +466,7 @@ fun QueueScreen(
                                     Icon(
                                         imageVector = if (isAudioPlayingNow) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                                         contentDescription = if (isAudioPlayingNow) "Pausa" else "Reproducir",
-                                        tint = Color.White,
+                                        tint = MaterialTheme.colorScheme.onPrimary,
                                         modifier = Modifier.size(28.dp)
                                     )
                                 }
@@ -555,15 +535,15 @@ fun QueueScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "A CONTINUACIÓN EN LA COLA",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold
+                            text = "A continuación",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Desliza para gestionar",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
+                            text = "${subsequentItems.size}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -601,8 +581,8 @@ fun QueueScreen(
                                 val isEndToStart = direction == SwipeToDismissBoxValue.EndToStart
 
                                 val backgroundColor = when {
-                                    isStartToEnd -> Color(0xFF34C759) // Verde
-                                    isEndToStart -> Color(0xFFFF3B30) // Rojo
+                                    isStartToEnd -> AccentGreen
+                                    isEndToStart -> AccentRed
                                     else -> Color.Transparent
                                 }
 
@@ -666,7 +646,7 @@ fun QueueScreen(
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
                                 ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -729,7 +709,7 @@ fun QueueScreen(
                                         )
                                         val durationMin = item.episode.duration / 60000
                                         Text(
-                                            text = "${item.podcastTitle} • ${durationMin} min",
+                                            text = "${item.podcastTitle} · ${durationMin} min",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -740,7 +720,7 @@ fun QueueScreen(
                                         downloadState = itemDownloadState,
                                         onDownloadClick = {
                                             podcastViewModel.downloadEpisode(item.episode)
-                                            Toast.makeText(context, "Descargando episodio...", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Descargando episodio…", Toast.LENGTH_SHORT).show()
                                         }
                                     )
 

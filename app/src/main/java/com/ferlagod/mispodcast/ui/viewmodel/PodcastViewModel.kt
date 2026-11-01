@@ -346,7 +346,7 @@ class PodcastViewModel @JvmOverloads constructor(
 
         viewModelScope.launch {
             _subscriptionLoading.value = true
-            _subscriptionMessage.value = "Descargando feed RSS..."
+            _subscriptionMessage.value = "Descargando feed RSS…"
             val result = repository.subscribeToFeed(feedUrl)
             result.onSuccess {
                 _subscriptionMessage.value = "Suscrito con éxito a ${it.title}"
@@ -365,12 +365,12 @@ class PodcastViewModel @JvmOverloads constructor(
 
         viewModelScope.launch {
             _subscriptionLoading.value = true
-            _subscriptionMessage.value = "Buscando '$searchTerm'..."
+            _subscriptionMessage.value = "Buscando '$searchTerm'…"
             val searchResult = repository.searchApplePodcasts(searchTerm)
             searchResult.onSuccess { results ->
                 val firstWithFeed = results.firstOrNull { !it.feedUrl.isNullOrBlank() }
                 if (firstWithFeed != null && !firstWithFeed.feedUrl.isNullOrBlank()) {
-                    _subscriptionMessage.value = "Suscribiendo a ${firstWithFeed.collectionName ?: searchTerm}..."
+                    _subscriptionMessage.value = "Suscribiendo a ${firstWithFeed.collectionName ?: searchTerm}…"
                     val subResult = repository.subscribeToFeed(firstWithFeed.feedUrl)
                     subResult.onSuccess { podcast ->
                         _subscriptionMessage.value = "¡Suscrito a ${podcast.title}!"
@@ -676,7 +676,7 @@ class PodcastViewModel @JvmOverloads constructor(
     ) {
         viewModelScope.launch {
             _subscriptionLoading.value = true
-            _subscriptionMessage.value = "Importando audios de carpeta local..."
+            _subscriptionMessage.value = "Importando audios de carpeta local…"
             val result = repository.importLocalFolder(context, treeUri, title, artworkUri)
             result.onSuccess {
                 _subscriptionMessage.value = "Carpeta importada con éxito: ${it.title}"

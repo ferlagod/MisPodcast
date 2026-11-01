@@ -84,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
+import com.ferlagod.mispodcast.ui.theme.readableContentColor
 
 /**
  * Indicador animado de ecualizador con 3 barras que oscilan armónicamente
@@ -207,7 +208,7 @@ fun PlayProgressButton(
             Icon(
                 imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                 contentDescription = stringResource(if (isPlaying) R.string.action_pause else R.string.action_play),
-                tint = if (isPlaying) Color.White else accentColor,
+                tint = if (isPlaying) accentColor.readableContentColor() else accentColor,
                 modifier = Modifier.size(size * 0.52f)
             )
         }
@@ -277,10 +278,10 @@ fun AnimatedSubscribeButton(
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = dominantColor,
-                    contentColor = Color.White
+                    contentColor = dominantColor.readableContentColor()
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
                 enabled = !isLoading
             ) {
                 Icon(

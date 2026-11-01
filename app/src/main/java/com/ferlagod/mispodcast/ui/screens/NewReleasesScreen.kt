@@ -68,7 +68,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -80,10 +79,8 @@ import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
 import com.ferlagod.mispodcast.ui.components.EpisodeDownloadButton
-import com.ferlagod.mispodcast.ui.theme.AccentOrange
 import com.ferlagod.mispodcast.ui.theme.AccentRed
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -95,6 +92,7 @@ import com.ferlagod.mispodcast.ui.components.SwipeableEpisodeRow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
 /**
  * Pantalla de novedades: muestra cronológicamente los nuevos episodios publicados
@@ -149,7 +147,7 @@ fun NewReleasesScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Capítulos recién publicados por tus creadores favoritos.",
+                        text = "Episodios recientes de tus suscripciones.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -371,7 +369,7 @@ private fun NewReleaseCard(
         colors = CardDefaults.cardColors(
             containerColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -393,15 +391,12 @@ private fun NewReleaseCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Box(
+                    PodcastArtworkPlaceholder(
+                        title = item.podcastTitle,
                         modifier = Modifier
                             .size(52.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Brush.linearGradient(listOf(RoyalBlueLight, AccentOrange))),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Filled.Podcasts, null, tint = Color.White)
-                    }
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -431,7 +426,7 @@ private fun NewReleaseCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "$dateText • ${item.episode.duration / 60000} min",
+                            text = "$dateText · ${item.episode.duration / 60000} min",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -575,7 +570,7 @@ private fun NewReleaseCard(
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                     ) {
-                        Text("En cola ✓", maxLines = 1, softWrap = false)
+                        Text("En cola", maxLines = 1, softWrap = false)
                     }
                 }
 

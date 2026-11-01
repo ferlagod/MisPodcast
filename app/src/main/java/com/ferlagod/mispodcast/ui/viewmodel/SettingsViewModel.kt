@@ -94,7 +94,7 @@ class SettingsViewModel @JvmOverloads constructor(
     fun testNextcloudConnection(serverUrl: String, username: String, appPassword: String) {
         viewModelScope.launch {
             _isTestingConnection.value = true
-            _connectionTestResult.value = "Probando conexión con Nextcloud..."
+            _connectionTestResult.value = "Probando conexión con Nextcloud…"
             _isConnectionSuccess.value = null
 
             val result = nextcloudSyncManager.testConnection(serverUrl, username, appPassword)
@@ -113,7 +113,7 @@ class SettingsViewModel @JvmOverloads constructor(
     fun syncNextcloudNow() {
         viewModelScope.launch {
             _isSyncingNextcloud.value = true
-            _nextcloudSyncMessage.value = "Sincronizando con Nextcloud..."
+            _nextcloudSyncMessage.value = "Sincronizando con Nextcloud…"
             val result = nextcloudSyncManager.syncNow()
             result.onSuccess { msg ->
                 _nextcloudSyncMessage.value = msg
@@ -230,7 +230,7 @@ class SettingsViewModel @JvmOverloads constructor(
     fun exportOpml(targetUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Generando archivo OPML..."
+            _backupMessage.value = "Generando archivo OPML…"
             val podcasts = database.podcastDao().getSubscribedPodcastsFlow().firstOrNull() ?: emptyList()
             val result = OpmlExporter.exportOpml(getApplication(), targetUri, podcasts)
             result.onSuccess { count ->
@@ -245,7 +245,7 @@ class SettingsViewModel @JvmOverloads constructor(
     fun importOpml(sourceUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Leyendo archivo OPML..."
+            _backupMessage.value = "Leyendo archivo OPML…"
             val parseResult = OpmlImporter.importOpml(getApplication(), sourceUri)
             parseResult.onSuccess { feeds ->
                 if (feeds.isEmpty()) {
@@ -254,7 +254,7 @@ class SettingsViewModel @JvmOverloads constructor(
                     return@launch
                 }
 
-                _backupMessage.value = "Importando ${feeds.size} podcasts..."
+                _backupMessage.value = "Importando ${feeds.size} podcasts…"
                 var importedCount = 0
                 for (feed in feeds) {
                     val isLocalFeed = feed.xmlUrl.startsWith("antennapod_local:") ||
@@ -310,7 +310,7 @@ class SettingsViewModel @JvmOverloads constructor(
     fun exportDatabaseZip(targetUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Creando copia de seguridad ZIP de la base de datos..."
+            _backupMessage.value = "Creando copia de seguridad ZIP de la base de datos…"
             val result = DatabaseBackupManager.exportDatabaseZip(getApplication(), targetUri, database)
             result.onSuccess {
                 _backupMessage.value = "¡Copia de seguridad de la base de datos guardada con éxito!"
@@ -324,7 +324,7 @@ class SettingsViewModel @JvmOverloads constructor(
     fun importDatabaseZip(sourceUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Analizando e importando base de datos..."
+            _backupMessage.value = "Analizando e importando base de datos…"
             val result = DatabaseBackupManager.importDatabase(getApplication(), sourceUri, database)
             result.onSuccess { msg ->
                 com.ferlagod.mispodcast.notification.NotificationHelper.cancelAllNotifications(getApplication())

@@ -87,7 +87,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -102,11 +101,11 @@ import com.ferlagod.mispodcast.data.mapper.PodcastLanguageMapper
 import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.AccentOrange
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
+import androidx.compose.material3.LocalContentColor
+import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
 /**
  * Pantalla para añadir nuevos programas y fuentes a la biblioteca.
@@ -176,13 +175,13 @@ fun AddPodcastScreen(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.FolderOpen,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -209,7 +208,7 @@ fun AddPodcastScreen(
                         value = folderCustomTitle,
                         onValueChange = { folderCustomTitle = it },
                         label = { Text("Nombre del podcast") },
-                        placeholder = { Text("Ej: Audiolibros, Mis Audios...") },
+                        placeholder = { Text("Ej: Audiolibros, Mis Audios…") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true
@@ -309,10 +308,10 @@ fun AddPodcastScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = Color.White
+                            color = LocalContentColor.current
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Importando...")
+                        Text("Importando…")
                     } else {
                         Text("Importar podcast", fontWeight = FontWeight.Bold)
                     }
@@ -370,7 +369,7 @@ fun AddPodcastScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -382,13 +381,13 @@ fun AddPodcastScreen(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.FolderOpen,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -636,17 +635,17 @@ fun AddPodcastScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Column(modifier = Modifier.padding(18.dp)) {
                                 Text(
-                                    text = "Suscripción directa por URL RSS / XML",
+                                    text = "Añadir por URL",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Introduce el enlace directo al feed RSS o Atom de cualquier podcast para importar sus episodios y metadatos de Podcasting 2.0.",
+                                    text = "Pega la dirección del feed RSS o Atom del podcast.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -689,11 +688,11 @@ fun AddPodcastScreen(
                                     if (isSubscribing) {
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(20.dp),
-                                            color = Color.White,
+                                            color = LocalContentColor.current,
                                             strokeWidth = 2.dp
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Importando feed...")
+                                        Text("Importando feed…")
                                     } else {
                                         Text("Añadir podcast", fontWeight = FontWeight.Bold)
                                     }
@@ -708,7 +707,7 @@ fun AddPodcastScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Column(
                                 modifier = Modifier.padding(20.dp),
@@ -718,13 +717,13 @@ fun AddPodcastScreen(
                                     modifier = Modifier
                                         .size(64.dp)
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.FolderOpen,
                                         contentDescription = null,
-                                        tint = Color.White,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(34.dp)
                                     )
                                 }
@@ -741,7 +740,7 @@ fun AddPodcastScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Elige cualquier carpeta de tu almacenamiento interno, tarjeta SD o descargas. Los archivos se reproducirán de forma nativa sin duplicar espacio y podrás asignarles carátula.",
+                                    text = "Elige una carpeta del almacenamiento interno o de la tarjeta SD. Los audios se reproducen desde su ubicación, sin duplicarse.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -779,7 +778,7 @@ fun AddPodcastScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "Sincronización continua de nuevos audios añadidos",
+                                                text = "Detecta los audios nuevos que añadas",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.SemiBold
                                             )
@@ -821,7 +820,7 @@ private fun SearchResultCard(
             .clickable(onClick = onCardClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -840,15 +839,12 @@ private fun SearchResultCard(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Box(
+                PodcastArtworkPlaceholder(
+                    title = result.collectionName.orEmpty(),
                     modifier = Modifier
                         .size(54.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Brush.linearGradient(listOf(RoyalBlueLight, IndigoSecondary))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.Podcasts, null, tint = Color.White)
-                }
+                )
             }
 
             Spacer(modifier = Modifier.width(14.dp))

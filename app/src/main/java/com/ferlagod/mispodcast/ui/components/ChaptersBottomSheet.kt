@@ -208,7 +208,7 @@ fun ChaptersBottomSheet(
                                         Icon(
                                             imageVector = Icons.Filled.Radio,
                                             contentDescription = null,
-                                            tint = Color.White,
+                                            tint = MaterialTheme.colorScheme.onPrimary,
                                             modifier = Modifier.size(18.dp)
                                         )
                                     } else {

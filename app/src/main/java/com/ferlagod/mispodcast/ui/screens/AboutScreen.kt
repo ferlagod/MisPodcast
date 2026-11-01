@@ -64,7 +64,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -74,8 +73,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ferlagod.mispodcast.R
-import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
+import com.ferlagod.mispodcast.BuildConfig
 
 /**
  * Pantalla de información general sobre la aplicación "Acerca de Mis Podcast".
@@ -134,13 +132,8 @@ fun AboutScreen(
                     Box(
                         modifier = Modifier
                             .size(110.dp)
-                            .shadow(16.dp, CircleShape, spotColor = RoyalBlueLight.copy(alpha = 0.5f))
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(RoyalBlueLight, IndigoSecondary)
-                                )
-                            ),
+                            .shadow(6.dp, CircleShape)
+                            .clip(CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
@@ -169,7 +162,7 @@ fun AboutScreen(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.about_version_license, "1.0.0"),
+                            text = stringResource(R.string.about_version_license, BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -197,7 +190,7 @@ fun AboutScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
@@ -311,7 +304,7 @@ fun AboutScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
