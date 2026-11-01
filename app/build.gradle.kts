@@ -51,6 +51,10 @@ android {
         compose = true
         buildConfig = true
     }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
     sourceSets {
         getByName("androidTest").assets.srcDir("$projectDir/schemas")
         getByName("test").assets.srcDir("$projectDir/schemas")

@@ -25,13 +25,6 @@ RepoType: git
 Repo: https://github.com/ferlagod/MisPodcast.git
 
 Builds:
-  - versionName: 1.0.0
-    versionCode: 10000118
-    commit: v1.0.0
-    subdir: app
-    gradle:
-      - yes
-
   - versionName: 1.0.1
     versionCode: 10010019
     commit: f645016645c8163d9233bafaa9a7006ad9808cf5
