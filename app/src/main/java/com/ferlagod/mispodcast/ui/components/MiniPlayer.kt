@@ -39,7 +39,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -101,6 +101,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -426,10 +427,25 @@ fun FullPlayerSheet(
             contentColor = playerContentColor,
             tonalElevation = 0.dp
         ) {
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
+                // Dimensionado adaptativo: pantallas pequeñas (p. ej. pantalla externa de plegables)
+                // reducen controles y la portada se limita al alto disponible para que todo quepa
+                val isCompact = maxWidth < 360.dp || maxHeight < 680.dp
+                val horizontalPadding = if (isCompact) 16.dp else 22.dp
+                val playButtonSize = if (isCompact) 60.dp else 72.dp
+                val skipButtonSize = if (isCompact) 46.dp else 54.dp
+                val skipIconSize = if (isCompact) 30.dp else 36.dp
+                // Alto aproximado del resto de elementos (barra, títulos, slider, controles, fila inferior)
+                val reservedHeight = (if (isCompact) 360.dp else 410.dp) + (if (chapters.isNotEmpty()) 56.dp else 0.dp)
+                val artworkSize = minOf(
+                    (maxWidth - horizontalPadding * 2) * 0.85f,
+                    maxHeight - reservedHeight,
+                    420.dp
+                ).coerceAtLeast(140.dp)
+
                 // 1. FONDO: Portada desenfocada (blur 60dp en API 31+) con velo inmersivo del color de fondo
                 if (artworkUrl.isNotBlank()) {
                     val blurModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -470,7 +486,7 @@ fun FullPlayerSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 22.dp, vertical = 4.dp)
+                        .padding(horizontal = horizontalPadding, vertical = 4.dp)
                         .navigationBarsPadding(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -540,13 +556,12 @@ fun FullPlayerSheet(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(if (isCompact) 4.dp else 8.dp))
 
-                    // PORTADA GRANDE (~85% de ancho) con escala animada al pausar y gesto de deslizamiento
+                    // PORTADA GRANDE (adaptada al ancho y alto disponibles) con escala animada al pausar y gesto de deslizamiento
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.85f)
-                            .aspectRatio(1f)
+                            .size(artworkSize)
                             .scale(artworkScale)
                             .offset { IntOffset(swipeOffsetX.roundToInt(), 0) }
                             .draggable(
@@ -612,12 +627,13 @@ fun FullPlayerSheet(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(if (isCompact) 12.dp else 18.dp))
 
                     // TÍTULO DEL EPISODIO Y PODCAST
                     Text(
                         text = currentEpisode?.title ?: "Episodio",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        style = (if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge)
+                            .copy(fontWeight = FontWeight.Bold),
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -629,7 +645,7 @@ fun FullPlayerSheet(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = podcastTitle,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = if (isCompact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
                         color = accentColor,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
@@ -749,7 +765,7 @@ fun FullPlayerSheet(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(if (isCompact) 8.dp else 14.dp))
 
                     // 5. CONTROLES DE TRANSPORTE PRINCIPALES: Retroceso, Play/Pause Squircle y Avance
                     Row(
@@ -765,7 +781,7 @@ fun FullPlayerSheet(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 playerViewModel.seekBack()
                             },
-                            modifier = Modifier.size(54.dp)
+                            modifier = Modifier.size(skipButtonSize)
                         ) {
                             Icon(
                                 imageVector = when (backSec) {
@@ -775,7 +791,7 @@ fun FullPlayerSheet(
                                     else -> Icons.Filled.FastRewind
                                 },
                                 contentDescription = stringResource(R.string.player_skip_backward_format, backSec),
-                                modifier = Modifier.size(36.dp),
+                                modifier = Modifier.size(skipIconSize),
                                 tint = playerContentColor
                             )
                         }
@@ -787,7 +803,7 @@ fun FullPlayerSheet(
                                 playerViewModel.togglePlayPause()
                             },
                             modifier = Modifier
-                                .size(72.dp)
+                                .size(playButtonSize)
                                 .clip(RoundedCornerShape(playButtonCornerRadius))
                                 .background(accentColor)
                         ) {
@@ -795,7 +811,7 @@ fun FullPlayerSheet(
                                 imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                                 contentDescription = stringResource(if (isPlaying) R.string.action_pause else R.string.action_play),
                                 tint = onAccentColor,
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(if (isCompact) 34.dp else 40.dp)
                             )
                         }
 
@@ -804,7 +820,7 @@ fun FullPlayerSheet(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 playerViewModel.seekForward()
                             },
-                            modifier = Modifier.size(54.dp)
+                            modifier = Modifier.size(skipButtonSize)
                         ) {
                             Icon(
                                 imageVector = when (forwardSec) {
@@ -814,15 +830,16 @@ fun FullPlayerSheet(
                                     else -> Icons.Filled.FastForward
                                 },
                                 contentDescription = stringResource(R.string.player_skip_forward_format, forwardSec),
-                                modifier = Modifier.size(36.dp),
+                                modifier = Modifier.size(skipIconSize),
                                 tint = playerContentColor
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(if (isCompact) 12.dp else 20.dp))
 
                     // 6. FILA INFERIOR DE 5 ICONOS ESENCIALES (Velocidad, Temporizador, Clips, Transcripción, Cola)
+                    // Cada acción ocupa 1/5 del ancho para que las etiquetas no se recorten en pantallas estrechas
                     Surface(
                         shape = RoundedCornerShape(22.dp),
                         color = playerContentColor.copy(alpha = 0.08f),
@@ -831,113 +848,77 @@ fun FullPlayerSheet(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceAround,
+                                .padding(horizontal = 4.dp, vertical = if (isCompact) 4.dp else 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val idleIconTint = playerContentColor.copy(alpha = 0.85f)
+                            val idleLabelColor = playerContentColor.copy(alpha = 0.75f)
+
                             // 1. Selector de velocidad
-                            IconButton(onClick = { showPlaybackSpeedSheet = true }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Speed,
-                                        contentDescription = stringResource(R.string.player_speed_description),
-                                        tint = if (playbackSpeed != 1.0f) accentColor else playerContentColor.copy(alpha = 0.85f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = PlaybackController.formatSpeed(playbackSpeed),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (playbackSpeed != 1.0f) accentColor else playerContentColor.copy(alpha = 0.75f)
-                                    )
-                                }
-                            }
+                            val speedActive = playbackSpeed != 1.0f
+                            PlayerToolButton(
+                                icon = Icons.Filled.Speed,
+                                contentDescription = stringResource(R.string.player_speed_description),
+                                label = PlaybackController.formatSpeed(playbackSpeed),
+                                iconTint = if (speedActive) accentColor else idleIconTint,
+                                labelColor = if (speedActive) accentColor else idleLabelColor,
+                                labelBold = true,
+                                onClick = { showPlaybackSpeedSheet = true },
+                                modifier = Modifier.weight(1f)
+                            )
 
                             // 2. Temporizador de apagado
-                            IconButton(onClick = { showSleepTimerSheet = true }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Bedtime,
-                                        contentDescription = stringResource(R.string.player_sleep_timer_description),
-                                        tint = if (sleepTimerState.isActive) accentColor else playerContentColor.copy(alpha = 0.85f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = if (sleepTimerState.isActive) sleepTimerState.formattedRemaining else "Apagar",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (sleepTimerState.isActive) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (sleepTimerState.isActive) accentColor else playerContentColor.copy(alpha = 0.75f)
-                                    )
-                                }
-                            }
+                            PlayerToolButton(
+                                icon = Icons.Filled.Bedtime,
+                                contentDescription = stringResource(R.string.player_sleep_timer_description),
+                                label = if (sleepTimerState.isActive) sleepTimerState.formattedRemaining else "Apagar",
+                                iconTint = if (sleepTimerState.isActive) accentColor else idleIconTint,
+                                labelColor = if (sleepTimerState.isActive) accentColor else idleLabelColor,
+                                labelBold = sleepTimerState.isActive,
+                                onClick = { showSleepTimerSheet = true },
+                                modifier = Modifier.weight(1f)
+                            )
 
                             // 3. Marcadores / Clips
-                            IconButton(onClick = { showBookmarksSheet = true }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Bookmark,
-                                        contentDescription = stringResource(R.string.player_bookmarks_description),
-                                        tint = if (bookmarks.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.85f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = if (bookmarks.isNotEmpty()) "${bookmarks.size}" else "Clips",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (bookmarks.isNotEmpty()) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (bookmarks.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.75f)
-                                    )
-                                }
-                            }
+                            PlayerToolButton(
+                                icon = Icons.Filled.Bookmark,
+                                contentDescription = stringResource(R.string.player_bookmarks_description),
+                                label = if (bookmarks.isNotEmpty()) "${bookmarks.size}" else "Clips",
+                                iconTint = if (bookmarks.isNotEmpty()) accentColor else idleIconTint,
+                                labelColor = if (bookmarks.isNotEmpty()) accentColor else idleLabelColor,
+                                labelBold = bookmarks.isNotEmpty(),
+                                onClick = { showBookmarksSheet = true },
+                                modifier = Modifier.weight(1f)
+                            )
 
                             // 4. Transcripción / Subtítulos
                             val hasTranscript = !currentEpisode?.transcriptUrl.isNullOrBlank() || transcript.isNotEmpty()
-                            IconButton(
-                                onClick = { if (hasTranscript) showTranscriptSheet = true },
-                                enabled = hasTranscript
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Subtitles,
-                                        contentDescription = stringResource(R.string.player_transcript_description),
-                                        tint = if (hasTranscript) accentColor else playerContentColor.copy(alpha = 0.35f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Texto",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (hasTranscript) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (hasTranscript) playerContentColor.copy(alpha = 0.85f) else playerContentColor.copy(alpha = 0.35f)
-                                    )
-                                }
-                            }
+                            PlayerToolButton(
+                                icon = Icons.Filled.Subtitles,
+                                contentDescription = stringResource(R.string.player_transcript_description),
+                                label = "Texto",
+                                iconTint = if (hasTranscript) accentColor else playerContentColor.copy(alpha = 0.35f),
+                                labelColor = if (hasTranscript) idleIconTint else playerContentColor.copy(alpha = 0.35f),
+                                labelBold = hasTranscript,
+                                enabled = hasTranscript,
+                                onClick = { showTranscriptSheet = true },
+                                modifier = Modifier.weight(1f)
+                            )
 
                             // 5. Cola de reproducción
-                            IconButton(
+                            PlayerToolButton(
+                                icon = Icons.AutoMirrored.Filled.QueueMusic,
+                                contentDescription = "Cola",
+                                label = if (queueEpisodes.isNotEmpty()) "${queueEpisodes.size}" else "Cola",
+                                iconTint = if (queueEpisodes.isNotEmpty()) accentColor else idleIconTint,
+                                labelColor = if (queueEpisodes.isNotEmpty()) accentColor else idleLabelColor,
+                                labelBold = queueEpisodes.isNotEmpty(),
                                 onClick = {
                                     onDismiss()
                                     onNavigateToQueue()
-                                }
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.QueueMusic,
-                                        contentDescription = "Cola",
-                                        tint = if (queueEpisodes.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.85f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = if (queueEpisodes.isNotEmpty()) "${queueEpisodes.size}" else "Cola",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (queueEpisodes.isNotEmpty()) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (queueEpisodes.isNotEmpty()) accentColor else playerContentColor.copy(alpha = 0.75f)
-                                    )
-                                }
-                            }
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
 
@@ -1029,6 +1010,48 @@ fun FullPlayerSheet(
         BookmarksBottomSheet(
             playerViewModel = playerViewModel,
             onDismissRequest = { showBookmarksSheet = false }
+        )
+    }
+}
+
+/**
+ * Acción de la fila inferior del reproductor: icono + etiqueta que ocupa el ancho asignado
+ * por su contenedor, de forma que el texto no quede recortado en pantallas estrechas.
+ */
+@Composable
+private fun PlayerToolButton(
+    icon: ImageVector,
+    contentDescription: String,
+    label: String,
+    iconTint: Color,
+    labelColor: Color,
+    labelBold: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 6.dp, horizontal = 2.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = iconTint,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (labelBold) FontWeight.Bold else FontWeight.Normal,
+            color = labelColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
         )
     }
 }
