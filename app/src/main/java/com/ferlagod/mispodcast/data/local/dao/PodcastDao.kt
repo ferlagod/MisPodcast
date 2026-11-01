@@ -31,10 +31,13 @@ import com.ferlagod.mispodcast.data.local.entities.ListeningHistoryEntity
 import com.ferlagod.mispodcast.data.local.entities.PlaybackStatsEntity
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
+import com.ferlagod.mispodcast.data.local.entities.SyncStateEntity
+import com.ferlagod.mispodcast.data.local.entities.SyncStatsContributionEntity
 import com.ferlagod.mispodcast.data.local.model.EpisodeOwner
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
 import com.ferlagod.mispodcast.data.local.model.GlobalStats
 import com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem
+import com.ferlagod.mispodcast.data.local.model.HistorySyncRow
 import com.ferlagod.mispodcast.data.local.model.QueueEpisodeItem
 import com.ferlagod.mispodcast.data.local.model.QueueItemEntityWithEpisode
 import kotlinx.coroutines.flow.Flow
@@ -336,13 +339,19 @@ interface PodcastDao {
         now: Long = System.currentTimeMillis()
     ): Int
 
-    // Obtener episodios con progreso de reproducción o escuchados
-    @Query("SELECT * FROM episodes WHERE isPlayed = 1 OR currentPositionMs > 0")
+    // Obtener episodios con progreso, escuchados o cuyo estado cambió alguna vez (p. ej. desmarcados)
+    @Query("SELECT * FROM episodes WHERE isPlayed = 1 OR currentPositionMs > 0 OR positionUpdatedAt > 0")
     suspend fun getPlayedOrInProgressEpisodes(): List<EpisodeEntity>
 
     // Marcar como favorito
     @Query("UPDATE episodes SET isFavorite = :isFavorite WHERE id = :episodeId")
     suspend fun updateFavoriteStatus(episodeId: String, isFavorite: Boolean): Int
+
+    @Query("SELECT id FROM episodes WHERE isFavorite = 1")
+    suspend fun getFavoriteEpisodeIds(): List<String>
+
+    @Query("SELECT * FROM episodes WHERE isFavorite = 1")
+    suspend fun getFavoriteEpisodesList(): List<EpisodeEntity>
 
     // Actualizar estado de descarga
     @Query("""
@@ -416,6 +425,10 @@ interface PodcastDao {
             currentPositionMs = CASE 
                 WHEN id IN (SELECT episodeId FROM queue_items) THEN currentPositionMs 
                 ELSE duration 
+            END,
+            positionUpdatedAt = CASE 
+                WHEN id IN (SELECT episodeId FROM queue_items) THEN positionUpdatedAt 
+                ELSE :now 
             END 
         WHERE id IN (
             SELECT e.id 
@@ -438,7 +451,7 @@ interface PodcastDao {
      *   no se marcan como reproducidos y conservan su posición actual).
      * - Los episodios que NO están en la cola se marcan como reproducidos con posición igual a su duración.
      */
-    suspend fun markAllNewReleasesAsPlayedDirect(): Int
+    suspend fun markAllNewReleasesAsPlayedDirect(now: Long = System.currentTimeMillis()): Int
 
     @Transaction
     suspend fun clearAllNewReleasesDirect() {
@@ -744,6 +757,31 @@ interface PodcastDao {
     @Query("DELETE FROM listening_history")
     suspend fun clearHistory(): Int
 
+    /**
+     * Borra el historial y deja una lápida con la fecha para que la sincronización no lo restaure
+     * desde otro dispositivo y propague el borrado.
+     */
+    @Transaction
+    suspend fun clearHistoryWithTombstone(now: Long = System.currentTimeMillis()) {
+        clearHistory()
+        setSyncState(SyncStateEntity(SYNC_KEY_HISTORY_CLEARED_AT, now.toString()))
+    }
+
+    @Query("DELETE FROM listening_history WHERE listenedAt <= :timestamp")
+    suspend fun deleteHistoryUpTo(timestamp: Long): Int
+
+    @Query("SELECT * FROM listening_history WHERE syncId = :syncId LIMIT 1")
+    suspend fun getHistoryBySyncId(syncId: String): ListeningHistoryEntity?
+
+    @Query("""
+        SELECT h.syncId, h.episodeId, h.podcastId, e.audioUrl, h.listenedAt, h.durationListenedMs, h.completed
+        FROM listening_history h
+        INNER JOIN episodes e ON h.episodeId = e.id
+        ORDER BY h.listenedAt DESC
+        LIMIT :limit
+    """)
+    suspend fun getHistorySessionsForSync(limit: Int): List<HistorySyncRow>
+
     @Query("SELECT EXISTS(SELECT 1 FROM listening_history WHERE episodeId = :episodeId)")
     suspend fun hasHistoryForEpisode(episodeId: String): Boolean
 
@@ -801,6 +839,30 @@ interface PodcastDao {
 
     @Query("SELECT * FROM playback_stats WHERE podcastId = :podcastId LIMIT 1")
     suspend fun getStatsForPodcast(podcastId: String): PlaybackStatsEntity?
+
+    /**
+     * Suma (o resta) un incremento a las estadísticas de un podcast de forma atómica, para que la
+     * sincronización no pise el tiempo que se registre mientras tanto en la reproducción.
+     */
+    @Transaction
+    suspend fun addToPlaybackStats(
+        podcastId: String,
+        podcastTitle: String,
+        deltaTimeMs: Long,
+        deltaCompleted: Int,
+        lastListenedAt: Long
+    ) {
+        val existing = getStatsForPodcast(podcastId)
+        upsertPlaybackStats(
+            PlaybackStatsEntity(
+                podcastId = podcastId,
+                podcastTitle = existing?.podcastTitle?.takeIf { it.isNotBlank() } ?: podcastTitle,
+                totalTimeListenedMs = ((existing?.totalTimeListenedMs ?: 0L) + deltaTimeMs).coerceAtLeast(0L),
+                episodesCompletedCount = ((existing?.episodesCompletedCount ?: 0) + deltaCompleted).coerceAtLeast(0),
+                lastListenedAt = maxOf(existing?.lastListenedAt ?: 0L, lastListenedAt)
+            )
+        )
+    }
 
     @Transaction
     suspend fun recordListenedDuration(
@@ -866,6 +928,29 @@ interface PodcastDao {
 
     @Query("DELETE FROM bookmarks WHERE id = :bookmarkId")
     suspend fun deleteBookmark(bookmarkId: String): Int
+
+    @Query("SELECT * FROM bookmarks")
+    suspend fun getAllBookmarksList(): List<BookmarkEntity>
+
+    // ==========================================
+    // ESTADO DE SINCRONIZACIÓN
+    // ==========================================
+
+    @Query("SELECT stateValue FROM sync_state WHERE stateKey = :key LIMIT 1")
+    suspend fun getSyncState(key: String): String?
+
+    @Upsert
+    suspend fun setSyncState(state: SyncStateEntity)
+
+    @Query("SELECT * FROM sync_stats_contributions")
+    suspend fun getAllSyncStatsContributions(): List<SyncStatsContributionEntity>
+
+    @Upsert
+    suspend fun upsertSyncStatsContributions(items: List<SyncStatsContributionEntity>)
+
+    companion object {
+        const val SYNC_KEY_HISTORY_CLEARED_AT = "history_cleared_at"
+    }
 }
 
 /**

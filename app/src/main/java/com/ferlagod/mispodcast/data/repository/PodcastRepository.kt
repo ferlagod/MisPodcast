@@ -593,7 +593,7 @@ class PodcastRepository(
         }
 
     suspend fun clearHistory() = withContext(Dispatchers.IO) {
-        podcastDao.clearHistory()
+        podcastDao.clearHistoryWithTombstone()
     }
 
     fun getPodcastStats(): Flow<List<PlaybackStatsEntity>> = podcastDao.getPodcastStatsFlow()

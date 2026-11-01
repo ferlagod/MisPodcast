@@ -45,9 +45,11 @@ import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
         QueueItemEntity::class,
         ListeningHistoryEntity::class,
         PlaybackStatsEntity::class,
-        com.ferlagod.mispodcast.data.local.entities.BookmarkEntity::class
+        com.ferlagod.mispodcast.data.local.entities.BookmarkEntity::class,
+        com.ferlagod.mispodcast.data.local.entities.SyncStateEntity::class,
+        com.ferlagod.mispodcast.data.local.entities.SyncStatsContributionEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 abstract class PodcastDatabase : RoomDatabase() {
@@ -66,6 +68,12 @@ abstract class PodcastDatabase : RoomDatabase() {
          * Todas delegan en [ensureAllTablesAndColumns] para garantizar de forma acumulativa
          * que cualquier usuario con cualquier versión previa conserve intactos todos sus datos.
          */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                ensureAllTablesAndColumns(db)
+            }
+        }
+
         val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 ensureAllTablesAndColumns(db)
@@ -242,6 +250,7 @@ abstract class PodcastDatabase : RoomDatabase() {
                     DATABASE_NAME
                 )
                     .addMigrations(
+                        MIGRATION_11_12,
                         MIGRATION_10_11,
                         MIGRATION_9_10,
                         MIGRATION_1_10,
@@ -400,6 +409,10 @@ abstract class PodcastDatabase : RoomDatabase() {
             """)
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_listening_history_episodeId` ON `listening_history` (`episodeId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_listening_history_listenedAt` ON `listening_history` (`listenedAt`)")
+            // Identificador estable de cada sesión para la sincronización (v12): se rellena en las filas existentes
+            addColumnIfNotExists(db, "listening_history", "syncId", "TEXT NOT NULL DEFAULT ''")
+            db.execSQL("UPDATE `listening_history` SET `syncId` = lower(hex(randomblob(16))) WHERE `syncId` = ''")
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_listening_history_syncId` ON `listening_history` (`syncId`)")
 
             // 5. Tabla playback_stats (Estadísticas)
             db.execSQL("""
@@ -429,6 +442,28 @@ abstract class PodcastDatabase : RoomDatabase() {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_bookmarks_episodeId` ON `bookmarks` (`episodeId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_bookmarks_podcastId` ON `bookmarks` (`podcastId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_bookmarks_createdAt` ON `bookmarks` (`createdAt`)")
+
+            // 7. Estado interno de la sincronización Nextcloud (v12)
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `sync_state` (
+                    `stateKey` TEXT NOT NULL,
+                    `stateValue` TEXT NOT NULL,
+                    PRIMARY KEY(`stateKey`)
+                )
+            """)
+
+            // 8. Aportación de cada dispositivo a las estadísticas (v12)
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `sync_stats_contributions` (
+                    `deviceId` TEXT NOT NULL,
+                    `podcastId` TEXT NOT NULL,
+                    `podcastTitle` TEXT NOT NULL,
+                    `totalTimeListenedMs` INTEGER NOT NULL,
+                    `episodesCompletedCount` INTEGER NOT NULL,
+                    `lastListenedAt` INTEGER NOT NULL,
+                    PRIMARY KEY(`deviceId`, `podcastId`)
+                )
+            """)
 
             android.util.Log.d(TAG, "Migración segura completada con éxito.")
         }

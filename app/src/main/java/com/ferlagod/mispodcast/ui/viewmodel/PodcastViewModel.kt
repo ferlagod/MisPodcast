@@ -53,6 +53,7 @@ import com.ferlagod.mispodcast.data.mapper.PodcastLanguageMapper
 import com.ferlagod.mispodcast.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
@@ -190,6 +191,15 @@ class PodcastViewModel @JvmOverloads constructor(
     init {
         // Programar sincronización periódica en segundo plano
         SyncWorker.schedulePeriodicSync(application)
+        // Traer al abrir la app lo hecho en otros dispositivos (posición, cola, favoritos...)
+        viewModelScope.launch {
+            val settings = preferencesManager.userSettingsFlow.first()
+            if (settings.nextcloudServerUrl.isNotBlank() && settings.nextcloudUsername.isNotBlank() &&
+                settings.nextcloudAppPassword.isNotBlank()
+            ) {
+                SyncWorker.scheduleImmediateSync(application)
+            }
+        }
 
         // Observar reactivamente el cambio de idioma/país para recargar recomendaciones
         viewModelScope.launch {
@@ -594,6 +604,7 @@ class PodcastViewModel @JvmOverloads constructor(
     fun clearHistory() {
         viewModelScope.launch {
             repository.clearHistory()
+            syncWithNextcloud()
         }
     }
 
@@ -657,6 +668,7 @@ class PodcastViewModel @JvmOverloads constructor(
                 episodeSortOrder = episodeSortOrder,
                 autoEnqueueRule = autoEnqueueRule
             )
+            syncWithNextcloud(debounceMs = 2500L)
         }
     }
 

@@ -24,7 +24,14 @@ import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.preferences.UserPreferencesManager
 import com.ferlagod.mispodcast.data.repository.PodcastRepository
+import com.ferlagod.mispodcast.data.local.entities.PlaybackStatsEntity
+import com.ferlagod.mispodcast.data.local.entities.SyncStatsContributionEntity
+import com.ferlagod.mispodcast.data.local.model.QueueItemEntityWithEpisode
+import com.ferlagod.mispodcast.sync.NextcloudDeviceStats
 import com.ferlagod.mispodcast.sync.NextcloudEpisodeProgress
+import com.ferlagod.mispodcast.sync.NextcloudFavoriteItem
+import com.ferlagod.mispodcast.sync.NextcloudQueueItem
+import com.ferlagod.mispodcast.sync.SyncBaseSnapshot
 import com.ferlagod.mispodcast.sync.NextcloudSubscription
 import com.ferlagod.mispodcast.sync.NextcloudSyncData
 import com.ferlagod.mispodcast.sync.NextcloudSyncManager
@@ -422,5 +429,137 @@ class NextcloudMergeTests {
         assertTrue(NextcloudSyncManager.isSecureServerUrl("http://localhost:8080"))
         assertTrue(NextcloudSyncManager.isSecureServerUrl("http://127.0.0.1:8080"))
         assertFalse(NextcloudSyncManager.isSecureServerUrl("http://servidor-remoto-inseguro.org"))
+    }
+
+    private fun episode(id: String) = EpisodeEntity(
+        id = id,
+        podcastId = "https://ejemplo.com/podcast.xml",
+        title = "Episodio $id",
+        description = "",
+        audioUrl = "https://audio.com/$id.mp3",
+        imageUrl = "",
+        pubDate = 1000L,
+        duration = 1_800_000L
+    )
+
+    private fun queueItem(id: String, index: Int, playing: Boolean = false) = QueueItemEntityWithEpisode(
+        queueId = index.toLong() + 1,
+        positionIndex = index,
+        isCurrentlyPlaying = playing,
+        addedAt = 1000L,
+        podcastTitle = "Podcast",
+        podcastArtworkUrl = "",
+        episode = episode(id)
+    )
+
+    /**
+     * Test 9: Un episodio quitado de la cola en este dispositivo no vuelve a aparecer al sincronizar
+     * (antes el archivo remoto lo devolvía siempre a la cola).
+     */
+    @Test
+    fun testQueueRemovalIsNotRevertedBySync() = runBlocking {
+        listOf("ep-a", "ep-b").forEach { id -> coEvery { mockDao.getEpisodeById(id) } returns episode(id) }
+        coEvery { mockDao.getQueueList() } returns listOf(queueItem("ep-a", 0))
+
+        val remoteData = NextcloudSyncData(
+            queue = listOf(
+                NextcloudQueueItem(episodeId = "ep-a", positionIndex = 0),
+                NextcloudQueueItem(episodeId = "ep-b", positionIndex = 1)
+            )
+        )
+        syncManager.mergeRemoteStateIntoLocal(remoteData, SyncBaseSnapshot(queue = listOf("ep-a", "ep-b")))
+
+        coVerify(exactly = 0) { mockDao.insertQueueItem(any()) }
+    }
+
+    /**
+     * Test 10: Un episodio quitado de la cola en otro dispositivo se quita también aquí,
+     * salvo el que se está reproduciendo.
+     */
+    @Test
+    fun testRemoteQueueRemovalPropagatesExceptCurrentlyPlaying() = runBlocking {
+        listOf("ep-a", "ep-b", "ep-c").forEach { id -> coEvery { mockDao.getEpisodeById(id) } returns episode(id) }
+        coEvery { mockDao.getQueueList() } returns listOf(
+            queueItem("ep-a", 0, playing = true),
+            queueItem("ep-b", 1),
+            queueItem("ep-c", 2)
+        )
+
+        val remoteData = NextcloudSyncData(
+            queue = listOf(NextcloudQueueItem(episodeId = "ep-c", positionIndex = 0))
+        )
+        syncManager.mergeRemoteStateIntoLocal(remoteData, SyncBaseSnapshot(queue = listOf("ep-a", "ep-b", "ep-c")))
+
+        coVerify(exactly = 1) { mockDao.removeFromQueue("ep-b") }
+        coVerify(exactly = 0) { mockDao.removeFromQueue("ep-a") }
+        coVerify(exactly = 1) { mockDao.reorderQueue(listOf("ep-a", "ep-c")) }
+    }
+
+    /**
+     * Test 11: Quitar un favorito se propaga en ambos sentidos.
+     */
+    @Test
+    fun testFavoriteRemovalPropagatesBothWays() = runBlocking {
+        listOf("ep-x", "ep-y").forEach { id -> coEvery { mockDao.getEpisodeById(id) } returns episode(id) }
+        // ep-x: favorito aquí, quitado en otro dispositivo. ep-y: quitado aquí, sigue en remoto.
+        coEvery { mockDao.getFavoriteEpisodeIds() } returns listOf("ep-x")
+
+        val remoteData = NextcloudSyncData(
+            favorites = listOf(NextcloudFavoriteItem(episodeId = "ep-y"))
+        )
+        syncManager.mergeRemoteStateIntoLocal(remoteData, SyncBaseSnapshot(favorites = listOf("ep-x", "ep-y")))
+
+        coVerify(exactly = 1) { mockDao.updateFavoriteStatus("ep-x", false) }
+        coVerify(exactly = 0) { mockDao.updateFavoriteStatus("ep-y", true) }
+    }
+
+    /**
+     * Test 12: El tiempo escuchado en otro dispositivo se suma al total en lugar de quedarse con el máximo.
+     */
+    @Test
+    fun testStatsFromOtherDeviceAreAdded() = runBlocking {
+        val podcastId = "https://ejemplo.com/podcast.xml"
+        // Aquí: 1 h propia. El otro dispositivo publicaba 1 h y ahora publica 3 h.
+        coEvery { mockDao.getPodcastStatsList() } returns listOf(
+            PlaybackStatsEntity(podcastId, "Podcast", totalTimeListenedMs = 7_200_000L, episodesCompletedCount = 2, lastListenedAt = 1000L)
+        )
+        coEvery { mockDao.getAllSyncStatsContributions() } returns listOf(
+            SyncStatsContributionEntity("otro", podcastId, "Podcast", 3_600_000L, 1, 900L)
+        )
+
+        val remoteData = NextcloudSyncData(
+            deviceStats = listOf(NextcloudDeviceStats("otro", podcastId, "Podcast", 10_800_000L, 3, 5000L))
+        )
+        syncManager.mergeRemoteStateIntoLocal(remoteData, null, deviceId = "este")
+
+        coVerify(exactly = 1) {
+            mockDao.addToPlaybackStats(
+                podcastId = podcastId,
+                podcastTitle = "Podcast",
+                deltaTimeMs = 7_200_000L,
+                deltaCompleted = 2,
+                lastListenedAt = 5000L
+            )
+        }
+    }
+
+    /**
+     * Test 13: Borrar el historial en otro dispositivo lo borra aquí y no se vuelve a importar.
+     */
+    @Test
+    fun testHistoryClearTombstoneIsApplied() = runBlocking {
+        coEvery { mockDao.getSyncState(any()) } returns null
+        val remoteData = NextcloudSyncData(
+            historyClearedAt = 50_000L,
+            history = listOf(
+                com.ferlagod.mispodcast.sync.NextcloudHistoryItem(
+                    episodeId = "ep-old", listenedAt = 40_000L, syncId = "s-1"
+                )
+            )
+        )
+        syncManager.mergeRemoteStateIntoLocal(remoteData)
+
+        coVerify(exactly = 1) { mockDao.deleteHistoryUpTo(50_000L) }
+        coVerify(exactly = 0) { mockDao.insertListeningHistory(any()) }
     }
 }

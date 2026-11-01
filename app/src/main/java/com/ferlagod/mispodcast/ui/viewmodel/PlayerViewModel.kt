@@ -642,12 +642,14 @@ class PlayerViewModel @JvmOverloads constructor(
                 createdAt = System.currentTimeMillis()
             )
             repository.addBookmark(bookmark)
+            syncManager.triggerSyncIfConfigured(debounceMs = 3000L)
         }
     }
 
     fun deleteBookmark(bookmarkId: String) {
         viewModelScope.launch {
             repository.deleteBookmark(bookmarkId)
+            syncManager.triggerSyncIfConfigured(debounceMs = 3000L)
         }
     }
 

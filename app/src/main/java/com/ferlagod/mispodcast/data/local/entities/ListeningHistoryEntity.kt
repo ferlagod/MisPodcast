@@ -22,6 +22,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 
 /**
  * Entidad Room que registra cada sesión de escucha realizada por el usuario.
@@ -41,7 +42,8 @@ import androidx.room.PrimaryKey
     ],
     indices = [
         Index(value = ["episodeId"]),
-        Index(value = ["listenedAt"])
+        Index(value = ["listenedAt"]),
+        Index(value = ["syncId"], unique = true)
     ]
 )
 data class ListeningHistoryEntity(
@@ -51,5 +53,7 @@ data class ListeningHistoryEntity(
     val podcastId: String,
     val listenedAt: Long = System.currentTimeMillis(),
     val durationListenedMs: Long = 0L,
-    val completed: Boolean = false
+    val completed: Boolean = false,
+    // Identificador estable de la sesión para sincronizarla entre dispositivos sin duplicarla
+    val syncId: String = UUID.randomUUID().toString()
 )

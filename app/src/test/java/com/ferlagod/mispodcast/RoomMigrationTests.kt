@@ -175,6 +175,26 @@ class RoomMigrationTests {
     }
 
     /**
+     * Test 2b: MIGRATION_11_12 añade el estado de sincronización y el identificador de sesión del historial.
+     */
+    @Test
+    fun testMigration11To12AddsSyncTablesAndHistorySyncId() {
+        assertEquals(11, PodcastDatabase.MIGRATION_11_12.startVersion)
+        assertEquals(12, PodcastDatabase.MIGRATION_11_12.endVersion)
+
+        PodcastDatabase.MIGRATION_11_12.migrate(mockDb)
+
+        val allSql = executedSqlStatements.joinToString("\n")
+        assertTrue(allSql.contains("ALTER TABLE `listening_history` ADD COLUMN `syncId`"))
+        assertTrue(allSql.contains("UPDATE `listening_history` SET `syncId` = lower(hex(randomblob(16)))"))
+        assertTrue(allSql.contains("index_listening_history_syncId"))
+        assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `sync_state`"))
+        assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `sync_stats_contributions`"))
+        // El relleno de syncId debe ir antes del índice único
+        assertTrue(allSql.indexOf("randomblob") < allSql.indexOf("index_listening_history_syncId"))
+    }
+
+    /**
      * Test 3: Migración acumulativa desde versión antigua v1 a v10.
      */
     @Test
