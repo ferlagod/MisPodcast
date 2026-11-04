@@ -56,6 +56,13 @@
             </intent-filter>
         </service>
 
+        <!-- Portadas como URIs content:// para Android Auto (solo sirve URLs registradas por la app) -->
+        <provider
+            android:name=".playback.AutoArtworkProvider"
+            android:authorities="${applicationId}.artwork"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
+
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"

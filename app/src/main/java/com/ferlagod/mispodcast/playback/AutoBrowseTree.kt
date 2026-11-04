@@ -50,7 +50,9 @@ class AutoBrowseTree(
     private val searchService: ApplePodcastSearchService,
     private val rssParser: RssFeedParser,
     /** Resuelve textos traducidos para los menús de Android Auto. */
-    private val getString: (Int) -> String = { "" }
+    private val getString: (Int) -> String = { "" },
+    /** Convierte portadas remotas en URIs que Android Auto pueda cargar (content://). */
+    private val browserArtworkMapper: (Uri?) -> Uri? = { it }
 ) {
 
     // Mapa temporal para almacenar feedUrls encontrados en búsquedas remotas
@@ -81,6 +83,19 @@ class AutoBrowseTree(
                     .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
                     .build()
             )
+            .build()
+    }
+
+    /**
+     * Adapta un elemento del catálogo para clientes externos (Android Auto): sustituye la portada
+     * remota por una URI `content://` servida por [AutoArtworkProvider].
+     */
+    fun forBrowser(item: MediaItem): MediaItem {
+        val artwork = item.mediaMetadata.artworkUri ?: return item
+        val mapped = browserArtworkMapper(artwork)
+        if (mapped == artwork) return item
+        return item.buildUpon()
+            .setMediaMetadata(item.mediaMetadata.buildUpon().setArtworkUri(mapped).build())
             .build()
     }
 

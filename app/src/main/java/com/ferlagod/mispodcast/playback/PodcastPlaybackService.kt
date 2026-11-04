@@ -141,7 +141,13 @@ class PodcastPlaybackService : MediaLibraryService() {
         searchService = container.applePodcastSearchService
         rssParser = container.rssFeedParser
 
-        autoBrowseTree = AutoBrowseTree(database, searchService, rssParser, ::getString)
+        autoBrowseTree = AutoBrowseTree(
+            database = database,
+            searchService = searchService,
+            rssParser = rssParser,
+            getString = ::getString,
+            browserArtworkMapper = { uri -> AutoArtworkProvider.toContentUri(applicationContext, uri) }
+        )
         playbackController = PlaybackController(database, autoBrowseTree)
         progressTracker = ProgressTracker(applicationContext, database, syncManager, serviceScope)
         sleepTimerManager = container.sleepTimerManager
@@ -600,7 +606,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                     val items = autoBrowseTree.getChildrenForFolder(parentId)
                     val fromIndex = (page.toLong() * pageSize).coerceAtMost(items.size.toLong()).toInt()
                     val toIndex = (fromIndex.toLong() + pageSize).coerceAtMost(items.size.toLong()).toInt()
-                    future.set(LibraryResult.ofItemList(items.subList(fromIndex, toIndex), params))
+                    future.set(LibraryResult.ofItemList(items.subList(fromIndex, toIndex).map(autoBrowseTree::forBrowser), params))
                 } catch (_: Exception) {
                     future.set(LibraryResult.ofError(SessionError.ERROR_UNKNOWN))
                 }
@@ -618,7 +624,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                 try {
                     val item = autoBrowseTree.getItem(mediaId)
                     if (item != null) {
-                        future.set(LibraryResult.ofItem(item, null))
+                        future.set(LibraryResult.ofItem(autoBrowseTree.forBrowser(item), null))
                     } else {
                         future.set(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
                     }
@@ -670,7 +676,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                     } else {
                         emptyList()
                     }
-                    future.set(LibraryResult.ofItemList(pagedResults, params))
+                    future.set(LibraryResult.ofItemList(pagedResults.map(autoBrowseTree::forBrowser), params))
                 } catch (_: Exception) {
                     future.set(LibraryResult.ofError(SessionError.ERROR_UNKNOWN))
                 }
