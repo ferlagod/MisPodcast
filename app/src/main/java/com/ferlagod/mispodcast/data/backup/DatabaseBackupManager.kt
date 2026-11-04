@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.net.Uri
 import com.ferlagod.mispodcast.data.local.PodcastDatabase
@@ -57,6 +59,7 @@ object DatabaseBackupManager {
                 cursor.moveToFirst()
                 cursor.close()
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 // Continuar si el checkpoint devuelve un estado transitorio
             }
 
@@ -95,6 +98,7 @@ object DatabaseBackupManager {
 
             Result.success(Unit)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -158,7 +162,7 @@ object DatabaseBackupManager {
                 if (hasMainMisPodcastDb) {
                     try {
                         database.close()
-                    } catch (ignored: Exception) {}
+                    } catch (e: Exception) { e.rethrowIfCancellation() }
 
                     val targetDir = context.getDatabasePath(DB_NAME).parentFile
                         ?: return@withContext Result.failure(IllegalStateException("No se encontró el directorio de bases de datos"))
@@ -171,9 +175,7 @@ object DatabaseBackupManager {
                         file.copyTo(File(targetDir, file.name), overwrite = true)
                     }
 
-                    return@withContext Result.success(
-                        "¡Base de datos de MisPodcast restaurada con éxito! Reinicia la app para recargar los cambios."
-                    )
+                    return@withContext Result.success(context.getString(R.string.msg_db_restored))
                 }
 
                 // Caso B: El ZIP contiene una base de datos de AntennaPod (.db o similar)
@@ -199,6 +201,7 @@ object DatabaseBackupManager {
                 )
             }
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         } finally {
             tempDir.deleteRecursively()

@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.notification
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -28,9 +29,11 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
+import coil3.asDrawable
+import coil3.imageLoader
+import coil3.request.allowHardware
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
 import com.ferlagod.mispodcast.MainActivity
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
@@ -41,9 +44,7 @@ import kotlinx.coroutines.withContext
 object NotificationHelper {
 
     const val CHANNEL_NEW_EPISODES_ID = "channel_new_episodes"
-    const val CHANNEL_NEW_EPISODES_NAME = "Nuevos episodios"
     const val CHANNEL_DOWNLOADS_ID = "channel_downloads"
-    const val CHANNEL_DOWNLOADS_NAME = "Descargas de episodios"
     private const val NOTIFICATION_GROUP_KEY = "com.ferlagod.mispodcast.NEW_EPISODES_GROUP"
     private const val SUMMARY_NOTIFICATION_ID = 9999
     private const val BATCH_SUMMARY_NOTIFICATION_ID = 8888
@@ -54,7 +55,9 @@ object NotificationHelper {
     fun cancelAllNotifications(context: Context) {
         try {
             NotificationManagerCompat.from(context).cancelAll()
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            android.util.Log.w("NotificationHelper", "No se pudieron cancelar las notificaciones: ${e.message}")
+        }
     }
 
     /**
@@ -65,10 +68,10 @@ object NotificationHelper {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channelEpisodes = NotificationChannel(
                 CHANNEL_NEW_EPISODES_ID,
-                CHANNEL_NEW_EPISODES_NAME,
+                context.getString(R.string.notif_channel_episodes),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Notificaciones automáticas al detectar nuevos capítulos de tus podcasts suscritos"
+                description = context.getString(R.string.notif_channel_episodes_desc)
                 enableLights(true)
                 lightColor = android.graphics.Color.BLUE
                 enableVibration(false)
@@ -79,10 +82,10 @@ object NotificationHelper {
 
             val channelDownloads = NotificationChannel(
                 CHANNEL_DOWNLOADS_ID,
-                CHANNEL_DOWNLOADS_NAME,
+                context.getString(R.string.notif_channel_downloads),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Progreso de descarga en segundo plano para escucha sin conexión"
+                description = context.getString(R.string.notif_channel_downloads_desc)
                 enableLights(false)
                 enableVibration(false)
                 setShowBadge(false)
@@ -138,8 +141,8 @@ object NotificationHelper {
         )
 
         val inboxStyle = NotificationCompat.InboxStyle()
-            .setBigContentTitle("$totalEpisodes nuevos episodios disponibles")
-            .setSummaryText("$totalPodcasts programas con novedades")
+            .setBigContentTitle(context.getString(R.string.notif_new_episodes_total, totalEpisodes))
+            .setSummaryText(context.getString(R.string.notif_programs_with_news, totalPodcasts))
 
         val sampleLines = validEntries.flatMap { (podcast, eps) ->
             eps.map { ep -> "${podcast.title}: ${ep.title}" }
@@ -149,14 +152,14 @@ object NotificationHelper {
             inboxStyle.addLine("• $line")
         }
         if (sampleLines.size > 5) {
-            inboxStyle.addLine("y ${sampleLines.size - 5} episodios más...")
+            inboxStyle.addLine(context.getString(R.string.notif_more_episodes, sampleLines.size - 5))
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
             .setSmallIcon(R.drawable.app_logo)
-            .setContentTitle("Mis Podcast")
-            .setContentText("$totalEpisodes nuevos episodios en $totalPodcasts podcasts")
-            .setSubText("Novedades")
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.notif_summary_text, totalEpisodes, totalPodcasts))
+            .setSubText(context.getString(R.string.notif_subtext_new_releases))
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
@@ -219,7 +222,7 @@ object NotificationHelper {
                 .setSmallIcon(R.drawable.app_logo)
                 .setContentTitle(podcast.title)
                 .setContentText(episode.title)
-                .setSubText("Nuevo episodio")
+                .setSubText(context.getString(R.string.notif_subtext_new_episode))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
@@ -228,7 +231,7 @@ object NotificationHelper {
                 .setStyle(
                     NotificationCompat.BigTextStyle()
                         .setBigContentTitle(podcast.title)
-                        .setSummaryText("Nuevo episodio publicado")
+                        .setSummaryText(context.getString(R.string.notif_new_episode_published))
                         .bigText("${episode.title}\n\n$cleanDescription")
                 )
 
@@ -259,22 +262,22 @@ object NotificationHelper {
             )
 
             val inboxStyle = NotificationCompat.InboxStyle()
-                .setBigContentTitle("${podcast.title} (${newEpisodes.size} nuevos)")
-                .setSummaryText("Nuevos episodios disponibles")
+                .setBigContentTitle(context.getString(R.string.notif_podcast_new_count, podcast.title, newEpisodes.size))
+                .setSummaryText(context.getString(R.string.notif_new_episodes_available))
 
             newEpisodes.take(5).forEach { ep ->
                 inboxStyle.addLine("• ${ep.title}")
             }
 
             if (newEpisodes.size > 5) {
-                inboxStyle.addLine("y ${newEpisodes.size - 5} más...")
+                inboxStyle.addLine(context.getString(R.string.notif_more_short, newEpisodes.size - 5))
             }
 
             val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
                 .setSmallIcon(R.drawable.app_logo)
                 .setContentTitle(podcast.title)
-                .setContentText("${newEpisodes.size} nuevos episodios disponibles")
-                .setSubText("Novedades")
+                .setContentText(context.getString(R.string.notif_new_episodes_total, newEpisodes.size))
+                .setSubText(context.getString(R.string.notif_subtext_new_releases))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
@@ -299,14 +302,14 @@ object NotificationHelper {
     private suspend fun loadArtworkBitmap(context: Context, url: String?): Bitmap? {
         if (url.isNullOrBlank()) return null
         return try {
-            val imageLoader = ImageLoader(context)
             val request = ImageRequest.Builder(context)
                 .data(url)
                 .allowHardware(false) // Requisito obligatorio para notificaciones en Android
                 .build()
-            val result = (imageLoader.execute(request) as? SuccessResult)?.drawable
+            val result = (context.imageLoader.execute(request) as? SuccessResult)?.image?.asDrawable(context.resources)
             (result as? BitmapDrawable)?.bitmap
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.rethrowIfCancellation()
             null
         }
     }

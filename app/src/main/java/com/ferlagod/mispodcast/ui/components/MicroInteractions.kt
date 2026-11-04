@@ -346,7 +346,7 @@ fun SwipeableEpisodeRow(
                     Quadruple(
                         RoyalBlueLight.copy(alpha = 0.85f),
                         Icons.AutoMirrored.Filled.QueueMusic,
-                        "Añadir a la cola",
+                        stringResource(R.string.add_to_queue),
                         Alignment.CenterStart
                     )
                 }
@@ -354,7 +354,7 @@ fun SwipeableEpisodeRow(
                     Quadruple(
                         AccentGreen.copy(alpha = 0.85f),
                         Icons.Filled.CheckCircle,
-                        "Marcar escuchado",
+                        stringResource(R.string.mark_played_short),
                         Alignment.CenterEnd
                     )
                 }

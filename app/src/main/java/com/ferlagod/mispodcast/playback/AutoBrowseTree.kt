@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.playback
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.OptIn
@@ -46,7 +48,9 @@ import kotlin.math.min
 class AutoBrowseTree(
     private val database: PodcastDatabase,
     private val searchService: ApplePodcastSearchService,
-    private val rssParser: RssFeedParser
+    private val rssParser: RssFeedParser,
+    /** Resuelve textos traducidos para los menús de Android Auto. */
+    private val getString: (Int) -> String = { "" }
 ) {
 
     // Mapa temporal para almacenar feedUrls encontrados en búsquedas remotas
@@ -162,10 +166,10 @@ class AutoBrowseTree(
      */
     fun getRootTabs(): ImmutableList<MediaItem> {
         return ImmutableList.of(
-            createBrowsableFolder(MEDIA_ID_QUEUE, "Cola de reproducción"),
-            createBrowsableFolder(MEDIA_ID_PODCASTS, "Mis Podcasts"),
-            createBrowsableFolder(MEDIA_ID_NEW_RELEASES, "Nuevos episodios"),
-            createBrowsableFolder(MEDIA_ID_DOWNLOADS, "Descargas")
+            createBrowsableFolder(MEDIA_ID_QUEUE, getString(R.string.auto_queue)),
+            createBrowsableFolder(MEDIA_ID_PODCASTS, getString(R.string.auto_my_podcasts)),
+            createBrowsableFolder(MEDIA_ID_NEW_RELEASES, getString(R.string.auto_new_episodes)),
+            createBrowsableFolder(MEDIA_ID_DOWNLOADS, getString(R.string.auto_downloads))
         )
     }
 
@@ -209,7 +213,7 @@ class AutoBrowseTree(
                             .build()
                     )
                 }
-                items.add(createBrowsableFolder(MEDIA_ID_HISTORY, "Historial de reproducción"))
+                items.add(createBrowsableFolder(MEDIA_ID_HISTORY, getString(R.string.auto_history)))
             }
 
             parentId.startsWith(PREFIX_PODCAST) -> {
@@ -251,7 +255,8 @@ class AutoBrowseTree(
                                     .build()
                             )
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        e.rethrowIfCancellation()
                     }
                 }
             }
@@ -309,7 +314,7 @@ class AutoBrowseTree(
                     .setMediaId(ROOT_ID)
                     .setMediaMetadata(
                         MediaMetadata.Builder()
-                            .setTitle("Mis Podcasts")
+                            .setTitle(getString(R.string.auto_my_podcasts))
                             .setIsBrowsable(true)
                             .setIsPlayable(false)
                             .build()
@@ -321,7 +326,7 @@ class AutoBrowseTree(
                     .setMediaId(MEDIA_ID_QUEUE)
                     .setMediaMetadata(
                         MediaMetadata.Builder()
-                            .setTitle("Cola de reproducción")
+                            .setTitle(getString(R.string.auto_queue))
                             .setIsBrowsable(true)
                             .setIsPlayable(false)
                             .build()
@@ -435,7 +440,8 @@ class AutoBrowseTree(
                         )
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                e.rethrowIfCancellation()
             }
         }
 
@@ -550,7 +556,8 @@ class AutoBrowseTree(
                         .build()
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.rethrowIfCancellation()
         }
 
         null

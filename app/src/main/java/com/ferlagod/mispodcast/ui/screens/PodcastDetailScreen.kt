@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -115,12 +116,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
 import com.ferlagod.mispodcast.data.download.DownloadStatus
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
@@ -165,6 +167,7 @@ fun PodcastDetailScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val coroutineScope = rememberCoroutineScope()
 
     // 1. Observar si el podcast ya existe en la base de datos Room
@@ -200,9 +203,9 @@ fun PodcastDetailScreen(
                 val result = podcastViewModel.reconnectLocalFolderPodcast(currentPodcastId, treeUri)
                 isLoadingFeed = false
                 result.onSuccess { count ->
-                    Toast.makeText(context, "¡Carpeta reconectada con éxito! ($count audios sincronizados)", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, resources.getString(R.string.folder_reconnected, count), Toast.LENGTH_LONG).show()
                 }.onFailure { err ->
-                    Toast.makeText(context, "Error reconectando carpeta: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, resources.getString(R.string.folder_reconnect_error, err.localizedMessage.orEmpty()), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -219,11 +222,12 @@ fun PodcastDetailScreen(
                 try {
                     val addedCount = podcastViewModel.rescanLocalFolderPodcast(currentPodcastId)
                     isLoadingFeed = false
-                    val msg = if (addedCount > 0) "¡Se han detectado $addedCount nuevos audios!" else "Carpeta al día (sin nuevos audios)"
+                    val msg = if (addedCount > 0) resources.getString(R.string.folder_new_audio_found, addedCount) else resources.getString(R.string.folder_up_to_date)
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
+                    e.rethrowIfCancellation()
                     isLoadingFeed = false
-                    Toast.makeText(context, "Error al escanear carpeta: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, resources.getString(R.string.folder_scan_error, e.localizedMessage.orEmpty()), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -243,9 +247,9 @@ fun PodcastDetailScreen(
                 }.onFailure { error ->
                     isLoadingFeed = false
                     if (roomPodcast == null) {
-                        feedError = error.localizedMessage ?: "No se pudo descargar el feed del podcast"
+                        feedError = error.localizedMessage ?: resources.getString(R.string.feed_download_failed)
                     } else {
-                        Toast.makeText(context, "Error al actualizar feed: ${error.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, resources.getString(R.string.feed_update_error, error.localizedMessage.orEmpty()), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -372,10 +376,10 @@ fun PodcastDetailScreen(
                                 putExtra(Intent.EXTRA_SUBJECT, roomPodcast?.title ?: "Podcast")
                                 putExtra(
                                     Intent.EXTRA_TEXT,
-                                    "Escucha ${roomPodcast?.title ?: "este podcast"}: ${roomPodcast?.link ?: targetUrl}"
+                                    resources.getString(R.string.share_podcast_text, roomPodcast?.title ?: resources.getString(R.string.this_podcast), roomPodcast?.link ?: targetUrl)
                                 )
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.action_share)))
+                            context.startActivity(Intent.createChooser(shareIntent, resources.getString(R.string.action_share)))
                         }, modifier = iconBg) {
                             Icon(
                                 imageVector = Icons.Filled.Share,
@@ -414,14 +418,14 @@ fun PodcastDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Text(
-                            text = "Cargando podcast…",
+                            text = stringResource(R.string.loading_podcast),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Esto puede tardar unos segundos",
+                            text = stringResource(R.string.may_take_seconds),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -446,7 +450,7 @@ fun PodcastDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No se pudo cargar el podcast",
+                            text = stringResource(R.string.podcast_load_failed),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.error
@@ -465,7 +469,7 @@ fun PodcastDetailScreen(
                         ) {
                             Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Reintentar")
+                            Text(stringResource(R.string.retry))
                         }
                     }
                 }
@@ -631,18 +635,18 @@ fun PodcastDetailScreen(
                     },
                     onAddToQueue = {
                         podcastViewModel.addEpisodeToQueue(ep.id)
-                        Toast.makeText(context, context.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, resources.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
                     },
                     onToggleFavorite = {
                         podcastViewModel.toggleFavorite(ep.id, ep.isFavorite)
                     },
                     onDownloadClick = {
                         podcastViewModel.downloadEpisode(ep)
-                        Toast.makeText(context, context.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, resources.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
                     },
                     onTogglePlayed = {
                         podcastViewModel.toggleEpisodePlayed(ep.id, ep.isPlayed)
-                        val msg = if (!ep.isPlayed) context.getString(R.string.toast_marked_as_played) else context.getString(R.string.toast_marked_as_unplayed)
+                        val msg = if (!ep.isPlayed) resources.getString(R.string.toast_marked_as_played) else resources.getString(R.string.toast_marked_as_unplayed)
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     },
                     onShareClick = {
@@ -651,10 +655,10 @@ fun PodcastDetailScreen(
                             putExtra(Intent.EXTRA_SUBJECT, ep.title)
                             putExtra(
                                 Intent.EXTRA_TEXT,
-                                context.getString(R.string.share_episode_format, ep.title, effectiveTitle, ep.audioUrl)
+                                resources.getString(R.string.share_episode_format, ep.title, effectiveTitle, ep.audioUrl)
                             )
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_episode)))
+                        context.startActivity(Intent.createChooser(shareIntent, resources.getString(R.string.share_episode)))
                     }
                 )
             }
@@ -676,7 +680,7 @@ fun PodcastDetailScreen(
                             newEpisodeNotifications = notify,
                             autoDeleteRule = autoDelete
                         )
-                        Toast.makeText(context, "Ajustes de '${settingsPodcast.title}' guardados", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, resources.getString(R.string.podcast_settings_saved, settingsPodcast.title), Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -692,882 +696,5 @@ fun PodcastDetailScreen(
                 )
             }
         }
-    }
-}
-
-/**
- * Renderiza la sección de cabecera de episodios y la lista de episodios de forma reutilizable
- * para el layout de un panel (teléfonos) y el panel derecho en dos paneles (tablets/plegables).
- */
-private fun LazyListScope.episodesListContent(
-    podcast: PodcastEntity,
-    sortedEpisodes: List<EpisodeEntity>,
-    totalEpisodeCount: Int,
-    episodeFilter: EpisodeFilter,
-    onFilterChange: (EpisodeFilter) -> Unit,
-    downloadStates: Map<String, EpisodeDownloadState>,
-    isPlaying: Boolean,
-    currentEpisodePlaying: EpisodeEntity?,
-    podcastViewModel: PodcastViewModel,
-    playerViewModel: PlayerViewModel,
-    context: Context,
-    reconnectFolderLauncher: androidx.activity.result.ActivityResultLauncher<Uri?>,
-    triggerRescanLocalFolder: () -> Unit,
-    onSelectEpisode: (String) -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    // Título de sección de episodios
-    item {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Episodios",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                val sortText = if (podcast.episodeSortOrder == "OLDEST_FIRST") "Orden cronológico (viejo→nuevo)" else "Más recientes primero"
-                Text(
-                    text = if (episodeFilter == EpisodeFilter.ALL) "$totalEpisodeCount disponibles · $sortText"
-                        else "${sortedEpisodes.size} de $totalEpisodeCount · ${episodeFilter.label}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            IconButton(
-                onClick = onOpenSettings,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Tune,
-                    contentDescription = stringResource(R.string.podcast_settings_title),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
-
-    if (totalEpisodeCount > 0) {
-        item {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 4.dp)
-            ) {
-                items(EpisodeFilter.entries) { filter ->
-                    FilterChip(
-                        selected = episodeFilter == filter,
-                        onClick = { onFilterChange(filter) },
-                        label = { Text(filter.label) }
-                    )
-                }
-            }
-        }
-    }
-
-    if (totalEpisodeCount > 0 && sortedEpisodes.isEmpty()) {
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(40.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Ningún episodio coincide con el filtro \"${episodeFilter.label}\".",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    } else if (sortedEpisodes.isEmpty()) {
-        item {
-            if (podcast.isLocalFolder) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FolderOpen,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(44.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "Carpeta sin audios detectados",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "No se han encontrado archivos de audio compatibles (.mp3, .m4a, .wav, .flac, .ogg, .opus, .aac) en esta carpeta.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedButton(
-                                onClick = { reconnectFolderLauncher.launch(null) },
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.FolderShared, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Cambiar carpeta")
-                            }
-                            Button(
-                                onClick = triggerRescanLocalFolder,
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Re-escanear")
-                            }
-                        }
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No hay episodios disponibles en este feed.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    } else {
-        items(sortedEpisodes, key = { it.id }) { episode ->
-            val isThisPlaying = currentEpisodePlaying?.id == episode.id && isPlaying
-            val downloadState = downloadStates[episode.id] ?: podcastViewModel.getEpisodeDownloadState(episode)
-
-            SwipeableEpisodeRow(
-                onSwipeToQueue = {
-                    podcastViewModel.addEpisodeToQueue(episode.id)
-                    Toast.makeText(context, context.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
-                },
-                onSwipeToComplete = {
-                    val willBePlayed = !episode.isPlayed
-                    podcastViewModel.toggleEpisodePlayed(episode.id, episode.isPlayed)
-                    Toast.makeText(context, context.getString(if (willBePlayed) R.string.toast_marked_played else R.string.toast_marked_unplayed), Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                EpisodeDetailItem(
-                    episode = episode,
-                    podcastTitle = podcast.title,
-                    podcastArtwork = podcast.artworkUrl,
-                    isPlaying = isThisPlaying,
-                    downloadState = downloadState,
-                    onEpisodeClick = {
-                        onSelectEpisode(episode.id)
-                    },
-                    onPlayClick = {
-                        if (isThisPlaying) {
-                            playerViewModel.togglePlayPause()
-                        } else {
-                            playerViewModel.playEpisode(
-                                episode = episode,
-                                podcastTitle = podcast.title,
-                                podcastArtwork = podcast.artworkUrl
-                            )
-                        }
-                    },
-                    onAddToQueue = {
-                        podcastViewModel.addEpisodeToQueue(episode.id)
-                        Toast.makeText(context, context.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
-                    },
-                    onToggleFavorite = {
-                        podcastViewModel.toggleFavorite(episode.id, episode.isFavorite)
-                    },
-                    onDownloadClick = {
-                        podcastViewModel.downloadEpisode(episode)
-                        Toast.makeText(context, context.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
-                    }
-                )
-            }
-        }
-    }
-}
-
-/**
- * Cabecera estilo Apple Podcasts: portada grande, autor, categoría, descripción extensible y botón azul.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PodcastHeaderSection(
-    podcast: PodcastEntity,
-    isSubscribing: Boolean,
-    isFolderValid: Boolean = true,
-    onToggleSubscription: () -> Unit,
-    onReconnectFolder: () -> Unit = {},
-    onOpenSettings: () -> Unit = {},
-    onOpenFunding: () -> Unit = {}
-) {
-    var isDescriptionExpanded by remember { mutableStateOf(false) }
-
-    val defaultNoDescription = stringResource(R.string.no_description_available)
-    val cleanDescription = remember(podcast.description, defaultNoDescription) {
-        if (podcast.description.isBlank()) {
-            defaultNoDescription
-        } else {
-            try {
-                Html.fromHtml(podcast.description, Html.FROM_HTML_MODE_COMPACT).toString().trim()
-            } catch (_: Exception) {
-                podcast.description.trim()
-            }
-        }
-    }
-
-    val dominantArtworkColor = rememberArtworkDominantColor(artworkUrl = podcast.artworkUrl.ifBlank { null })
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Cabecera inmersiva a todo el ancho (full-bleed) con portada desenfocada y degradado dominante
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(295.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            // Fondo con portada desenfocada a todo el ancho
-            if (podcast.artworkUrl.isNotBlank()) {
-                AsyncImage(
-                    model = podcast.artworkUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(50.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            // Degradado vertical multicapa con color dominante
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.Black.copy(alpha = 0.35f),
-                                dominantArtworkColor.copy(alpha = 0.55f),
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.88f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-            )
-
-            // Portada nítida encima, grande y elevada, con transición compartida
-            Card(
-                shape = MaterialTheme.shapes.extraLarge,
-                elevation = CardDefaults.cardElevation(defaultElevation = 14.dp),
-                border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.32f)),
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .size(175.dp)
-                    .aspectRatio(1f)
-            ) {
-                if (podcast.artworkUrl.isNotBlank()) {
-                    AsyncImage(
-                        model = podcast.artworkUrl,
-                        contentDescription = podcast.title,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .sharedPodcastArtwork(podcast.id),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    PodcastArtworkPlaceholder(
-                        title = podcast.title,
-                        modifier = Modifier.fillMaxSize(),
-                        iconSize = 64.dp
-                    )
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Categoría o etiqueta de Carpeta Local
-        val categoryLabel = when {
-            podcast.category.isNotBlank() -> podcast.category.uppercase()
-            podcast.isLocalFolder -> "CARPETA LOCAL"
-            else -> ""
-        }
-        if (categoryLabel.isNotBlank()) {
-            Surface(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (podcast.isLocalFolder) {
-                        Icon(
-                            imageVector = Icons.Default.FolderOpen,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-                    Text(
-                        text = categoryLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        // Título del podcast
-        Text(
-            text = podcast.title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Autor / Editorial
-        val authorLabel = if (podcast.isLocalFolder) {
-            if (podcast.author.isNotBlank() && podcast.author != "Local Folder") podcast.author else "Archivos locales"
-        } else {
-            podcast.author.ifBlank { "Autor desconocido" }
-        }
-        Text(
-            text = authorLabel,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
-        )
-
-        // CABECERA / ALERTA DE RECONEXIÓN SI LA CARPETA LOCAL NO ES ACCESIBLE
-        if (podcast.isLocalFolder && !isFolderValid) {
-            Spacer(modifier = Modifier.height(14.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FolderShared,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Carpeta local desconectada",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "La ruta anterior no es accesible en este dispositivo (migración, OPML o copia de AntennaPod). Selecciona la carpeta actual para volver a enlazar los archivos.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onReconnectFolder,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FolderShared,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reconectar carpeta local", fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Fila de acciones principales
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Botón animado de suscripción con rebote elástico y respuesta háptica (+ ↔ ✓)
-            AnimatedSubscribeButton(
-                isSubscribed = podcast.isSubscribed,
-                isLoading = isSubscribing,
-                onClick = onToggleSubscription,
-                dominantColor = dominantArtworkColor
-            )
-
-            // Si es carpeta local, botón complementario para reconectar
-            if (podcast.isLocalFolder) {
-                Spacer(modifier = Modifier.width(8.dp))
-                OutlinedButton(
-                    onClick = onReconnectFolder,
-                    shape = RoundedCornerShape(24.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FolderShared,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Reconectar carpeta",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            // Botón de ajustes por podcast
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedButton(
-                onClick = onOpenSettings,
-                shape = RoundedCornerShape(24.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Tune,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Ajustes",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            // Botón de apoyo / Value4Value (si el podcast tiene financiación o datos Lightning)
-            if (!podcast.fundingUrl.isNullOrBlank() || !podcast.valueForValueInfo.isNullOrBlank()) {
-                Spacer(modifier = Modifier.width(8.dp))
-                val isLightningOnly = podcast.fundingUrl.isNullOrBlank() && !podcast.valueForValueInfo.isNullOrBlank()
-                val amberColor = Color(0xFFF7931A)
-                OutlinedButton(
-                    onClick = onOpenFunding,
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (isLightningOnly) amberColor else AccentRed
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isLightningOnly) amberColor.copy(alpha = 0.6f) else AccentRed.copy(alpha = 0.6f)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
-                ) {
-                    if (isLightningOnly) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_lightning),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = amberColor
-                        )
-                    } else {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_support_heart),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = AccentRed
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.support_podcast_button),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Descripción extensible
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
-                .clickable { isDescriptionExpanded = !isDescriptionExpanded },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-            )
-        ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Text(
-                    text = cleanDescription,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = if (isDescriptionExpanded) Int.MAX_VALUE else 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (isDescriptionExpanded) "Menos" else "Más",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-}
-
-/**
- * Fila individual para cada episodio con botones de reproducción, cola, favoritos y descarga.
- */
-@Composable
-private fun EpisodeDetailItem(
-    episode: EpisodeEntity,
-    podcastTitle: String,
-    podcastArtwork: String,
-    isPlaying: Boolean,
-    downloadState: EpisodeDownloadState,
-    onEpisodeClick: () -> Unit,
-    onPlayClick: () -> Unit,
-    onAddToQueue: () -> Unit,
-    onToggleFavorite: () -> Unit,
-    onDownloadClick: () -> Unit
-) {
-    val dateText = remember(episode.pubDate) {
-        if (episode.pubDate > 0) {
-            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-            sdf.format(Date(episode.pubDate))
-        } else ""
-    }
-
-    val durationText = remember(episode.duration) {
-        if (episode.duration > 0) {
-            val totalSeconds = episode.duration / 1000
-            val hours = totalSeconds / 3600
-            val minutes = (totalSeconds % 3600) / 60
-            when {
-                hours > 0 && minutes > 0 -> "${hours}h ${minutes}m"
-                hours > 0 -> "${hours}h"
-                minutes > 0 -> "${minutes} min"
-                else -> "${totalSeconds}s"
-            }
-        } else "Audio"
-    }
-
-    val fileSizeText = remember(episode.fileSizeBytes) {
-        if (episode.fileSizeBytes > 0) {
-            val mb = episode.fileSizeBytes.toDouble() / (1024 * 1024)
-            String.format(Locale.getDefault(), "%.1f MB", mb)
-        } else ""
-    }
-
-    val cleanSnippet = remember(episode.description) {
-        if (episode.description.isBlank()) ""
-        else {
-            try {
-                Html.fromHtml(episode.description, Html.FROM_HTML_MODE_COMPACT).toString().trim()
-            } catch (_: Exception) {
-                episode.description.trim()
-            }
-        }
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp)
-            .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
-            .clickable(onClick = onEpisodeClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Metadatos: Fecha, duración, tamaño y badge local
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (dateText.isNotBlank()) {
-                    Text(
-                        text = dateText.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = " · ",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Text(
-                    text = durationText,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                if (fileSizeText.isNotBlank()) {
-                    Text(
-                        text = " · ",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = fileSizeText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                if (!episode.localFilePath.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Surface(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FolderOpen,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(10.dp)
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = "LOCAL",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = androidx.compose.ui.unit.TextUnit(8f, androidx.compose.ui.unit.TextUnitType.Sp),
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Título del episodio con indicador de ecualizador si está sonando
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (isPlaying) {
-                    EqualizerIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        isPlaying = true,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
-                Text(
-                    text = episode.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Resumen de descripción
-            if (cleanSnippet.isNotBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = cleanSnippet,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Barra de acciones: Reproducir con anillo de progreso, Cola, Favorito, Descargar
-            val playProgress = if (episode.duration > 0) {
-                (episode.currentPositionMs.toFloat() / episode.duration.toFloat()).coerceIn(0f, 1f)
-            } else 0f
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Botón de reproducción con anillo de progreso para episodios a medias
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable { onPlayClick() }
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    PlayProgressButton(
-                        isPlaying = isPlaying,
-                        progress = playProgress,
-                        onClick = onPlayClick,
-                        size = 36.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    val remainingMins = ((1f - playProgress) * (episode.duration / 60000)).toInt()
-                    Text(
-                        text = when {
-                            isPlaying -> stringResource(R.string.action_pause)
-                            playProgress > 0.02f -> "Continuar (${remainingMins}m)"
-                            else -> stringResource(R.string.action_play)
-                        },
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    val haptic = LocalHapticFeedback.current
-
-                    // Botón añadir a cola
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onAddToQueue()
-                        },
-                        modifier = Modifier.size(34.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.QueueMusic,
-                            contentDescription = stringResource(R.string.add_to_queue),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(19.dp)
-                        )
-                    }
-
-                    // Botón favorito con respuesta háptica
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onToggleFavorite()
-                        },
-                        modifier = Modifier.size(34.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (episode.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = stringResource(if (episode.isFavorite) R.string.action_remove_favorite else R.string.action_add_favorite),
-                            tint = if (episode.isFavorite) AccentRed else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(19.dp)
-                        )
-                    }
-
-                    // Botón de descarga interactivo con animación y progreso
-                    EpisodeDownloadButton(
-                        downloadState = downloadState,
-                        onDownloadClick = onDownloadClick
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Filtros rápidos de la lista de episodios de un podcast.
- */
-enum class EpisodeFilter(val label: String) {
-    ALL("Todos"),
-    UNPLAYED("Sin escuchar"),
-    IN_PROGRESS("En curso"),
-    DOWNLOADED("Descargados"),
-    FAVORITES("Favoritos"),
-    SHORT("Cortos (<30 min)");
-
-    fun matches(episode: EpisodeEntity, downloadState: EpisodeDownloadState?): Boolean = when (this) {
-        ALL -> true
-        UNPLAYED -> !episode.isPlayed && episode.currentPositionMs <= 0L
-        IN_PROGRESS -> !episode.isPlayed && episode.currentPositionMs > 0L
-        DOWNLOADED -> episode.isDownloaded || downloadState?.status == com.ferlagod.mispodcast.data.download.DownloadStatus.DOWNLOADED
-        FAVORITES -> episode.isFavorite
-        SHORT -> episode.duration in 1L until 30L * 60L * 1000L
     }
 }

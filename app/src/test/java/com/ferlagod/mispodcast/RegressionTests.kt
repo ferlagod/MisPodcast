@@ -682,7 +682,8 @@ class RegressionTests {
         val endOfEpState = timerManager.state.value
         assertTrue(endOfEpState.isActive)
         assertTrue(endOfEpState.mode is SleepTimerMode.EndOfEpisode)
-        assertEquals("Al final del episodio", endOfEpState.formattedRemaining)
+        // El texto "Al final del episodio" lo pone la UI traducido; el estado no devuelve tiempo
+        assertEquals("", endOfEpState.formattedRemaining)
 
         // Al finalizar el episodio se debe pausar la reproducción y apagar el temporizador
         timerManager.onEpisodeEnded()
@@ -1666,32 +1667,38 @@ class RegressionTests {
         assertEquals(72_000_000f / 126_000_000f, top1.percentageOfTotal, 0.01f)
 
         // Verificación de arquetipo
-        assertEquals("El Fan Incondicional", wrapped.archetype)
+        assertEquals(com.ferlagod.mispodcast.data.model.WrappedArchetype.LOYAL_FAN, wrapped.archetype)
 
         // 3. Verificación de arquetipos alternativos según hábitos auditivos
-        val (maratoniano, _) = com.ferlagod.mispodcast.data.model.WrappedData.resolveArchetype(
+        val maratoniano = com.ferlagod.mispodcast.data.model.WrappedData.resolveArchetype(
             totalHours = 120.0,
             totalPodcasts = 5,
             episodesCompleted = 80,
             topPercentage = 0.3f
         )
-        assertEquals("El Maratoniano del Audio", maratoniano)
+        assertEquals(com.ferlagod.mispodcast.data.model.WrappedArchetype.MARATHONER, maratoniano)
 
-        val (explorador, _) = com.ferlagod.mispodcast.data.model.WrappedData.resolveArchetype(
+        val explorador = com.ferlagod.mispodcast.data.model.WrappedData.resolveArchetype(
             totalHours = 25.0,
             totalPodcasts = 15,
             episodesCompleted = 20,
             topPercentage = 0.15f
         )
-        assertEquals("El Explorador Ecléctico", explorador)
+        assertEquals(com.ferlagod.mispodcast.data.model.WrappedArchetype.EXPLORER, explorador)
 
         // 4. Verificación de texto generado para compartir
-        val shareText = wrapped.generateShareText()
-        assertTrue(shareText.contains("¡Mi Wrapped 2026 en Mis Podcast!"))
-        assertTrue(shareText.contains("35,0 horas") || shareText.contains("35.0 horas"))
+        // Contexto simulado: cada recurso se resuelve como "[id|args]" para comprobar qué se compone
+        val shareContext = io.mockk.mockk<android.content.Context>()
+        io.mockk.every { shareContext.getString(any()) } answers { "[${firstArg<Int>()}]" }
+        io.mockk.every { shareContext.getString(any(), *anyVararg()) } answers {
+            "[${firstArg<Int>()}|${(args[1] as Array<*>).joinToString("|")}]"
+        }
+        val shareText = wrapped.generateShareText(shareContext)
+        assertTrue(shareText.contains("[${com.ferlagod.mispodcast.R.string.wrapped_share_header}|2026]"))
+        assertTrue(shareText.contains("35,0") || shareText.contains("35.0"))
         assertTrue(shareText.contains("Nadie Sabe Nada"))
-        assertTrue(shareText.contains("El Fan Incondicional"))
-        assertTrue(shareText.contains("#MisPodcastWrapped"))
+        assertTrue(shareText.contains("[${com.ferlagod.mispodcast.R.string.archetype_loyal_fan}]"))
+        assertTrue(shareText.contains("#MisPodcastWrapped #Wrapped2026"))
         assertTrue(shareText.contains("🥇 Nadie Sabe Nada"))
         assertTrue(shareText.contains("🥈 The Daily"))
         assertTrue(shareText.contains("🥉 La Ruina"))

@@ -15,7 +15,7 @@ android {
         applicationId = "com.ferlagod.mispodcast"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10010024
+        versionCode = 10010026
         versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -30,6 +30,14 @@ android {
             (localProps.getProperty(name) ?: System.getenv(name) ?: "").replace("\"", "")
         buildConfigField("String", "PODCASTINDEX_API_KEY", "\"${secretOf("PODCASTINDEX_API_KEY")}\"")
         buildConfigField("String", "PODCASTINDEX_API_SECRET", "\"${secretOf("PODCASTINDEX_API_SECRET")}\"")
+        // Versiones de las bibliotecas principales, mostradas en «Acerca de» (siempre sincronizadas con libs.versions.toml)
+        buildConfigField("String", "LIB_KOTLIN", "\"${libs.versions.kotlin.get()}\"")
+        buildConfigField("String", "LIB_MEDIA3", "\"${libs.versions.media3.get()}\"")
+        buildConfigField("String", "LIB_ROOM", "\"${libs.versions.room.get()}\"")
+        buildConfigField("String", "LIB_RETROFIT", "\"${libs.versions.retrofit.get()}\"")
+        buildConfigField("String", "LIB_OKHTTP", "\"${libs.versions.okhttp.get()}\"")
+        buildConfigField("String", "LIB_COIL", "\"${libs.versions.coil.get()}\"")
+        buildConfigField("String", "LIB_WORKMANAGER", "\"${libs.versions.workManager.get()}\"")
         resourceConfigurations += setOf("en", "es", "fr", "de", "it", "pt")
     }
 
@@ -104,6 +112,7 @@ dependencies {
 
     // Coil para carga de portadas
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.palette)
 
     // WorkManager para sincronización periódica en background
@@ -137,6 +146,7 @@ dependencies {
     androidTestImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.jetbrains.kotlinx.coroutines.test)
     androidTestImplementation(libs.okhttp3.mockwebserver)
+    androidTestImplementation(libs.room.testing)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)

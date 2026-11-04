@@ -43,6 +43,8 @@ class MisPodcastApplication : Application() {
         super.onCreate()
         instance = this
         container = DefaultAppContainer(this)
+        // Programar (una sola vez por proceso) la sincronización periódica en segundo plano
+        com.ferlagod.mispodcast.sync.SyncWorker.schedulePeriodicSync(this)
         observePrivacySettings()
     }
 

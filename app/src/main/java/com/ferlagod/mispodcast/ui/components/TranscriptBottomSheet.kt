@@ -75,6 +75,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -101,6 +102,7 @@ fun TranscriptBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
+    val resources = LocalResources.current
     val focusManager = LocalFocusManager.current
 
     var searchQuery by remember { mutableStateOf("") }
@@ -150,7 +152,7 @@ fun TranscriptBottomSheet(
             ) {
                 Column {
                     Text(
-                        text = "Transcripción",
+                        text = stringResource(R.string.transcript),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -176,7 +178,7 @@ fun TranscriptBottomSheet(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("Transcripción de podcast", fullText.trim())
                                 clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "Transcripción copiada al portapapeles", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, resources.getString(R.string.transcript_copied), Toast.LENGTH_SHORT).show()
                             }
                         ) {
                             Icon(
@@ -206,7 +208,7 @@ fun TranscriptBottomSheet(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         Text(
-                            text = "Buscar en la transcripción…",
+                            text = stringResource(R.string.transcript_search_placeholder),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     },
@@ -270,7 +272,7 @@ fun TranscriptBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Cargando transcripción…",
+                            text = stringResource(R.string.transcript_loading),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -296,14 +298,14 @@ fun TranscriptBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "No hay transcripción disponible",
+                            text = stringResource(R.string.transcript_none_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Este episodio no incluye transcripción.",
+                            text = stringResource(R.string.transcript_none_sub),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

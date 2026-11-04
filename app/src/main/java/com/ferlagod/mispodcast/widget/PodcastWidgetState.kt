@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.widget
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
@@ -114,6 +115,7 @@ object PodcastWidgetManager {
             try {
                 PodcastPlaybackWidget().updateAll(context)
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 // Glance puede no tener receptores activos aún
             }
         }
@@ -126,6 +128,7 @@ object PodcastWidgetManager {
                     ComponentName(context.applicationContext, PodcastTileService::class.java)
                 )
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 // Ignorar si el componente aún no ha sido activado por el sistema
             }
         }

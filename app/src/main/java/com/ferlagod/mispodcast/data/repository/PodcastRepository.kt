@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.repository
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import com.ferlagod.mispodcast.data.local.dao.PodcastDao
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
 import com.ferlagod.mispodcast.data.local.entities.PlaybackStatsEntity
@@ -118,6 +119,7 @@ class PodcastRepository(
             }
             Result.success(response.results.filter { !it.feedUrl.isNullOrBlank() })
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -159,7 +161,7 @@ class PodcastRepository(
                     return@withContext Result.success(
                         HomeRecommendationData(
                             title = PodcastLanguageMapper.getRecommendedTitle(languageCode),
-                            subtitle = "Basado en tu interés por '${candidate.title}'",
+                            subtitle = PodcastLanguageMapper.getRecommendedSubtitle(languageCode, candidate.title),
                             podcasts = filtered.take(15)
                         )
                     )
@@ -192,6 +194,7 @@ class PodcastRepository(
                 )
             )
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -242,6 +245,7 @@ class PodcastRepository(
 
             Result.success(podcastEntity)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -291,6 +295,7 @@ class PodcastRepository(
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -334,6 +339,7 @@ class PodcastRepository(
                         podcastDao
                     )
                 } catch (e: Exception) {
+                    e.rethrowIfCancellation()
                     android.util.Log.w("PodcastRepository", "Aviso al escanear carpetas locales: ${e.message}")
                 }
             }
@@ -383,12 +389,14 @@ class PodcastRepository(
                     )
                     podcastDao.insertPodcast(updatedPodcast)
                 } catch (e: Exception) {
+                    e.rethrowIfCancellation()
                     android.util.Log.w("PodcastRepository", "Error al actualizar feed '${podcast.title}': ${e.message}")
                 }
             }
 
             Result.success(newEpisodesCount)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -406,9 +414,9 @@ class PodcastRepository(
             for (key in inputs) {
                 results.add(key)
                 if (key.contains("%")) {
-                    try { results.add(java.net.URLDecoder.decode(key, "UTF-8")) } catch (_: Exception) {}
+                    try { results.add(java.net.URLDecoder.decode(key, "UTF-8")) } catch (e: Exception) { e.rethrowIfCancellation() }
                 }
-                try { results.add(android.net.Uri.encode(key)) } catch (_: Exception) {}
+                try { results.add(android.net.Uri.encode(key)) } catch (e: Exception) { e.rethrowIfCancellation() }
                 val stripped = key
                     .removePrefix("antennapod_local:")
                     .removePrefix("local://")
@@ -470,6 +478,7 @@ class PodcastRepository(
 
             Result.success(podcastEntity)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }
@@ -601,9 +610,20 @@ class PodcastRepository(
     fun getGlobalStats(): Flow<GlobalStats> = podcastDao.getGlobalStatsFlow()
 
     /**
+     * Años con historial de escucha (del más reciente al más antiguo), siempre incluyendo el actual.
+     */
+    suspend fun getWrappedAvailableYears(): List<Int> = withContext(Dispatchers.IO) {
+        val currentYear = java.time.Year.now().value
+        val firstYear = podcastDao.getFirstListenedAt()?.let {
+            java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).year
+        } ?: currentYear
+        (currentYear downTo firstYear.coerceIn(currentYear - 9, currentYear)).toList()
+    }
+
+    /**
      * Calcula y retorna el resumen anual "Wrapped" para un año específico (o histórico acumulado si year = 0).
      */
-    suspend fun getWrappedStats(year: Int = 2026): WrappedData = withContext(Dispatchers.IO) {
+    suspend fun getWrappedStats(year: Int = java.time.Year.now().value): WrappedData = withContext(Dispatchers.IO) {
         val periodStats = if (year > 0) {
             val calendar = java.util.Calendar.getInstance().apply {
                 set(java.util.Calendar.YEAR, year)
@@ -655,7 +675,7 @@ class PodcastRepository(
         }
 
         val top1Percentage = topPodcasts.firstOrNull()?.percentageOfTotal ?: 0f
-        val (archetype, desc) = WrappedData.resolveArchetype(
+        val archetype = WrappedData.resolveArchetype(
             totalHours = totalTimeMs.toDouble() / 3600000.0,
             totalPodcasts = totalPodcasts,
             episodesCompleted = totalCompleted,
@@ -668,8 +688,7 @@ class PodcastRepository(
             totalEpisodesCompleted = totalCompleted,
             totalPodcastsTracked = totalPodcasts,
             topPodcasts = topPodcasts,
-            archetype = archetype,
-            archetypeDescription = desc
+            archetype = archetype
         )
     }
 

@@ -80,7 +80,8 @@ import com.ferlagod.mispodcast.ui.components.WrappedBottomSheet
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.AccentOrange
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
-import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
+import com.ferlagod.mispodcast.ui.viewmodel.StatsViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.util.Locale
 import com.ferlagod.mispodcast.ui.theme.isAppInDarkTheme
 
@@ -147,15 +148,16 @@ private fun StatCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(
-    podcastViewModel: PodcastViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    statsViewModel: StatsViewModel = viewModel()
 ) {
-    val globalStats by podcastViewModel.globalStats.collectAsState()
-    val timeSavedMs by podcastViewModel.timeSavedMs.collectAsState()
-    val podcastStats by podcastViewModel.podcastStats.collectAsState()
-    val wrappedData by podcastViewModel.wrappedData.collectAsState()
-    val selectedWrappedYear by podcastViewModel.selectedWrappedYear.collectAsState()
-    val isLoadingWrapped by podcastViewModel.isLoadingWrapped.collectAsState()
+    val globalStats by statsViewModel.globalStats.collectAsState()
+    val timeSavedMs by statsViewModel.timeSavedMs.collectAsState()
+    val podcastStats by statsViewModel.podcastStats.collectAsState()
+    val wrappedData by statsViewModel.wrappedData.collectAsState()
+    val selectedWrappedYear by statsViewModel.selectedWrappedYear.collectAsState()
+    val wrappedAvailableYears by statsViewModel.wrappedAvailableYears.collectAsState()
+    val isLoadingWrapped by statsViewModel.isLoadingWrapped.collectAsState()
 
     var showWrappedSheet by remember { mutableStateOf(false) }
     val wrappedSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -321,17 +323,17 @@ fun StatsScreen(
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     StatCard(
-                        title = "Tiempo total",
+                        title = stringResource(R.string.stats_total_time),
                         value = totalHours,
-                        subtitle = "Escuchado en total",
+                        subtitle = stringResource(R.string.stats_total_time_sub),
                         icon = Icons.Filled.AccessTime,
                         iconBgColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        title = "Completados",
+                        title = stringResource(R.string.wrapped_stat_completed),
                         value = "${globalStats.totalEpisodesCompleted}",
-                        subtitle = "Episodios enteros",
+                        subtitle = stringResource(R.string.wrapped_stat_full_episodes),
                         icon = Icons.Filled.CheckCircle,
                         iconBgColor = AccentGreen,
                         modifier = Modifier.weight(1f)
@@ -345,9 +347,9 @@ fun StatsScreen(
                     if (totalMin >= 60) String.format(Locale.getDefault(), "%.1f h", timeSavedMs / 3_600_000.0) else "$totalMin min"
                 }
                 StatCard(
-                    title = "Tiempo ahorrado",
+                    title = stringResource(R.string.stats_time_saved),
                     value = savedText,
-                    subtitle = "Gracias a la velocidad y al recorte de silencios",
+                    subtitle = stringResource(R.string.stats_time_saved_sub),
                     icon = Icons.Filled.Speed,
                     iconBgColor = AccentGreen,
                     modifier = Modifier.fillMaxWidth()
@@ -356,9 +358,9 @@ fun StatsScreen(
 
             item {
                 StatCard(
-                    title = "Programas escuchados",
+                    title = stringResource(R.string.stats_shows_listened),
                     value = "${globalStats.totalPodcastsTracked}",
-                    subtitle = "Podcasts diferentes reproducidos",
+                    subtitle = stringResource(R.string.stats_shows_listened_sub),
                     icon = Icons.Filled.Podcasts,
                     iconBgColor = IndigoSecondary,
                     modifier = Modifier.fillMaxWidth()
@@ -380,7 +382,7 @@ fun StatsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Podcasts más escuchados",
+                                text = stringResource(R.string.stats_top_podcasts),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -395,7 +397,7 @@ fun StatsScreen(
 
                         if (podcastStats.isEmpty()) {
                             Text(
-                                text = "Reproduce episodios para generar el desglose por programa.",
+                                text = stringResource(R.string.stats_top_empty),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -407,7 +409,7 @@ fun StatsScreen(
                             podcastStats.forEach { stat ->
                                 val hours = stat.totalTimeListenedMs.toDouble() / 3600000.0
                                 val hoursFormatted = if (hours >= 1.0) {
-                                    String.format(Locale.getDefault(), "%.1f h", hours)
+                                    String.format(androidx.compose.ui.platform.LocalConfiguration.current.locales[0], "%.1f h", hours)
                                 } else {
                                     "${stat.totalTimeListenedMs / 60000} min"
                                 }
@@ -460,8 +462,9 @@ fun StatsScreen(
                 sheetState = wrappedSheetState,
                 wrappedData = wrappedData,
                 selectedYear = selectedWrappedYear,
+                availableYears = wrappedAvailableYears,
                 isLoading = isLoadingWrapped,
-                onYearSelected = { podcastViewModel.loadWrapped(it) },
+                onYearSelected = { statsViewModel.loadWrapped(it) },
                 onDismissRequest = { showWrappedSheet = false }
             )
         }

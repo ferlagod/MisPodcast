@@ -49,7 +49,7 @@ import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
         com.ferlagod.mispodcast.data.local.entities.SyncStateEntity::class,
         com.ferlagod.mispodcast.data.local.entities.SyncStatsContributionEntity::class
     ],
-    version = 12,
+    version = PodcastDatabase.DB_VERSION,
     exportSchema = true
 )
 abstract class PodcastDatabase : RoomDatabase() {
@@ -63,184 +63,25 @@ abstract class PodcastDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: PodcastDatabase? = null
 
+        /** Versión actual del esquema (usada también en la anotación [Database]). */
+        const val DB_VERSION = 13
+
         /**
-         * Migraciones paso a paso y directas.
-         * Todas delegan en [ensureAllTablesAndColumns] para garantizar de forma acumulativa
-         * que cualquier usuario con cualquier versión previa conserve intactos todos sus datos.
+         * Migración directa desde cualquier versión anterior a [DB_VERSION].
+         *
+         * [ensureAllTablesAndColumns] es idempotente y deja el esquema en su estado final sea cual sea
+         * la versión de origen, por lo que basta una única migración por versión de partida.
+         * Las correcciones de datos heredadas ([applyLegacyDataFixes]) se ejecutan una sola vez, al
+         * actualizar, en lugar de en cada apertura de la base de datos.
          */
-        val MIGRATION_11_12 = object : Migration(11, 12) {
+        private fun directMigrationFrom(fromVersion: Int) = object : Migration(fromVersion, DB_VERSION) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 ensureAllTablesAndColumns(db)
+                applyLegacyDataFixes(db)
             }
         }
 
-        val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_10 = object : Migration(1, 10) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_9 = object : Migration(1, 9) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_6_8 = object : Migration(6, 8) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_8 = object : Migration(1, 8) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_7 = object : Migration(1, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_2_7 = object : Migration(2, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_3_7 = object : Migration(3, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_4_7 = object : Migration(4, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_5_7 = object : Migration(5, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_6 = object : Migration(1, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_2_6 = object : Migration(2, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_3_6 = object : Migration(3, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_4_6 = object : Migration(4, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_5 = object : Migration(1, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_2_5 = object : Migration(2, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_3_5 = object : Migration(3, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_1_4 = object : Migration(1, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
-
-        val MIGRATION_2_4 = object : Migration(2, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                ensureAllTablesAndColumns(db)
-            }
-        }
+        val ALL_MIGRATIONS: Array<Migration> = (1 until DB_VERSION).map { directMigrationFrom(it) }.toTypedArray()
 
         fun getInstance(context: Context): PodcastDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -249,73 +90,10 @@ abstract class PodcastDatabase : RoomDatabase() {
                     PodcastDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(
-                        MIGRATION_11_12,
-                        MIGRATION_10_11,
-                        MIGRATION_9_10,
-                        MIGRATION_1_10,
-                        MIGRATION_8_9,
-                        MIGRATION_1_9,
-                        MIGRATION_7_8,
-                        MIGRATION_6_8,
-                        MIGRATION_1_8,
-                        MIGRATION_1_2,
-                        MIGRATION_2_3,
-                        MIGRATION_3_4,
-                        MIGRATION_4_5,
-                        MIGRATION_5_6,
-                        MIGRATION_6_7,
-                        MIGRATION_1_7,
-                        MIGRATION_2_7,
-                        MIGRATION_3_7,
-                        MIGRATION_4_7,
-                        MIGRATION_5_7,
-                        MIGRATION_1_6,
-                        MIGRATION_2_6,
-                        MIGRATION_3_6,
-                        MIGRATION_4_6,
-                        MIGRATION_1_5,
-                        MIGRATION_2_5,
-                        MIGRATION_3_5,
-                        MIGRATION_1_4,
-                        MIGRATION_2_4
-                    )
+                    .addMigrations(*ALL_MIGRATIONS)
                     // NUNCA borrar datos de usuarios en actualizaciones normales.
                     // Solo en caso de downgrade (instalar un APK con versión inferior de BD).
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onOpen(db: SupportSQLiteDatabase) {
-                            super.onOpen(db)
-                            try {
-                                // Corregir episodios en curso que tuvieran erróneamente marcado isPlayed = 1
-                                // para garantizar su reanudación exacta desde la posición guardada
-                                db.execSQL("""
-                                    UPDATE episodes 
-                                    SET isPlayed = 0 
-                                    WHERE currentPositionMs > 0 
-                                      AND (duration <= 0 OR currentPositionMs < duration - 5000)
-                                """)
-
-                                // Reconocer podcasts de carpetas locales importados desde AntennaPod
-                                db.execSQL("""
-                                    UPDATE podcasts 
-                                    SET isLocalFolder = 1,
-                                        localFolderPath = REPLACE(feedUrl, 'antennapod_local:', ''),
-                                        category = 'Archivos Locales'
-                                    WHERE feedUrl LIKE 'antennapod_local:%'
-                                """)
-
-                                // Restaurar podcasts RSS que tenían erróneamente isLocalFolder = 1 por URLs de caché de AntennaPod
-                                db.execSQL("""
-                                    UPDATE podcasts 
-                                    SET isLocalFolder = 0,
-                                        localFolderPath = NULL
-                                    WHERE isLocalFolder = 1 
-                                      AND (feedUrl LIKE 'http://%' OR feedUrl LIKE 'https://%')
-                                """)
-                            } catch (_: Exception) {}
-                        }
-                    })
                     .build()
                 INSTANCE = instance
                 instance
@@ -323,11 +101,43 @@ abstract class PodcastDatabase : RoomDatabase() {
         }
 
         /**
+         * Corrige datos guardados por versiones antiguas de la app. Se ejecuta una vez al migrar.
+         */
+        internal fun applyLegacyDataFixes(db: SupportSQLiteDatabase) {
+            // Episodios en curso que tuvieran erróneamente marcado isPlayed = 1,
+            // para garantizar su reanudación exacta desde la posición guardada
+            db.execSQL("""
+                UPDATE episodes
+                SET isPlayed = 0
+                WHERE currentPositionMs > 0
+                  AND (duration <= 0 OR currentPositionMs < duration - 5000)
+            """)
+
+            // Reconocer podcasts de carpetas locales importados desde AntennaPod
+            db.execSQL("""
+                UPDATE podcasts
+                SET isLocalFolder = 1,
+                    localFolderPath = REPLACE(feedUrl, 'antennapod_local:', ''),
+                    category = 'Archivos Locales'
+                WHERE feedUrl LIKE 'antennapod_local:%'
+            """)
+
+            // Restaurar podcasts RSS que tenían erróneamente isLocalFolder = 1 por URLs de caché de AntennaPod
+            db.execSQL("""
+                UPDATE podcasts
+                SET isLocalFolder = 0,
+                    localFolderPath = NULL
+                WHERE isLocalFolder = 1
+                  AND (feedUrl LIKE 'http://%' OR feedUrl LIKE 'https://%')
+            """)
+        }
+
+        /**
          * Verifica y crea de forma idempotente todas las columnas, índices y tablas necesarias
          * en Room sin tocar ni alterar las filas existentes de los usuarios.
          */
         private fun ensureAllTablesAndColumns(db: SupportSQLiteDatabase) {
-            android.util.Log.d(TAG, "Ejecutando migración segura a Room v6...")
+            android.util.Log.d(TAG, "Ejecutando migración segura a Room v$DB_VERSION...")
 
             // 1. Columnas adicionales de podcasts (Carpetas locales, lápidas, cabeceras HTTP de caché, Podcasting 2.0 y ajustes por podcast)
             addColumnIfNotExists(db, "podcasts", "fundingUrl", "TEXT DEFAULT NULL")

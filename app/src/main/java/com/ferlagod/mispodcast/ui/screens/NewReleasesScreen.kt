@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -74,7 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
@@ -147,7 +149,7 @@ fun NewReleasesScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Episodios recientes de tus suscripciones.",
+                        text = stringResource(R.string.new_releases_recent_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -177,7 +179,7 @@ fun NewReleasesScreen(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Encolar",
+                                    text = stringResource(R.string.action_enqueue),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -188,7 +190,7 @@ fun NewReleasesScreen(
                                 onDismissRequest = { showEnqueueMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Añadir todos a continuación (Up Next)") },
+                                    text = { Text(stringResource(R.string.enqueue_all_next)) },
                                     leadingIcon = {
                                         Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null)
                                     },
@@ -198,7 +200,7 @@ fun NewReleasesScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Añadir todos al final de la cola") },
+                                    text = { Text(stringResource(R.string.enqueue_all_last)) },
                                     leadingIcon = {
                                         Icon(Icons.Filled.Queue, contentDescription = null)
                                     },
@@ -280,7 +282,7 @@ fun NewReleasesScreen(
                             onClick = onNavigateToAddPodcast,
                             shape = RoundedCornerShape(14.dp)
                         ) {
-                            Text("Explorar podcasts")
+                            Text(stringResource(R.string.action_explore_podcasts))
                         }
                     }
                 }
@@ -350,13 +352,15 @@ private fun NewReleaseCard(
     onMarkAsPlayed: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val resources = LocalResources.current
     val dateText = remember(item.episode.pubDate) {
         val now = System.currentTimeMillis()
         val diffDays = (now - item.episode.pubDate) / (1000 * 60 * 60 * 24)
         when {
-            diffDays == 0L -> "Hoy"
-            diffDays == 1L -> "Ayer"
-            diffDays < 7L -> "Hace $diffDays días"
+            diffDays == 0L -> resources.getString(R.string.date_today)
+            diffDays == 1L -> resources.getString(R.string.date_yesterday)
+            diffDays < 7L -> resources.getString(R.string.date_days_ago, diffDays.toInt())
             else -> java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(item.episode.pubDate))
         }
     }
@@ -446,7 +450,7 @@ private fun NewReleaseCard(
                                     modifier = Modifier.size(11.dp)
                                 )
                                 Text(
-                                    text = "En cola",
+                                    text = stringResource(R.string.in_queue),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
@@ -535,7 +539,7 @@ private fun NewReleaseCard(
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reproducir", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                    Text(stringResource(R.string.play_episode), fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 }
 
                 if (!inQueue) {
@@ -550,7 +554,7 @@ private fun NewReleaseCard(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = stringResource(R.string.play_next), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Siguiente", maxLines = 1, softWrap = false)
+                        Text(stringResource(R.string.action_next), maxLines = 1, softWrap = false)
                     }
 
                     OutlinedButton(
@@ -570,7 +574,7 @@ private fun NewReleaseCard(
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                     ) {
-                        Text("En cola", maxLines = 1, softWrap = false)
+                        Text(stringResource(R.string.in_queue), maxLines = 1, softWrap = false)
                     }
                 }
 

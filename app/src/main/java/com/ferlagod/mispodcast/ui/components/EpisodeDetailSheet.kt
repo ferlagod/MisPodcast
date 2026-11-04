@@ -91,7 +91,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
@@ -494,7 +494,7 @@ fun EpisodeDetailSheet(
             if (soundbites.isNotEmpty() && onSeekToPosition != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Momentos destacados",
+                    text = stringResource(R.string.highlights_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -509,7 +509,7 @@ fun EpisodeDetailSheet(
                             onClick = { onSeekToPosition(bite.startTimeMs) },
                             label = {
                                 Text(
-                                    text = "${TimestampParser.format(bite.startTimeMs)} · ${bite.title ?: "Fragmento de ${bite.durationMs / 1000} s"}",
+                                    text = "${TimestampParser.format(bite.startTimeMs)} · ${bite.title ?: stringResource(R.string.soundbite_fallback, (bite.durationMs / 1000).toInt())}",
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -575,7 +575,9 @@ fun EpisodeDetailSheet(
                                 try {
                                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(episode.transcriptUrl))
                                     context.startActivity(intent)
-                                } catch (_: Exception) {}
+                                } catch (e: Exception) {
+                                    android.util.Log.w("EpisodeDetailSheet", "No se pudo abrir la transcripción: ${e.message}")
+                                }
                             },
                             shape = RoundedCornerShape(12.dp)
                         ) {

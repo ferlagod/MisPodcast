@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.playback
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -40,6 +41,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.LibraryResult
+import androidx.media3.session.SessionError
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
@@ -132,20 +134,18 @@ class PodcastPlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
-        val container = (applicationContext as? com.ferlagod.mispodcast.MisPodcastApplication)?.container
-        database = container?.database ?: PodcastDatabase.getInstance(applicationContext)
-        syncManager = container?.nextcloudSyncManager ?: NextcloudSyncManager.getInstance(applicationContext)
-        preferencesManager = container?.preferencesManager ?: UserPreferencesManager.getInstance(applicationContext)
-        searchService = container?.applePodcastSearchService ?: ApplePodcastSearchService.create()
-        rssParser = container?.rssFeedParser ?: RssFeedParser()
+        val container = (applicationContext as com.ferlagod.mispodcast.MisPodcastApplication).container
+        database = container.database
+        syncManager = container.nextcloudSyncManager
+        preferencesManager = container.preferencesManager
+        searchService = container.applePodcastSearchService
+        rssParser = container.rssFeedParser
 
-        autoBrowseTree = AutoBrowseTree(database, searchService, rssParser)
+        autoBrowseTree = AutoBrowseTree(database, searchService, rssParser, ::getString)
         playbackController = PlaybackController(database, autoBrowseTree)
         progressTracker = ProgressTracker(applicationContext, database, syncManager, serviceScope)
-        sleepTimerManager = container?.sleepTimerManager ?: SleepTimerManager.getInstance(applicationContext)
-        chapterRepository = container?.chapterRepository ?: com.ferlagod.mispodcast.data.repository.ChapterRepository(
-            container?.okHttpClient ?: okhttp3.OkHttpClient()
-        )
+        sleepTimerManager = container.sleepTimerManager
+        chapterRepository = container.chapterRepository
 
         createNotificationChannel()
         initializePlayer()
@@ -226,10 +226,10 @@ class PodcastPlaybackService : MediaLibraryService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Reproducción de Podcast",
+                getString(R.string.notif_channel_playback),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Controles y estado de la reproducción en curso de Mis Podcast"
+                description = getString(R.string.notif_channel_playback_desc)
                 setShowBadge(false)
                 lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
             }
@@ -536,8 +536,11 @@ class PodcastPlaybackService : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): MediaSession.ConnectionResult {
-            val baseResult = super.onConnect(session, controller)
-            val sessionCommands = baseResult.availableSessionCommands.buildUpon()
+            // Desde Media3 1.6+, super.onConnect() devuelve un resultado "no implementado" con
+            // comandos VACÍOS. Si partimos de él, Android Auto no recibe los comandos de biblioteca
+            // (GET_LIBRARY_ROOT, GET_CHILDREN...) y su onGetRoot() devuelve null: la interfaz no carga.
+            // Se conceden explícitamente todos los comandos de sesión, biblioteca y reproductor.
+            val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 .add(COMMAND_REPLAY_10)
                 .add(COMMAND_FORWARD_30)
                 .add(COMMAND_CYCLE_SPEED)
@@ -545,14 +548,8 @@ class PodcastPlaybackService : MediaLibraryService() {
                 .add(COMMAND_PREV_CHAPTER)
                 .build()
 
-            val playerCommands = if (baseResult.availablePlayerCommands.size() > 0) {
-                baseResult.availablePlayerCommands
-            } else {
-                MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS
-            }
-
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
-                .setAvailablePlayerCommands(playerCommands)
+                .setAvailablePlayerCommands(MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS)
                 .setAvailableSessionCommands(sessionCommands)
                 .setCustomLayout(playbackController.buildCustomCommandButtons())
                 .build()
@@ -601,9 +598,11 @@ class PodcastPlaybackService : MediaLibraryService() {
             serviceScope.launch(Dispatchers.IO) {
                 try {
                     val items = autoBrowseTree.getChildrenForFolder(parentId)
-                    future.set(LibraryResult.ofItemList(items, params))
+                    val fromIndex = (page.toLong() * pageSize).coerceAtMost(items.size.toLong()).toInt()
+                    val toIndex = (fromIndex.toLong() + pageSize).coerceAtMost(items.size.toLong()).toInt()
+                    future.set(LibraryResult.ofItemList(items.subList(fromIndex, toIndex), params))
                 } catch (_: Exception) {
-                    future.set(LibraryResult.ofError(LibraryResult.RESULT_ERROR_UNKNOWN))
+                    future.set(LibraryResult.ofError(SessionError.ERROR_UNKNOWN))
                 }
             }
             return future
@@ -621,10 +620,10 @@ class PodcastPlaybackService : MediaLibraryService() {
                     if (item != null) {
                         future.set(LibraryResult.ofItem(item, null))
                     } else {
-                        future.set(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+                        future.set(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
                     }
                 } catch (_: Exception) {
-                    future.set(LibraryResult.ofError(LibraryResult.RESULT_ERROR_UNKNOWN))
+                    future.set(LibraryResult.ofError(SessionError.ERROR_UNKNOWN))
                 }
             }
             return future
@@ -644,8 +643,9 @@ class PodcastPlaybackService : MediaLibraryService() {
                         session.notifySearchResultChanged(controller, query, count, params)
                     }
                     future.set(LibraryResult.ofVoid())
-                } catch (_: Exception) {
-                    future.set(LibraryResult.ofError(LibraryResult.RESULT_ERROR_UNKNOWN))
+                } catch (e: Exception) {
+                    e.rethrowIfCancellation()
+                    future.set(LibraryResult.ofError(SessionError.ERROR_UNKNOWN))
                 }
             }
             return future
@@ -672,7 +672,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                     }
                     future.set(LibraryResult.ofItemList(pagedResults, params))
                 } catch (_: Exception) {
-                    future.set(LibraryResult.ofError(LibraryResult.RESULT_ERROR_UNKNOWN))
+                    future.set(LibraryResult.ofError(SessionError.ERROR_UNKNOWN))
                 }
             }
             return future

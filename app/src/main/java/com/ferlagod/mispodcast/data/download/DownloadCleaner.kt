@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.download
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.os.Environment
 import android.util.Log
@@ -67,6 +68,7 @@ object DownloadCleaner {
                 if (!shouldDelete) return@withContext
                 deleteDownloadedFile(context, dao, episode)
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 Log.w(TAG, "No se pudo aplicar 'borrar tras escuchar' a $episodeId: ${e.message}")
             }
         }
@@ -100,6 +102,7 @@ object DownloadCleaner {
                 candidates.forEach { deleteDownloadedFile(context, dao, it) }
                 Log.i(TAG, "Límite de $limit descargas: eliminados ${candidates.size} de $excess sobrantes")
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 Log.w(TAG, "No se pudo aplicar el límite de descargas: ${e.message}")
             }
         }
@@ -140,6 +143,7 @@ object DownloadCleaner {
                     }
                 }
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 Log.w(TAG, "Error limpiando temporales huérfanos: ${e.message}")
             }
         }

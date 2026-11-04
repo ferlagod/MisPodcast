@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.worker
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -60,8 +61,7 @@ class EpisodeDownloadWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     private val okHttpClient: OkHttpClient by lazy {
-        val baseClient = (applicationContext as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.okHttpClient
-        (baseClient?.newBuilder() ?: OkHttpClient.Builder())
+        (applicationContext as com.ferlagod.mispodcast.MisPodcastApplication).container.okHttpClient.newBuilder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .build()
@@ -72,8 +72,8 @@ class EpisodeDownloadWorker(
         val audioUrl = inputData.getString(KEY_AUDIO_URL) ?: return Result.failure()
         val episodeTitle = inputData.getString(KEY_EPISODE_TITLE) ?: "Episodio"
 
-        val container = (applicationContext as? com.ferlagod.mispodcast.MisPodcastApplication)?.container
-        val database = container?.database ?: PodcastDatabase.getInstance(applicationContext)
+        val container = (applicationContext as com.ferlagod.mispodcast.MisPodcastApplication).container
+        val database = container.database
         val dao = database.podcastDao()
         val downloadManager = EpisodeDownloadManager.getInstance(applicationContext, dao)
 
@@ -87,7 +87,7 @@ class EpisodeDownloadWorker(
 
         val sanitizedTitle = EpisodeDownloadManager.sanitizeFileName(episodeTitle)
         val tempFile = File(targetDir, "${sanitizedTitle}_${episodeId.hashCode()}.tmp")
-        val stripTrackers = (container?.preferencesManager ?: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager.getInstance(applicationContext))
+        val stripTrackers = container.preferencesManager
             .userSettingsFlow.first().stripAudioTrackers
         val cleanAudioUrl = if (stripTrackers) com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(audioUrl) else audioUrl
 
@@ -211,11 +211,13 @@ class EpisodeDownloadWorker(
                 return Result.failure()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Fallo irrecuperable al descargar $episodeTitle: ${e.message}", e)
+            // La limpieza también se aplica si el usuario cancela la descarga
             if (tempFile.exists()) {
                 tempFile.delete()
             }
             downloadManager.reportProgress(episodeId, DownloadStatus.NOT_DOWNLOADED, 0f)
+            e.rethrowIfCancellation()
+            Log.e(TAG, "Fallo irrecuperable al descargar $episodeTitle: ${e.message}", e)
             return Result.failure()
         }
     }
@@ -235,7 +237,7 @@ class EpisodeDownloadWorker(
         val notificationId = (KEY_DOWNLOAD_NOTIFICATION_BASE + id.hashCode()) and 0x7FFFFFFF
 
         val notification = NotificationCompat.Builder(applicationContext, NotificationHelper.CHANNEL_DOWNLOADS_ID)
-            .setContentTitle("Descargando episodio")
+            .setContentTitle(applicationContext.getString(R.string.notif_downloading_episode))
             .setContentText(title)
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)

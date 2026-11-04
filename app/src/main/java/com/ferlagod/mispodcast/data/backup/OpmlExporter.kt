@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.net.Uri
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
@@ -75,6 +76,7 @@ object OpmlExporter {
 
             Result.success(podcasts.size)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }

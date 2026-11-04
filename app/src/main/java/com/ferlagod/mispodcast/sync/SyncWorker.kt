@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.sync
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.util.Log
 import androidx.work.Constraints
@@ -90,6 +91,7 @@ class SyncWorker(
                     db.podcastDao()
                 )
             } catch (folderEx: Exception) {
+                folderEx.rethrowIfCancellation()
                 Log.w(TAG, "Aviso al re-escanear carpetas locales: ${folderEx.message}")
             }
 
@@ -106,6 +108,7 @@ class SyncWorker(
             // Siempre terminar limpiamente con Result.success() para evitar bucles de retry
             Result.success()
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Log.e(TAG, "Excepción en SyncWorker: ${e.message}", e)
             Result.success()
         }

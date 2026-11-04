@@ -428,6 +428,7 @@ class NextcloudMergeTests {
         assertTrue(NextcloudSyncManager.isSecureServerUrl("https://192.168.1.100:8443"))
         assertTrue(NextcloudSyncManager.isSecureServerUrl("http://localhost:8080"))
         assertTrue(NextcloudSyncManager.isSecureServerUrl("http://127.0.0.1:8080"))
+        assertTrue(NextcloudSyncManager.isSecureServerUrl("http://[::1]:8080"))
         assertFalse(NextcloudSyncManager.isSecureServerUrl("http://servidor-remoto-inseguro.org"))
     }
 

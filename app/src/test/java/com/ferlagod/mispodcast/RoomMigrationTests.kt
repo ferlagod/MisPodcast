@@ -78,65 +78,40 @@ class RoomMigrationTests {
         unmockkAll()
     }
 
+    private fun migrationFrom(version: Int) =
+        PodcastDatabase.ALL_MIGRATIONS.single { it.startVersion == version }
+
     /**
-     * Test 1: Verificar que las definiciones de migración tienen las versiones de inicio y fin correctas.
+     * Test 1: Existe una migración directa a la versión actual desde cada versión anterior.
      */
     @Test
     fun testMigrationVersionDefinitions() {
-        // Migración acumulativa directa v1 -> v10
-        assertEquals(10, PodcastDatabase.MIGRATION_10_11.startVersion)
-        assertEquals(11, PodcastDatabase.MIGRATION_10_11.endVersion)
-
-        assertEquals(1, PodcastDatabase.MIGRATION_1_10.startVersion)
-        assertEquals(10, PodcastDatabase.MIGRATION_1_10.endVersion)
-
-        // Migración última v9 -> v10 (Ocultar de novedades / descartes)
-        assertEquals(9, PodcastDatabase.MIGRATION_9_10.startVersion)
-        assertEquals(10, PodcastDatabase.MIGRATION_9_10.endVersion)
-
-        // Migración previa v8 -> v9 (Ajustes de podcast y bookmarks)
-        assertEquals(8, PodcastDatabase.MIGRATION_8_9.startVersion)
-        assertEquals(9, PodcastDatabase.MIGRATION_8_9.endVersion)
-
-        // Migración acumulativa v1 -> v9
-        assertEquals(1, PodcastDatabase.MIGRATION_1_9.startVersion)
-        assertEquals(9, PodcastDatabase.MIGRATION_1_9.endVersion)
-
-        // Migraciones intermedias
-        assertEquals(7, PodcastDatabase.MIGRATION_7_8.startVersion)
-        assertEquals(8, PodcastDatabase.MIGRATION_7_8.endVersion)
-
-        assertEquals(6, PodcastDatabase.MIGRATION_6_8.startVersion)
-        assertEquals(8, PodcastDatabase.MIGRATION_6_8.endVersion)
-
-        assertEquals(1, PodcastDatabase.MIGRATION_1_8.startVersion)
-        assertEquals(8, PodcastDatabase.MIGRATION_1_8.endVersion)
-
-        assertEquals(1, PodcastDatabase.MIGRATION_1_2.startVersion)
-        assertEquals(2, PodcastDatabase.MIGRATION_1_2.endVersion)
-
-        assertEquals(2, PodcastDatabase.MIGRATION_2_3.startVersion)
-        assertEquals(3, PodcastDatabase.MIGRATION_2_3.endVersion)
-
-        assertEquals(3, PodcastDatabase.MIGRATION_3_4.startVersion)
-        assertEquals(4, PodcastDatabase.MIGRATION_3_4.endVersion)
-
-        assertEquals(4, PodcastDatabase.MIGRATION_4_5.startVersion)
-        assertEquals(5, PodcastDatabase.MIGRATION_4_5.endVersion)
-
-        assertEquals(5, PodcastDatabase.MIGRATION_5_6.startVersion)
-        assertEquals(6, PodcastDatabase.MIGRATION_5_6.endVersion)
-
-        assertEquals(6, PodcastDatabase.MIGRATION_6_7.startVersion)
-        assertEquals(7, PodcastDatabase.MIGRATION_6_7.endVersion)
+        val starts = PodcastDatabase.ALL_MIGRATIONS.map { it.startVersion }
+        assertEquals((1 until PodcastDatabase.DB_VERSION).toList(), starts)
+        PodcastDatabase.ALL_MIGRATIONS.forEach {
+            assertEquals(PodcastDatabase.DB_VERSION, it.endVersion)
+        }
     }
 
     /**
-     * Test 2: Ejecutar MIGRATION_9_10 y verificar la adición de columnas y tablas.
+     * Test 1b: Las correcciones de datos heredadas se aplican al migrar (y ya no en cada apertura).
+     */
+    @Test
+    fun testMigrationAppliesLegacyDataFixes() {
+        migrationFrom(PodcastDatabase.DB_VERSION - 1).migrate(mockDb)
+
+        val allSql = executedSqlStatements.joinToString("\n")
+        assertTrue(allSql.contains("SET isPlayed = 0"))
+        assertTrue(allSql.contains("WHERE feedUrl LIKE 'antennapod_local:%'"))
+        assertTrue(allSql.contains("SET isLocalFolder = 0"))
+    }
+
+    /**
+     * Test 2: Ejecutar la migración desde v9 y verificar la adición de columnas y tablas.
      */
     @Test
     fun testMigration9To10CreatesAllRequiredTablesAndColumns() {
-        PodcastDatabase.MIGRATION_9_10.migrate(mockDb)
+        migrationFrom(9).migrate(mockDb)
 
         val allSql = executedSqlStatements.joinToString("\n")
 
@@ -175,14 +150,11 @@ class RoomMigrationTests {
     }
 
     /**
-     * Test 2b: MIGRATION_11_12 añade el estado de sincronización y el identificador de sesión del historial.
+     * Test 2b: La migración desde v11 añade el estado de sincronización y el identificador de sesión del historial.
      */
     @Test
     fun testMigration11To12AddsSyncTablesAndHistorySyncId() {
-        assertEquals(11, PodcastDatabase.MIGRATION_11_12.startVersion)
-        assertEquals(12, PodcastDatabase.MIGRATION_11_12.endVersion)
-
-        PodcastDatabase.MIGRATION_11_12.migrate(mockDb)
+        migrationFrom(11).migrate(mockDb)
 
         val allSql = executedSqlStatements.joinToString("\n")
         assertTrue(allSql.contains("ALTER TABLE `listening_history` ADD COLUMN `syncId`"))
@@ -199,7 +171,7 @@ class RoomMigrationTests {
      */
     @Test
     fun testDirectMigration1To10CompletesSuccessfully() {
-        PodcastDatabase.MIGRATION_1_10.migrate(mockDb)
+        migrationFrom(1).migrate(mockDb)
 
         val allSql = executedSqlStatements.joinToString("\n")
         assertTrue(allSql.contains("CREATE TABLE IF NOT EXISTS `bookmarks`"))
@@ -222,7 +194,7 @@ class RoomMigrationTests {
         every { mockDb.query(any<String>()) } returns mockCursorWithExistingColumns
 
         // Debe ejecutarse sin lanzar excepciones
-        PodcastDatabase.MIGRATION_8_9.migrate(mockDb)
+        migrationFrom(8).migrate(mockDb)
 
         verify(atLeast = 1) { mockDb.query(any<String>()) }
     }

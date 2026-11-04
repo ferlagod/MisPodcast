@@ -153,7 +153,7 @@ fun PlaybackSpeedBottomSheet(
                     }
                     Column {
                         Text(
-                            text = "Velocidad de reproducción",
+                            text = stringResource(R.string.speed_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -323,7 +323,7 @@ fun PlaybackSpeedBottomSheet(
                     .padding(horizontal = 24.dp)
             ) {
                 Text(
-                    text = "Velocidades preestablecidas",
+                    text = stringResource(R.string.speed_presets),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -383,7 +383,7 @@ fun PlaybackSpeedBottomSheet(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Normal (1.0x)")
+                    Text(stringResource(R.string.speed_normal))
                 }
 
                 // Cerrar / Aceptar
@@ -397,7 +397,7 @@ fun PlaybackSpeedBottomSheet(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("Listo", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
                 }
             }
         }

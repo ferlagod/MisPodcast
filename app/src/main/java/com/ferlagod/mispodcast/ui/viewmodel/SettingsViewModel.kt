@@ -18,8 +18,10 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.R
 import android.app.Application
 import android.net.Uri
+import com.ferlagod.mispodcast.util.UiText
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
@@ -49,14 +51,10 @@ import kotlinx.coroutines.launch
  */
 class SettingsViewModel @JvmOverloads constructor(
     application: Application,
-    private val preferencesManager: UserPreferencesManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.preferencesManager
-        ?: UserPreferencesManager.getInstance(application),
-    private val database: PodcastDatabase = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.database
-        ?: PodcastDatabase.getInstance(application),
-    private val repository: PodcastRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.podcastRepository
-        ?: PodcastRepository(database.podcastDao()),
-    private val nextcloudSyncManager: com.ferlagod.mispodcast.sync.NextcloudSyncManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.nextcloudSyncManager
-        ?: com.ferlagod.mispodcast.sync.NextcloudSyncManager.getInstance(application)
+    private val preferencesManager: UserPreferencesManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.preferencesManager,
+    private val database: PodcastDatabase = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.database,
+    private val repository: PodcastRepository = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.podcastRepository,
+    private val nextcloudSyncManager: com.ferlagod.mispodcast.sync.NextcloudSyncManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.nextcloudSyncManager
 ) : AndroidViewModel(application) {
 
     val userSettings: StateFlow<UserSettings> = preferencesManager.userSettingsFlow
@@ -65,14 +63,14 @@ class SettingsViewModel @JvmOverloads constructor(
     private val _isProcessingBackup = MutableStateFlow(false)
     val isProcessingBackup: StateFlow<Boolean> = _isProcessingBackup.asStateFlow()
 
-    private val _backupMessage = MutableStateFlow<String?>(null)
-    val backupMessage: StateFlow<String?> = _backupMessage.asStateFlow()
+    private val _backupMessage = MutableStateFlow<UiText?>(null)
+    val backupMessage: StateFlow<UiText?> = _backupMessage.asStateFlow()
 
     private val _isTestingConnection = MutableStateFlow(false)
     val isTestingConnection: StateFlow<Boolean> = _isTestingConnection.asStateFlow()
 
-    private val _connectionTestResult = MutableStateFlow<String?>(null)
-    val connectionTestResult: StateFlow<String?> = _connectionTestResult.asStateFlow()
+    private val _connectionTestResult = MutableStateFlow<UiText?>(null)
+    val connectionTestResult: StateFlow<UiText?> = _connectionTestResult.asStateFlow()
 
     private val _isConnectionSuccess = MutableStateFlow<Boolean?>(null)
     val isConnectionSuccess: StateFlow<Boolean?> = _isConnectionSuccess.asStateFlow()
@@ -80,8 +78,8 @@ class SettingsViewModel @JvmOverloads constructor(
     private val _isSyncingNextcloud = MutableStateFlow(false)
     val isSyncingNextcloud: StateFlow<Boolean> = _isSyncingNextcloud.asStateFlow()
 
-    private val _nextcloudSyncMessage = MutableStateFlow<String?>(null)
-    val nextcloudSyncMessage: StateFlow<String?> = _nextcloudSyncMessage.asStateFlow()
+    private val _nextcloudSyncMessage = MutableStateFlow<UiText?>(null)
+    val nextcloudSyncMessage: StateFlow<UiText?> = _nextcloudSyncMessage.asStateFlow()
 
     fun setNextcloudConfig(serverUrl: String, username: String, appPassword: String) {
         viewModelScope.launch {
@@ -94,16 +92,16 @@ class SettingsViewModel @JvmOverloads constructor(
     fun testNextcloudConnection(serverUrl: String, username: String, appPassword: String) {
         viewModelScope.launch {
             _isTestingConnection.value = true
-            _connectionTestResult.value = "Probando conexión con Nextcloud…"
+            _connectionTestResult.value = UiText.Res(R.string.msg_nextcloud_testing)
             _isConnectionSuccess.value = null
 
             val result = nextcloudSyncManager.testConnection(serverUrl, username, appPassword)
-            result.onSuccess { msg ->
-                _connectionTestResult.value = msg
+            result.onSuccess {
+                _connectionTestResult.value = UiText.Res(R.string.msg_nextcloud_connected, username.trim())
                 _isConnectionSuccess.value = true
                 preferencesManager.setNextcloudConfig(serverUrl, username, appPassword)
             }.onFailure { err ->
-                _connectionTestResult.value = err.localizedMessage ?: "Error al conectar con Nextcloud"
+                _connectionTestResult.value = err.localizedMessage?.let(UiText::Raw) ?: UiText.Res(R.string.msg_nextcloud_connect_error)
                 _isConnectionSuccess.value = false
             }
             _isTestingConnection.value = false
@@ -113,12 +111,16 @@ class SettingsViewModel @JvmOverloads constructor(
     fun syncNextcloudNow() {
         viewModelScope.launch {
             _isSyncingNextcloud.value = true
-            _nextcloudSyncMessage.value = "Sincronizando con Nextcloud…"
+            _nextcloudSyncMessage.value = UiText.Res(R.string.msg_nextcloud_syncing)
             val result = nextcloudSyncManager.syncNow()
             result.onSuccess { msg ->
-                _nextcloudSyncMessage.value = msg
+                _nextcloudSyncMessage.value = when (msg) {
+                    com.ferlagod.mispodcast.sync.NextcloudSyncManager.MSG_ALREADY_RUNNING -> UiText.Res(R.string.msg_nextcloud_sync_running)
+                    com.ferlagod.mispodcast.sync.NextcloudSyncManager.MSG_NOT_CONFIGURED -> UiText.Res(R.string.msg_nextcloud_not_configured)
+                    else -> UiText.Res(R.string.msg_nextcloud_synced)
+                }
             }.onFailure { err ->
-                _nextcloudSyncMessage.value = err.localizedMessage ?: "Error en la sincronización"
+                _nextcloudSyncMessage.value = err.localizedMessage?.let(UiText::Raw) ?: UiText.Res(R.string.msg_nextcloud_sync_error)
             }
             _isSyncingNextcloud.value = false
         }
@@ -230,13 +232,13 @@ class SettingsViewModel @JvmOverloads constructor(
     fun exportOpml(targetUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Generando archivo OPML…"
+            _backupMessage.value = UiText.Res(R.string.msg_opml_generating)
             val podcasts = database.podcastDao().getSubscribedPodcastsFlow().firstOrNull() ?: emptyList()
             val result = OpmlExporter.exportOpml(getApplication(), targetUri, podcasts)
             result.onSuccess { count ->
-                _backupMessage.value = "¡Éxito! Exportadas $count suscripciones a OPML."
+                _backupMessage.value = UiText.Res(R.string.msg_opml_exported, count)
             }.onFailure { err ->
-                _backupMessage.value = "Error al exportar OPML: ${err.localizedMessage}"
+                _backupMessage.value = UiText.Res(R.string.msg_opml_export_error, err.localizedMessage.orEmpty())
             }
             _isProcessingBackup.value = false
         }
@@ -245,16 +247,16 @@ class SettingsViewModel @JvmOverloads constructor(
     fun importOpml(sourceUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Leyendo archivo OPML…"
+            _backupMessage.value = UiText.Res(R.string.msg_opml_reading)
             val parseResult = OpmlImporter.importOpml(getApplication(), sourceUri)
             parseResult.onSuccess { feeds ->
                 if (feeds.isEmpty()) {
-                    _backupMessage.value = "El archivo OPML no contiene canales de podcast válidos."
+                    _backupMessage.value = UiText.Res(R.string.msg_opml_empty)
                     _isProcessingBackup.value = false
                     return@launch
                 }
 
-                _backupMessage.value = "Importando ${feeds.size} podcasts…"
+                _backupMessage.value = UiText.Res(R.string.msg_opml_importing, feeds.size)
                 var importedCount = 0
                 for (feed in feeds) {
                     val isLocalFeed = feed.xmlUrl.startsWith("antennapod_local:") ||
@@ -292,12 +294,12 @@ class SettingsViewModel @JvmOverloads constructor(
                         }
                     }
                 }
-                _backupMessage.value = "¡Completado! Se importaron $importedCount de ${feeds.size} podcasts con éxito."
+                _backupMessage.value = UiText.Res(R.string.msg_opml_imported, importedCount, feeds.size)
                 if (importedCount > 0) {
                     nextcloudSyncManager.triggerSyncIfConfigured(debounceMs = 2500L)
                 }
             }.onFailure { err ->
-                _backupMessage.value = "Error al leer OPML: ${err.localizedMessage}"
+                _backupMessage.value = UiText.Res(R.string.msg_opml_read_error, err.localizedMessage.orEmpty())
             }
             _isProcessingBackup.value = false
         }
@@ -310,12 +312,12 @@ class SettingsViewModel @JvmOverloads constructor(
     fun exportDatabaseZip(targetUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Creando copia de seguridad ZIP de la base de datos…"
+            _backupMessage.value = UiText.Res(R.string.msg_db_exporting)
             val result = DatabaseBackupManager.exportDatabaseZip(getApplication(), targetUri, database)
             result.onSuccess {
-                _backupMessage.value = "¡Copia de seguridad de la base de datos guardada con éxito!"
+                _backupMessage.value = UiText.Res(R.string.msg_db_exported)
             }.onFailure { err ->
-                _backupMessage.value = "Error al exportar base de datos: ${err.localizedMessage}"
+                _backupMessage.value = UiText.Res(R.string.msg_db_export_error, err.localizedMessage.orEmpty())
             }
             _isProcessingBackup.value = false
         }
@@ -324,14 +326,14 @@ class SettingsViewModel @JvmOverloads constructor(
     fun importDatabaseZip(sourceUri: Uri) {
         viewModelScope.launch {
             _isProcessingBackup.value = true
-            _backupMessage.value = "Analizando e importando base de datos…"
+            _backupMessage.value = UiText.Res(R.string.msg_db_importing)
             val result = DatabaseBackupManager.importDatabase(getApplication(), sourceUri, database)
             result.onSuccess { msg ->
                 com.ferlagod.mispodcast.notification.NotificationHelper.cancelAllNotifications(getApplication())
-                _backupMessage.value = msg
+                _backupMessage.value = UiText.Raw(msg)
                 nextcloudSyncManager.triggerSyncIfConfigured(debounceMs = 2500L)
             }.onFailure { err ->
-                _backupMessage.value = "Error al restaurar base de datos: ${err.localizedMessage}"
+                _backupMessage.value = UiText.Res(R.string.msg_db_import_error, err.localizedMessage.orEmpty())
             }
             _isProcessingBackup.value = false
         }

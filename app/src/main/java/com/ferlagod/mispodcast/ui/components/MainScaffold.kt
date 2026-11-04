@@ -125,6 +125,7 @@ fun MainScaffold(
                         val isCurrentTab = currentRoute == item.route
                         if (!isCurrentTab) {
                             val isSubscreen = currentRoute !in bottomTabRoutes
+                            @Suppress("RestrictedApi") // No hay API pública para leer la pila completa
                             val backStack = navController.currentBackStack.value
                             val originTabRoute = backStack.asReversed()
                                 .mapNotNull { it.destination.route }

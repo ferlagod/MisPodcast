@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.download
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.util.Log
 import androidx.work.BackoffPolicy
@@ -200,6 +201,7 @@ class EpisodeDownloadManager private constructor(
                     .enqueueUniqueWork("download_${episode.id}", ExistingWorkPolicy.KEEP, workRequest)
 
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 Log.e("EpisodeDownloadManager", "Error al encolar descarga para ${episode.title}", e)
                 reportProgress(episode.id, DownloadStatus.NOT_DOWNLOADED, 0f)
             }

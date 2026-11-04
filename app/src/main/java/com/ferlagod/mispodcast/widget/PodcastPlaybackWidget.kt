@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.widget
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.unit.dp
@@ -114,7 +115,7 @@ class PodcastPlaybackWidget : GlanceAppWidget() {
                                 modifier = GlanceModifier.defaultWeight()
                             ) {
                                 Text(
-                                    text = if (hasEpisode) state.podcastTitle.ifBlank { "Mis Podcast" } else "Mis Podcast",
+                                    text = if (hasEpisode) state.podcastTitle.ifBlank { context.getString(R.string.app_name) } else context.getString(R.string.app_name),
                                     style = TextStyle(
                                         color = GlanceTheme.colors.primary,
                                         fontSize = 12.sp,
@@ -124,7 +125,7 @@ class PodcastPlaybackWidget : GlanceAppWidget() {
                                 )
                                 Spacer(modifier = GlanceModifier.height(2.dp))
                                 Text(
-                                    text = if (hasEpisode) state.episodeTitle else "Toca para reanudar la reproducción",
+                                    text = if (hasEpisode) state.episodeTitle else context.getString(R.string.widget_tap_to_resume),
                                     style = TextStyle(
                                         color = GlanceTheme.colors.onSurface,
                                         fontSize = 14.sp,
@@ -169,7 +170,7 @@ class PodcastPlaybackWidget : GlanceAppWidget() {
                             ) {
                                 Image(
                                     provider = ImageProvider(R.drawable.ic_replay_10),
-                                    contentDescription = "Retroceder 10 segundos",
+                                    contentDescription = context.getString(R.string.player_skip_backward_format, 10),
                                     modifier = GlanceModifier.size(20.dp)
                                 )
                             }
@@ -189,7 +190,7 @@ class PodcastPlaybackWidget : GlanceAppWidget() {
                                     provider = ImageProvider(
                                         if (state.isPlaying) R.drawable.ic_widget_pause else R.drawable.ic_widget_play
                                     ),
-                                    contentDescription = if (state.isPlaying) "Pausar" else "Reproducir",
+                                    contentDescription = if (state.isPlaying) context.getString(R.string.action_pause) else context.getString(R.string.action_play),
                                     modifier = GlanceModifier.size(24.dp)
                                 )
                             }
@@ -207,7 +208,7 @@ class PodcastPlaybackWidget : GlanceAppWidget() {
                             ) {
                                 Image(
                                     provider = ImageProvider(R.drawable.ic_forward_30),
-                                    contentDescription = "Avanzar 30 segundos",
+                                    contentDescription = context.getString(R.string.player_skip_forward_format, 30),
                                     modifier = GlanceModifier.size(20.dp)
                                 )
                             }
@@ -230,6 +231,7 @@ class TogglePlayPauseActionCallback : ActionCallback {
         try {
             ContextCompat.startForegroundService(context, intent)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             context.startService(intent)
         }
     }
@@ -246,6 +248,7 @@ class SkipBackActionCallback : ActionCallback {
         try {
             ContextCompat.startForegroundService(context, intent)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             context.startService(intent)
         }
     }
@@ -262,6 +265,7 @@ class SkipForwardActionCallback : ActionCallback {
         try {
             ContextCompat.startForegroundService(context, intent)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             context.startService(intent)
         }
     }

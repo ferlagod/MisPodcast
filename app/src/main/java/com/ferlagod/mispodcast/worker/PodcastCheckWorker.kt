@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.worker
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.util.Log
 import androidx.work.Constraints
@@ -115,10 +116,10 @@ class PodcastCheckWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            val container = (applicationContext as? com.ferlagod.mispodcast.MisPodcastApplication)?.container
-            val database = container?.database ?: PodcastDatabase.getInstance(applicationContext)
+            val container = (applicationContext as com.ferlagod.mispodcast.MisPodcastApplication).container
+            val database = container.database
             val podcastDao = database.podcastDao()
-            val prefManager = container?.preferencesManager ?: UserPreferencesManager.getInstance(applicationContext)
+            val prefManager = container.preferencesManager
             val settings = prefManager.userSettingsFlow.first()
 
             val subscribedPodcasts = podcastDao.getSubscribedPodcasts()
@@ -134,10 +135,11 @@ class PodcastCheckWorker(
                     podcastDao
                 )
             } catch (folderEx: Exception) {
+                folderEx.rethrowIfCancellation()
                 Log.w(TAG, "Aviso al re-escanear carpetas locales: ${folderEx.message}")
             }
 
-            val feedParser = container?.rssFeedParser ?: RssFeedParser()
+            val feedParser = container.rssFeedParser
             val totalNewEpisodesFound = AtomicInteger(0)
             val discoveredNewEpisodes = java.util.concurrent.ConcurrentHashMap<com.ferlagod.mispodcast.data.local.entities.PodcastEntity, List<com.ferlagod.mispodcast.data.local.entities.EpisodeEntity>>()
             val downloadManager = EpisodeDownloadManager.getInstance(applicationContext, podcastDao)
@@ -249,6 +251,7 @@ class PodcastCheckWorker(
                                     }
                                 }
                             } catch (feedEx: Exception) {
+                                feedEx.rethrowIfCancellation()
                                 Log.w(TAG, "Error al comprobar feed de '${podcast.title}': ${feedEx.message}")
                             }
                         }
@@ -268,6 +271,7 @@ class PodcastCheckWorker(
             Log.i(TAG, "Comprobación finalizada. Total nuevos capítulos descubiertos: ${totalNewEpisodesFound.get()}")
             Result.success()
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Log.e(TAG, "Excepción en PodcastCheckWorker: ${e.message}", e)
             Result.success()
         }

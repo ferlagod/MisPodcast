@@ -75,7 +75,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.model.ValueForValueConfig
 import com.ferlagod.mispodcast.data.model.ValueRecipient
@@ -276,7 +276,7 @@ fun FundingBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "Este podcast aún no ha configurado enlaces directos de Value4Value o financiación en su feed RSS.",
+                            text = stringResource(R.string.funding_none),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -298,7 +298,8 @@ private fun TraditionalFundingCard(
     fundingUrl: String,
     onOpenUrl: (String) -> Unit
 ) {
-    val platformName = remember(fundingUrl) {
+    val genericSiteLabel = stringResource(R.string.funding_generic_site)
+    val platformName = remember(fundingUrl, genericSiteLabel) {
         val lower = fundingUrl.lowercase()
         when {
             lower.contains("patreon.com") -> "Patreon"
@@ -309,7 +310,7 @@ private fun TraditionalFundingCard(
             lower.contains("github.com") -> "GitHub Sponsors"
             lower.contains("subscribestar.com") -> "SubscribeStar"
             lower.contains("gofundme.com") -> "GoFundMe"
-            else -> "Sitio web de mecenazgo"
+            else -> genericSiteLabel
         }
     }
 
@@ -488,7 +489,7 @@ private fun RecipientItem(
     onOpenWallet: (String) -> Unit,
     onCopy: (String) -> Unit
 ) {
-    val displayName = recipient.name?.ifBlank { null } ?: "Creador"
+    val displayName = recipient.name?.ifBlank { null } ?: stringResource(R.string.funding_creator)
     val isLnAddress = recipient.type.equals("lnaddress", ignoreCase = true) || recipient.address.contains("@")
 
     Column(
@@ -592,7 +593,7 @@ private fun openUrlInBrowser(context: Context, url: String) {
         }
         context.startActivity(intent)
     } catch (_: Exception) {
-        Toast.makeText(context, "No se pudo abrir el enlace", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.open_link_failed), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -634,5 +635,7 @@ private fun copyToClipboard(context: Context, text: String) {
             context.getString(R.string.support_address_copied),
             Toast.LENGTH_SHORT
         ).show()
-    } catch (_: Exception) {}
+    } catch (e: Exception) {
+        android.util.Log.w("FundingBottomSheet", "No se pudo copiar al portapapeles: ${e.message}")
+    }
 }

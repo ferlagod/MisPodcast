@@ -18,6 +18,9 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -74,7 +77,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.mapper.PodcastLanguageMapper
@@ -99,6 +102,8 @@ fun CategoryPodcastsScreen(
     onPodcastClick: (podcastId: String, feedUrl: String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val resources = LocalResources.current
     var podcastItems by remember { mutableStateOf<List<ApplePodcastDto>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -119,10 +124,11 @@ fun CategoryPodcastsScreen(
                 )
                 podcastItems = results
                 if (results.isEmpty()) {
-                    errorMessage = "No se encontraron podcasts disponibles en este momento."
+                    errorMessage = resources.getString(R.string.category_no_podcasts_now)
                 }
             } catch (e: Exception) {
-                errorMessage = e.localizedMessage ?: "Error al obtener podcasts de $categoryName"
+                e.rethrowIfCancellation()
+                errorMessage = e.localizedMessage ?: resources.getString(R.string.category_load_error, categoryName)
             } finally {
                 isLoading = false
             }
@@ -187,7 +193,7 @@ fun CategoryPodcastsScreen(
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Text(
-                            text = "Cargando $categoryName…",
+                            text = stringResource(R.string.category_loading, categoryName),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground,
                             textAlign = TextAlign.Center
@@ -211,7 +217,7 @@ fun CategoryPodcastsScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No se pudieron cargar los podcasts",
+                            text = stringResource(R.string.podcasts_load_failed),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.error
@@ -230,7 +236,7 @@ fun CategoryPodcastsScreen(
                         ) {
                             Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Reintentar")
+                            Text(stringResource(R.string.retry))
                         }
                     }
                 }
@@ -243,7 +249,7 @@ fun CategoryPodcastsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No se encontraron podcasts disponibles para $categoryName.",
+                            text = stringResource(R.string.category_no_podcasts_for, categoryName),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -282,7 +288,7 @@ fun CategoryPodcastsScreen(
                                     )
                                 }
                                 Text(
-                                    text = "Más populares",
+                                    text = stringResource(R.string.most_popular),
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground
@@ -373,7 +379,7 @@ private fun CategoryPodcastRowCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = podcast.collectionName ?: "Sin título",
+                        text = podcast.collectionName ?: stringResource(R.string.untitled),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -384,7 +390,7 @@ private fun CategoryPodcastRowCard(
                     Spacer(modifier = Modifier.height(3.dp))
 
                     Text(
-                        text = podcast.artistName ?: "Autor desconocido",
+                        text = podcast.artistName ?: stringResource(R.string.unknown_author),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -422,7 +428,7 @@ private fun CategoryPodcastRowCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Siguiendo",
+                                text = stringResource(R.string.following),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = AccentGreen
@@ -446,7 +452,7 @@ private fun CategoryPodcastRowCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Seguir",
+                            text = stringResource(R.string.follow),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold
                         )

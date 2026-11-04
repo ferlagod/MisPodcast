@@ -63,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -90,6 +91,7 @@ fun BookmarksBottomSheet(
     val bookmarks by playerViewModel.bookmarks.collectAsState()
     val currentPosMs by playerViewModel.currentPositionMs.collectAsState()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val haptic = LocalHapticFeedback.current
 
     var newNoteText by remember { mutableStateOf("") }
@@ -141,7 +143,7 @@ fun BookmarksBottomSheet(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Marcadores y Clips",
+                        text = stringResource(R.string.bookmarks_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -190,7 +192,7 @@ fun BookmarksBottomSheet(
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Guardar en ${playerViewModel.formatBookmarkTime(currentPosMs)}",
+                                text = stringResource(R.string.bookmark_save_at, playerViewModel.formatBookmarkTime(currentPosMs)),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -202,7 +204,7 @@ fun BookmarksBottomSheet(
                         OutlinedTextField(
                             value = newNoteText,
                             onValueChange = { newNoteText = it },
-                            placeholder = { Text("Nota o recordatorio (opcional)") },
+                            placeholder = { Text(stringResource(R.string.bookmark_note_placeholder)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             shape = MaterialTheme.shapes.small
@@ -217,7 +219,9 @@ fun BookmarksBottomSheet(
                             Button(
                                 onClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    playerViewModel.addBookmark(newNoteText)
+                                    playerViewModel.addBookmark(
+                                        newNoteText.ifBlank { resources.getString(R.string.bookmark_default_note, playerViewModel.formatBookmarkTime(currentPosMs)) }
+                                    )
                                     newNoteText = ""
                                     isAddingBookmark = false
                                 },

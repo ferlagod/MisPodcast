@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.local
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.Intent
 import android.media.MediaMetadataRetriever
@@ -55,6 +56,7 @@ object LocalFolderPodcastImporter {
                 val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(treeUri, takeFlags)
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 Log.w(TAG, "No se pudo tomar permiso persistente: ${e.message}")
             }
 
@@ -116,6 +118,7 @@ object LocalFolderPodcastImporter {
             Log.d(TAG, "Carpeta importada exitosamente: $title con ${episodes.size} audios iniciales.")
             Result.success(podcastEntity)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Log.e(TAG, "Error importando carpeta local", e)
             Result.failure(e)
         }
@@ -167,6 +170,7 @@ object LocalFolderPodcastImporter {
                 val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(newTreeUri, takeFlags)
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 Log.w(TAG, "No se pudo tomar permiso persistente: ${e.message}")
             }
 
@@ -177,7 +181,7 @@ object LocalFolderPodcastImporter {
 
             if (podcast == null) {
                 val allLocal = podcastDao.getAllLocalFolderPodcasts()
-                val decodedTarget = try { java.net.URLDecoder.decode(podcastId, "UTF-8") } catch (_: Exception) { podcastId }
+                val decodedTarget = try { java.net.URLDecoder.decode(podcastId, "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); podcastId }
                 val cleanTarget = decodedTarget
                     .removePrefix("antennapod_local:")
                     .removePrefix("local://")
@@ -185,9 +189,9 @@ object LocalFolderPodcastImporter {
                     .trim()
 
                 podcast = allLocal.firstOrNull { p ->
-                    val pDecodedId = try { java.net.URLDecoder.decode(p.id, "UTF-8") } catch (_: Exception) { p.id }
-                    val pDecodedFeed = try { java.net.URLDecoder.decode(p.feedUrl, "UTF-8") } catch (_: Exception) { p.feedUrl }
-                    val pDecodedPath = try { java.net.URLDecoder.decode(p.localFolderPath.orEmpty(), "UTF-8") } catch (_: Exception) { p.localFolderPath.orEmpty() }
+                    val pDecodedId = try { java.net.URLDecoder.decode(p.id, "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); p.id }
+                    val pDecodedFeed = try { java.net.URLDecoder.decode(p.feedUrl, "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); p.feedUrl }
+                    val pDecodedPath = try { java.net.URLDecoder.decode(p.localFolderPath.orEmpty(), "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); p.localFolderPath.orEmpty() }
 
                     p.id == podcastId ||
                     p.feedUrl == podcastId ||
@@ -402,6 +406,7 @@ object LocalFolderPodcastImporter {
             Log.d(TAG, "Reconexión completada: $reconnectedCount audios re-enlazados y ${newEpisodes.size} nuevos audios añadidos.")
             Result.success(reconnectedCount + newEpisodes.size)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Log.e(TAG, "Error reconectando carpeta local", e)
             Result.failure(e)
         }
@@ -423,7 +428,7 @@ object LocalFolderPodcastImporter {
 
             if (podcast == null) {
                 val allLocal = podcastDao.getAllLocalFolderPodcasts()
-                val decodedTarget = try { java.net.URLDecoder.decode(podcastId, "UTF-8") } catch (_: Exception) { podcastId }
+                val decodedTarget = try { java.net.URLDecoder.decode(podcastId, "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); podcastId }
                 val cleanTarget = decodedTarget
                     .removePrefix("antennapod_local:")
                     .removePrefix("local://")
@@ -431,9 +436,9 @@ object LocalFolderPodcastImporter {
                     .trim()
 
                 podcast = allLocal.firstOrNull { p ->
-                    val pDecodedId = try { java.net.URLDecoder.decode(p.id, "UTF-8") } catch (_: Exception) { p.id }
-                    val pDecodedFeed = try { java.net.URLDecoder.decode(p.feedUrl, "UTF-8") } catch (_: Exception) { p.feedUrl }
-                    val pDecodedPath = try { java.net.URLDecoder.decode(p.localFolderPath.orEmpty(), "UTF-8") } catch (_: Exception) { p.localFolderPath.orEmpty() }
+                    val pDecodedId = try { java.net.URLDecoder.decode(p.id, "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); p.id }
+                    val pDecodedFeed = try { java.net.URLDecoder.decode(p.feedUrl, "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); p.feedUrl }
+                    val pDecodedPath = try { java.net.URLDecoder.decode(p.localFolderPath.orEmpty(), "UTF-8") } catch (e: Exception) { e.rethrowIfCancellation(); p.localFolderPath.orEmpty() }
 
                     p.id == podcastId ||
                     p.feedUrl == podcastId ||
@@ -456,7 +461,8 @@ object LocalFolderPodcastImporter {
             val treeUri = Uri.parse(path)
             val rootFolder = try {
                 DocumentFile.fromTreeUri(context, treeUri)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 null
             } ?: return@withContext 0
 
@@ -492,6 +498,7 @@ object LocalFolderPodcastImporter {
             Log.d(TAG, "Rescan completado para ${podcast.title}: ${newEpisodes.size} nuevos episodios añadidos.")
             newEpisodes.size
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Log.e(TAG, "Error re-escaneando carpeta local", e)
             0
         }

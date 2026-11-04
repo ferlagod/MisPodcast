@@ -367,14 +367,14 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         val techList = listOf(
-                            "Kotlin 2.2 & Jetpack Compose (Material 3)",
-                            "AndroidX Media3 ExoPlayer & MediaSession",
-                            "Room Database 2.7 & KSP",
-                            "Apple Podcasts Search API (España)",
+                            "Kotlin ${BuildConfig.LIB_KOTLIN} & Jetpack Compose (Material 3)",
+                            "AndroidX Media3 ${BuildConfig.LIB_MEDIA3} (ExoPlayer & MediaSession)",
+                            "Room ${BuildConfig.LIB_ROOM} & KSP",
+                            stringResource(R.string.tech_apple_search),
                             "Nextcloud WebDAV & GPodder Sync",
-                            "Retrofit2, OkHttp3 & Coil",
+                            "Retrofit ${BuildConfig.LIB_RETROFIT}, OkHttp ${BuildConfig.LIB_OKHTTP} & Coil ${BuildConfig.LIB_COIL}",
                             "Podcasting 2.0 (Chapters, Transcripts, Funding)",
-                            "WorkManager 2.10 para tareas en segundo plano"
+                            stringResource(R.string.tech_workmanager, BuildConfig.LIB_WORKMANAGER)
                         )
 
                         techList.forEach { tech ->

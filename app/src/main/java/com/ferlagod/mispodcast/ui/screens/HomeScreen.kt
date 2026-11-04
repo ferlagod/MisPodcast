@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -89,7 +91,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
@@ -139,7 +141,7 @@ import com.ferlagod.mispodcast.ui.theme.readableContentColor
  */
 data class CategoryChipData(
     val icon: ImageVector,
-    val name: String,
+    @androidx.annotation.StringRes val nameRes: Int,
     val genreId: Int,
     val accentColor: Color
 )
@@ -226,29 +228,32 @@ fun HomeScreen(
     }
     val pendingHours = pendingMs / (1000 * 60 * 60)
     val pendingMinutes = (pendingMs % (1000 * 60 * 60)) / (1000 * 60)
-    val pendingTimeText = if (pendingHours > 0) "${pendingHours} h pendientes" else "${max(1L, pendingMinutes)} min pendientes"
+    val pendingTimeText = if (pendingHours > 0) stringResource(R.string.pending_hours, pendingHours) else stringResource(R.string.pending_minutes, max(1L, pendingMinutes))
 
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val forYouLabel = stringResource(R.string.category_for_you)
     val activitySummary = remember(newReleases.size, queue.size, pendingTimeText) {
         if (newReleases.isNotEmpty()) {
-            "${newReleases.size} episodios nuevos · $pendingTimeText"
+            resources.getString(R.string.activity_new_episodes, newReleases.size, pendingTimeText)
         } else if (queue.isNotEmpty()) {
-            "${queue.size} en cola · $pendingTimeText"
+            resources.getString(R.string.activity_in_queue, queue.size, pendingTimeText)
         } else {
-            "Tu biblioteca al día · Explora podcasts"
+            resources.getString(R.string.activity_up_to_date)
         }
     }
 
     // Categorías con icono y tono de la paleta editorial
     val categoryChips = remember {
         listOf(
-            CategoryChipData(Icons.Filled.Science, "Ciencia", 1533, EditorialTeal),
-            CategoryChipData(Icons.Filled.TheaterComedy, "Comedia", 1303, EditorialRose),
-            CategoryChipData(Icons.AutoMirrored.Filled.MenuBook, "Libros", 1301, EditorialAmber),
-            CategoryChipData(Icons.Filled.Memory, "Tecnología", 1318, EditorialOcean),
-            CategoryChipData(Icons.Filled.AccountBalance, "Historia", 1487, EditorialOchre),
-            CategoryChipData(Icons.Filled.Newspaper, "Noticias", 1489, EditorialSlate),
-            CategoryChipData(Icons.Filled.AutoStories, "Ficción", 1483, EditorialPlum),
-            CategoryChipData(Icons.Filled.Spa, "Salud", 1512, EditorialMoss)
+            CategoryChipData(Icons.Filled.Science, R.string.category_science, 1533, EditorialTeal),
+            CategoryChipData(Icons.Filled.TheaterComedy, R.string.category_comedy, 1303, EditorialRose),
+            CategoryChipData(Icons.AutoMirrored.Filled.MenuBook, R.string.category_books, 1301, EditorialAmber),
+            CategoryChipData(Icons.Filled.Memory, R.string.category_technology, 1318, EditorialOcean),
+            CategoryChipData(Icons.Filled.AccountBalance, R.string.category_history, 1487, EditorialOchre),
+            CategoryChipData(Icons.Filled.Newspaper, R.string.category_news, 1489, EditorialSlate),
+            CategoryChipData(Icons.Filled.AutoStories, R.string.category_fiction, 1483, EditorialPlum),
+            CategoryChipData(Icons.Filled.Spa, R.string.category_health, 1512, EditorialMoss)
         )
     }
 
@@ -438,7 +443,7 @@ fun HomeScreen(
                                         val remainingMs = max(0L, (if (durationMs > 0) durationMs else activeEpisode.duration) - (if (currentPlayingEpisode != null) currentPosMs else activeEpisode.currentPositionMs))
                                         val remainingMin = remainingMs / 60000
                                         Text(
-                                            text = if (remainingMin > 0) "Quedan $remainingMin min" else "Finalizado",
+                                            text = if (remainingMin > 0) stringResource(R.string.time_left_minutes, remainingMin) else stringResource(R.string.state_finished),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color.White.copy(alpha = 0.85f),
                                             fontWeight = FontWeight.Medium
@@ -635,7 +640,7 @@ fun HomeScreen(
                             .padding(horizontal = 20.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = msg,
+                            text = msg.asString(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -704,7 +709,7 @@ fun HomeScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = recommendationError.orEmpty(),
+                                        text = recommendationError?.asString().orEmpty(),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer
                                     )
@@ -720,7 +725,7 @@ fun HomeScreen(
                         ) {
                             Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Explorar podcasts destacados", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.explore_featured), fontWeight = FontWeight.Bold)
                         }
                     }
                 } else {
@@ -776,9 +781,10 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(categoryChips.filter { it.genreId > 0 }) { chip ->
+                        val chipName = stringResource(chip.nameRes)
                         CategoryCollectionCard(
                             chip = chip,
-                            onClick = { onNavigateToCategory(chip.name, chip.genreId) }
+                            onClick = { onNavigateToCategory(chipName, chip.genreId) }
                         )
                     }
                 }
@@ -795,13 +801,13 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Últimos publicados",
+                        text = stringResource(R.string.latest_published),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "Añadir feed",
+                        text = stringResource(R.string.action_add_feed_short),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
@@ -817,7 +823,7 @@ fun HomeScreen(
                         title = if (subscribedPodcasts.isEmpty()) stringResource(R.string.empty_subscriptions_title) else stringResource(R.string.empty_new_releases),
                         subtitle = if (subscribedPodcasts.isEmpty()) stringResource(R.string.empty_subscriptions_subtitle) else stringResource(R.string.empty_new_releases_subtitle),
                         actionLabel = if (subscribedPodcasts.isEmpty()) stringResource(R.string.action_explore_podcasts) else null,
-                        onAction = if (subscribedPodcasts.isEmpty()) { { onNavigateToCategory("Para ti", 0) } } else null
+                        onAction = if (subscribedPodcasts.isEmpty()) { { onNavigateToCategory(forYouLabel, 0) } } else null
                     )
                 }
             } else {
@@ -851,328 +857,6 @@ fun HomeScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-/**
- * Tarjeta cuadrada de 140dp para "Tus podcasts".
- */
-@Composable
-fun SubscribedPodcastCard(
-    podcast: PodcastEntity,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .width(140.dp)
-            .clickable { onClick() }
-    ) {
-        Box(
-            modifier = Modifier
-                .size(140.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            if (podcast.artworkUrl.isNotBlank()) {
-                AsyncImage(
-                    model = podcast.artworkUrl,
-                    contentDescription = podcast.title,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .sharedPodcastArtwork(podcast.id),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                PodcastArtworkPlaceholder(
-                    title = podcast.title,
-                    modifier = Modifier.fillMaxSize(),
-                    iconSize = 44.dp
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = podcast.title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = podcast.author.ifBlank { "Podcast" },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-/**
- * Tarjeta de 140dp para el carrusel de recomendaciones de Apple Podcasts
- * con botón flotante de suscripción rápida y categoría.
- */
-@Composable
-fun RecommendationCard(
-    podcast: ApplePodcastDto,
-    isSubscribed: Boolean,
-    isSubscriptionLoading: Boolean,
-    onSubscribe: () -> Unit,
-    onClick: () -> Unit
-) {
-    val artwork = podcast.artworkUrl600 ?: podcast.artworkUrl100
-
-    Column(
-        modifier = Modifier
-            .width(140.dp)
-            .clickable { onClick() }
-    ) {
-        val podcastId = podcast.collectionId?.toString() ?: podcast.feedUrl.orEmpty()
-        Box(
-            modifier = Modifier
-                .size(140.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            if (!artwork.isNullOrBlank()) {
-                AsyncImage(
-                    model = artwork,
-                    contentDescription = podcast.collectionName,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .sharedPodcastArtwork(podcastId),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                PodcastArtworkPlaceholder(
-                    title = podcast.collectionName.orEmpty(),
-                    modifier = Modifier.fillMaxSize(),
-                    iconSize = 44.dp
-                )
-            }
-
-            // Botón flotante de suscripción en la esquina inferior derecha
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp)
-            ) {
-                if (isSubscribed) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.7f),
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = null,
-                                tint = AccentGreen,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                } else {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clickable(enabled = !isSubscriptionLoading) { onSubscribe() }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = stringResource(R.string.subscribe),
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = podcast.collectionName ?: "Sin título",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = podcast.artistName ?: "Autor desconocido",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        if (!podcast.primaryGenreName.isNullOrBlank()) {
-            Text(
-                text = podcast.primaryGenreName,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-/**
- * Tarjeta de categoría estilo editorial: color sólido con icono decorativo recortado.
- */
-@Composable
-fun CategoryCollectionCard(
-    chip: CategoryChipData,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(140.dp)
-            .height(90.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(chip.accentColor)
-        ) {
-            Icon(
-                imageVector = chip.icon,
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.22f),
-                modifier = Modifier
-                    .size(64.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 12.dp, y = 12.dp)
-            )
-
-            Text(
-                text = chip.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-            )
-        }
-    }
-}
-
-/**
- * Fila para cada episodio en la lista cronológica de últimos publicados.
- */
-@Composable
-fun EpisodeRowCard(
-    item: EpisodeWithPodcast,
-    isPlaying: Boolean = false,
-    progressRatio: Float = 0f,
-    onPlay: () -> Unit,
-    onAddToQueue: () -> Unit
-) {
-    val haptic = LocalHapticFeedback.current
-    val dateFormatted = remember(item.episode.pubDate) {
-        val sdf = SimpleDateFormat("dd MMM", Locale.getDefault())
-        sdf.format(Date(item.episode.pubDate))
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val art = item.episode.imageUrl.ifBlank { item.podcastArtworkUrl }
-            if (art.isNotBlank()) {
-                AsyncImage(
-                    model = art,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(MaterialTheme.shapes.medium),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                PodcastArtworkPlaceholder(
-                    title = item.podcastTitle,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(MaterialTheme.shapes.medium),
-                    iconSize = 28.dp
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = item.podcastTitle,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    if (isPlaying) {
-                        EqualizerIndicator(
-                            isPlaying = true,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(width = 16.dp, height = 12.dp)
-                        )
-                    }
-                }
-                Text(
-                    text = item.episode.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                val durationMins = item.episode.duration / 60000
-                Text(
-                    text = if (durationMins > 0) "$dateFormatted · $durationMins min" else dateFormatted,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            PlayProgressButton(
-                isPlaying = isPlaying,
-                progress = progressRatio,
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onPlay()
-                },
-                modifier = Modifier.size(44.dp)
-            )
         }
     }
 }

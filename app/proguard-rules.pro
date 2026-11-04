@@ -93,5 +93,15 @@
 # ------------------------------------------------------------------------------
 # 9. Coil (Carga y Decodificación de Portadas)
 # ------------------------------------------------------------------------------
--dontwarn coil.**
--keep class coil.** { *; }
+-dontwarn coil3.**
+-keep class coil3.** { *; }
+
+# ------------------------------------------------------------------------------
+# 10. Eliminar logs de depuración en release (Log.e se conserva para diagnosticar fallos)
+# ------------------------------------------------------------------------------
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+}

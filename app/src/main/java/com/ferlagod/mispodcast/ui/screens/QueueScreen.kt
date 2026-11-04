@@ -95,7 +95,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.DownloadStatus
 import com.ferlagod.mispodcast.data.local.model.QueueEpisodeItem
@@ -106,6 +106,7 @@ import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import com.ferlagod.mispodcast.ui.components.EmptyStateView
 import com.ferlagod.mispodcast.ui.components.EpisodeDetailSheet
 import com.ferlagod.mispodcast.ui.components.EpisodeDownloadButton
@@ -139,6 +140,7 @@ fun QueueScreen(
     val currentEpisode by playerViewModel.currentEpisode.collectAsState()
     val downloadStates by podcastViewModel.downloadStates.collectAsState()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val haptic = LocalHapticFeedback.current
 
     val undownloadedCount = remember(queueItems, downloadStates) {
@@ -274,9 +276,9 @@ fun QueueScreen(
                                         podcastViewModel.downloadEpisode(item.episode)
                                     }
                                 }
-                                Toast.makeText(context, "Descargando $undownloadedCount episodios…", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, resources.getString(R.string.toast_downloading_n, undownloadedCount), Toast.LENGTH_SHORT).show()
                             },
-                            label = { Text("Descargar todo ($undownloadedCount)") },
+                            label = { Text(stringResource(R.string.download_all_count, undownloadedCount)) },
                             icon = {
                                 Icon(
                                     imageVector = Icons.Filled.Download,
@@ -371,7 +373,7 @@ fun QueueScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = if (isAudioPlayingNow) "Reproduciendo" else "En pausa",
+                                            text = if (isAudioPlayingNow) stringResource(R.string.state_playing) else stringResource(R.string.state_paused),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onPrimary,
                                             fontWeight = FontWeight.Bold
@@ -444,7 +446,7 @@ fun QueueScreen(
                                     downloadState = activeDownloadState,
                                     onDownloadClick = {
                                         podcastViewModel.downloadEpisode(firstItem.episode)
-                                        Toast.makeText(context, "Descargando episodio…", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, resources.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
                                     }
                                 )
 
@@ -465,7 +467,7 @@ fun QueueScreen(
                                 ) {
                                     Icon(
                                         imageVector = if (isAudioPlayingNow) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                        contentDescription = if (isAudioPlayingNow) "Pausa" else "Reproducir",
+                                        contentDescription = if (isAudioPlayingNow) stringResource(R.string.action_pause) else stringResource(R.string.action_play),
                                         tint = MaterialTheme.colorScheme.onPrimary,
                                         modifier = Modifier.size(28.dp)
                                     )
@@ -535,7 +537,7 @@ fun QueueScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "A continuación",
+                            text = stringResource(R.string.queue_up_next),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
@@ -720,7 +722,7 @@ fun QueueScreen(
                                         downloadState = itemDownloadState,
                                         onDownloadClick = {
                                             podcastViewModel.downloadEpisode(item.episode)
-                                            Toast.makeText(context, "Descargando episodio…", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, resources.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
                                         }
                                     )
 
@@ -853,18 +855,18 @@ fun QueueScreen(
             },
             onAddToQueue = {
                 podcastViewModel.addEpisodeToQueue(item.episode.id)
-                Toast.makeText(context, context.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, resources.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
             },
             onToggleFavorite = {
                 podcastViewModel.toggleFavorite(item.episode.id, item.episode.isFavorite)
             },
             onDownloadClick = {
                 podcastViewModel.downloadEpisode(item.episode)
-                Toast.makeText(context, context.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, resources.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
             },
             onTogglePlayed = {
                 podcastViewModel.toggleEpisodePlayed(item.episode.id, item.episode.isPlayed)
-                val msg = if (!item.episode.isPlayed) context.getString(R.string.toast_marked_as_played) else context.getString(R.string.toast_marked_as_unplayed)
+                val msg = if (!item.episode.isPlayed) resources.getString(R.string.toast_marked_as_played) else resources.getString(R.string.toast_marked_as_unplayed)
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             },
             onShareClick = {
@@ -873,10 +875,10 @@ fun QueueScreen(
                     putExtra(Intent.EXTRA_SUBJECT, item.episode.title)
                     putExtra(
                         Intent.EXTRA_TEXT,
-                        context.getString(R.string.share_episode_format, item.episode.title, item.podcastTitle, item.episode.audioUrl)
+                        resources.getString(R.string.share_episode_format, item.episode.title, item.podcastTitle, item.episode.audioUrl)
                     )
                 }
-                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_episode)))
+                context.startActivity(Intent.createChooser(shareIntent, resources.getString(R.string.share_episode)))
             }
         )
     }

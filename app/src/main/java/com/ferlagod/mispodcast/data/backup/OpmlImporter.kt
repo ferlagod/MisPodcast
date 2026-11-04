@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.net.Uri
 import android.util.Xml
@@ -75,6 +76,7 @@ object OpmlImporter {
 
             Result.success(feedList)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         }
     }

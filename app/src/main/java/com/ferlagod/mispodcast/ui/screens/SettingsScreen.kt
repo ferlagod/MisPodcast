@@ -135,8 +135,6 @@ fun SettingsScreen(
     val isProcessingBackup by settingsViewModel.isProcessingBackup.collectAsState()
     val backupMessage by settingsViewModel.backupMessage.collectAsState()
 
-    val isSyncing by podcastViewModel.isSyncing.collectAsState()
-    val syncMessage by podcastViewModel.syncMessage.collectAsState()
 
     var serverUrlInput by remember(settings.nextcloudServerUrl) { mutableStateOf(settings.nextcloudServerUrl) }
     var usernameInput by remember(settings.nextcloudUsername) { mutableStateOf(settings.nextcloudUsername) }
@@ -228,7 +226,7 @@ fun SettingsScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                             }
                             Text(
-                                text = backupMessage.orEmpty(),
+                                text = backupMessage?.asString().orEmpty(),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.weight(1f)
@@ -373,7 +371,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.GraphicEq,
                             title = stringResource(R.string.settings_skip_silence),
-                            subtitle = "Acorta los silencios durante la reproducción",
+                            subtitle = stringResource(R.string.skip_silence_sub),
                             checked = settings.skipSilence,
                             onCheckedChange = { settingsViewModel.setSkipSilence(it) }
                         )
@@ -383,8 +381,8 @@ fun SettingsScreen(
                         // Mejora de voz y volumen (LoudnessEnhancer)
                         SettingsSwitchRow(
                             icon = Icons.Filled.RecordVoiceOver,
-                            title = "Mejora de voz y volumen",
-                            subtitle = "Realza las voces y nivela el volumen",
+                            title = stringResource(R.string.voice_boost_title),
+                            subtitle = stringResource(R.string.voice_boost_sub),
                             checked = settings.voiceBoostEnabled,
                             onCheckedChange = { settingsViewModel.setVoiceBoostEnabled(it) }
                         )
@@ -393,14 +391,14 @@ fun SettingsScreen(
                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                             val gainLabels = mapOf(
-                                com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_SOFT_MB to "Suave (+4 dB)",
-                                com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_BALANCED_MB to "Medio (+8 dB, recomendado)",
-                                com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_STRONG_MB to "Fuerte (+12 dB)"
+                                com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_SOFT_MB to stringResource(R.string.gain_soft),
+                                com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_BALANCED_MB to stringResource(R.string.gain_balanced),
+                                com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_STRONG_MB to stringResource(R.string.gain_strong)
                             )
                             SettingsDropdownRow(
                                 icon = Icons.Filled.GraphicEq,
-                                title = "Nivel de amplificación de voz",
-                                currentValue = gainLabels[settings.voiceBoostGainMb] ?: "Medio (+8 dB)",
+                                title = stringResource(R.string.voice_boost_level),
+                                currentValue = gainLabels[settings.voiceBoostGainMb] ?: stringResource(R.string.gain_balanced),
                                 options = listOf(
                                     com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_SOFT_MB,
                                     com.ferlagod.mispodcast.playback.AudioEffectsManager.GAIN_BALANCED_MB,
@@ -416,8 +414,8 @@ fun SettingsScreen(
                         // Modo Mono (un solo auricular)
                         SettingsSwitchRow(
                             icon = Icons.Filled.Headphones,
-                            title = "Modo mono (un solo auricular)",
-                            subtitle = "Combina ambos canales en uno",
+                            title = stringResource(R.string.mono_mode_title),
+                            subtitle = stringResource(R.string.mono_mode_sub),
                             checked = settings.monoAudioEnabled,
                             onCheckedChange = { settingsViewModel.setMonoAudioEnabled(it) }
                         )
@@ -425,14 +423,14 @@ fun SettingsScreen(
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                         val autoEnqueueLabels = mapOf(
-                            "DISABLED" to "Desactivado (manual)",
-                            "TOP" to "Al principio de la cola (Siguiente / Up Next)",
-                            "BOTTOM" to "Al final de la cola"
+                            "DISABLED" to stringResource(R.string.auto_enqueue_disabled),
+                            "TOP" to stringResource(R.string.auto_enqueue_top),
+                            "BOTTOM" to stringResource(R.string.auto_enqueue_bottom)
                         )
                         SettingsDropdownRow(
                             icon = Icons.AutoMirrored.Filled.QueueMusic,
-                            title = "Añadir episodios nuevos a la cola",
-                            currentValue = autoEnqueueLabels[settings.defaultAutoEnqueueRule] ?: "Desactivado (manual)",
+                            title = stringResource(R.string.auto_enqueue_title),
+                            currentValue = autoEnqueueLabels[settings.defaultAutoEnqueueRule] ?: stringResource(R.string.auto_enqueue_disabled),
                             options = listOf("DISABLED", "TOP", "BOTTOM"),
                             onSelect = { settingsViewModel.setDefaultAutoEnqueueRule(it) },
                             formatOption = { autoEnqueueLabels[it] ?: it }
@@ -448,7 +446,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.Download,
                             title = stringResource(R.string.settings_auto_download),
-                            subtitle = "Descarga los episodios nuevos al detectarlos",
+                            subtitle = stringResource(R.string.auto_download_sub),
                             checked = settings.autoDownloadNewEpisodes,
                             onCheckedChange = { settingsViewModel.setAutoDownloadNewEpisodes(it) }
                         )
@@ -457,8 +455,8 @@ fun SettingsScreen(
 
                         SettingsSwitchRow(
                             icon = Icons.Filled.Wifi,
-                            title = "Solo con conexión Wi-Fi",
-                            subtitle = "No usa datos móviles para descargar",
+                            title = stringResource(R.string.wifi_only_title),
+                            subtitle = stringResource(R.string.wifi_only_sub),
                             checked = settings.downloadOnlyOnWifi,
                             onCheckedChange = { settingsViewModel.setDownloadOnlyOnWifi(it) }
                         )
@@ -467,8 +465,8 @@ fun SettingsScreen(
 
                         SettingsSwitchRow(
                             icon = Icons.Filled.BatteryChargingFull,
-                            title = "Solo mientras se carga",
-                            subtitle = "Espera a que el teléfono esté cargando",
+                            title = stringResource(R.string.charging_only_title),
+                            subtitle = stringResource(R.string.charging_only_sub),
                             checked = settings.downloadOnlyWhenCharging,
                             onCheckedChange = { settingsViewModel.setDownloadOnlyWhenCharging(it) }
                         )
@@ -476,13 +474,14 @@ fun SettingsScreen(
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                         val episodesStr = stringResource(R.string.episodes)
+                        val unlimitedStr = stringResource(R.string.unlimited)
                         SettingsDropdownRow(
                             icon = Icons.Filled.Storage,
                             title = stringResource(R.string.settings_cache_limit),
-                            currentValue = if (settings.cachedEpisodesLimit >= 100) "Ilimitado" else "${settings.cachedEpisodesLimit} $episodesStr",
+                            currentValue = if (settings.cachedEpisodesLimit >= 100) unlimitedStr else "${settings.cachedEpisodesLimit} $episodesStr",
                             options = listOf(5, 10, 20, 50, 100),
                             onSelect = { settingsViewModel.setCachedEpisodesLimit(it) },
-                            formatOption = { if (it >= 100) "Ilimitado" else "$it $episodesStr" }
+                            formatOption = { if (it >= 100) unlimitedStr else "$it $episodesStr" }
                         )
 
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
@@ -490,7 +489,7 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.Storage,
                             title = stringResource(R.string.settings_delete_after_played),
-                            subtitle = "Borra el archivo descargado de la memoria tras completarlo",
+                            subtitle = stringResource(R.string.delete_after_played_sub),
                             checked = settings.deleteAfterPlayed,
                             onCheckedChange = { settingsViewModel.setDeleteAfterPlayed(it) }
                         )
@@ -499,8 +498,8 @@ fun SettingsScreen(
 
                         SettingsSwitchRow(
                             icon = Icons.Filled.Security,
-                            title = "Bloquear rastreadores",
-                            subtitle = "Quita las redirecciones de medición (Podtrac, Chartable…) de los enlaces de audio",
+                            title = stringResource(R.string.block_trackers_title),
+                            subtitle = stringResource(R.string.block_trackers_sub),
                             checked = settings.stripAudioTrackers,
                             onCheckedChange = { settingsViewModel.setStripAudioTrackers(it) }
                         )
@@ -535,10 +534,10 @@ fun SettingsScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 val lastSyncText = if (settings.lastSyncTimestamp > 0L) {
-                                    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                                    "Última vez: ${sdf.format(Date(settings.lastSyncTimestamp))}"
+                                    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
+                                    stringResource(R.string.last_sync_format, sdf.format(Date(settings.lastSyncTimestamp)))
                                 } else {
-                                    "Sin sincronización previa"
+                                    stringResource(R.string.never_synced)
                                 }
                                 Text(
                                     text = lastSyncText,
@@ -550,7 +549,7 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "Sincroniza suscripciones, cola y progreso con tu servidor Nextcloud mediante WebDAV o gPodder Sync.",
+                            text = stringResource(R.string.nextcloud_sync_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -603,7 +602,7 @@ fun SettingsScreen(
                                 settingsViewModel.setNextcloudConfig(serverUrlInput, usernameInput, it)
                             },
                             label = { Text(stringResource(R.string.settings_app_password)) },
-                            placeholder = { Text("Generada en Seguridad > Dispositivos") },
+                            placeholder = { Text(stringResource(R.string.app_password_placeholder)) },
                             leadingIcon = {
                                 Icon(Icons.Filled.Key, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             },
@@ -611,7 +610,7 @@ fun SettingsScreen(
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                                        contentDescription = if (passwordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password)
                                     )
                                 }
                             },
@@ -649,7 +648,7 @@ fun SettingsScreen(
                                         Spacer(modifier = Modifier.width(10.dp))
                                     }
                                     Text(
-                                        text = connectionTestResult.orEmpty(),
+                                        text = connectionTestResult?.asString().orEmpty(),
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Medium,
                                         color = if (isConnectionSuccess == true) {
@@ -672,7 +671,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
-                                    text = nextcloudSyncMessage.orEmpty(),
+                                    text = nextcloudSyncMessage?.asString().orEmpty(),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(12.dp)
@@ -706,7 +705,7 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Probando…")
+                                    Text(stringResource(R.string.testing_ellipsis))
                                 } else {
                                     Text(stringResource(R.string.settings_test_connection), fontWeight = FontWeight.SemiBold)
                                 }
@@ -726,7 +725,7 @@ fun SettingsScreen(
                                         color = LocalContentColor.current
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Sincronizando…")
+                                    Text(stringResource(R.string.syncing_ellipsis))
                                 } else {
                                     Icon(Icons.Filled.CloudSync, null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -743,7 +742,7 @@ fun SettingsScreen(
                 SettingsSection(title = stringResource(R.string.settings_backup)) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Guarda tus suscripciones y tu progreso, o pásalos a otro dispositivo.",
+                            text = stringResource(R.string.backup_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -752,7 +751,7 @@ fun SettingsScreen(
 
                         // Respaldo OPML
                         Text(
-                            text = "Suscripciones (OPML)",
+                            text = stringResource(R.string.opml_subscriptions_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -796,13 +795,13 @@ fun SettingsScreen(
 
                         // Respaldo Base de Datos Completa
                         Text(
-                            text = "Copia completa (.zip / AntennaPod .db)",
+                            text = stringResource(R.string.full_backup_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Exporta tu base de datos completa o importa copias de seguridad de MisPodcast (.zip) o bases de datos de AntennaPod (.db o .zip con suscripciones, episodios escuchados, favoritos, cola y estadísticas).",
+                            text = stringResource(R.string.full_backup_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -874,12 +873,12 @@ fun SettingsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Comprobar ahora",
+                                    text = stringResource(R.string.check_now_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Buscar episodios nuevos ahora",
+                                    text = stringResource(R.string.check_now_sub),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -889,7 +888,7 @@ fun SettingsScreen(
                                 onClick = { settingsViewModel.triggerManualCheckNow() },
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Text("Comprobar")
+                                Text(stringResource(R.string.action_check))
                             }
                         }
                     }
@@ -901,8 +900,8 @@ fun SettingsScreen(
                 SettingsSection(title = stringResource(R.string.settings_notifications)) {
                     SettingsSwitchRow(
                         icon = Icons.Filled.Notifications,
-                        title = "Nuevos episodios",
-                        subtitle = "Avisar cuando tus suscripciones publiquen episodios",
+                        title = stringResource(R.string.new_episodes_notif_title),
+                        subtitle = stringResource(R.string.new_episodes_notif_sub),
                         checked = settings.newEpisodeNotifications,
                         onCheckedChange = { settingsViewModel.setNewEpisodeNotifications(it) }
                     )
@@ -936,12 +935,12 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Acerca de Mis Podcast",
+                                text = stringResource(R.string.about_app_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Versión ${BuildConfig.VERSION_NAME} · GNU GPL v3",
+                                text = stringResource(R.string.about_version_license, BuildConfig.VERSION_NAME),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -958,366 +957,3 @@ fun SettingsScreen(
         }
     }
 }
-
-@Composable
-private fun SettingsSection(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column {
-        Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ThemeOptionButton(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-    ) {
-        Box(
-            modifier = Modifier.padding(vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingsSwitchRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary
-            )
-        )
-    }
-}
-
-@Composable
-private fun <T> SettingsDropdownRow(
-    icon: ImageVector,
-    title: String,
-    currentValue: String,
-    options: List<T>,
-    onSelect: (T) -> Unit,
-    formatOption: (T) -> String
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { expanded = true }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
-        Box {
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = currentValue,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                )
-            }
-
-            androidx.compose.material3.DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                options.forEach { option ->
-                    androidx.compose.material3.DropdownMenuItem(
-                        text = { Text(formatOption(option)) },
-                        onClick = {
-                            onSelect(option)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingsFrequencySelectorRow(
-    currentFrequency: EpisodeCheckFrequency,
-    onFrequencySelected: (EpisodeCheckFrequency) -> Unit
-) {
-    var showDialog by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDialog = true }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.CloudSync,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.settings_check_frequency),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = stringResource(currentFrequency.titleRes),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-
-    if (showDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.settings_check_frequency),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    EpisodeCheckFrequency.entries.forEach { frequency ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onFrequencySelected(frequency)
-                                    showDialog = false
-                                }
-                                .padding(vertical = 10.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            androidx.compose.material3.RadioButton(
-                                selected = (frequency == currentFrequency),
-                                onClick = {
-                                    onFrequencySelected(frequency)
-                                    showDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = stringResource(frequency.titleRes),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (frequency == currentFrequency) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                androidx.compose.material3.TextButton(onClick = { showDialog = false }) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun SettingsLanguageSelectorRow(
-    currentLanguageCode: String,
-    onLanguageSelected: (AppLanguageOption) -> Unit
-) {
-    var showDialog by remember { mutableStateOf(false) }
-    val currentOption = AppLanguageOption.fromCode(currentLanguageCode)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDialog = true }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Language,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.settings_language),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            val currentOptionName = stringResource(currentOption.titleRes)
-            val subtitleText = if (currentOption == AppLanguageOption.SYSTEM) {
-                val effective = com.ferlagod.mispodcast.util.LanguageManager.getEffectiveLanguageCode(currentLanguageCode)
-                "$currentOptionName (${effective.uppercase()})"
-            } else {
-                "$currentOptionName (${currentOption.code.uppercase()})"
-            }
-            Text(
-                text = subtitleText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-
-    if (showDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.settings_language_app),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    AppLanguageOption.entries.forEach { option ->
-                        val isSelected = (option == currentOption)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onLanguageSelected(option)
-                                    showDialog = false
-                                }
-                                .padding(vertical = 10.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            androidx.compose.material3.RadioButton(
-                                selected = isSelected,
-                                onClick = {
-                                    onLanguageSelected(option)
-                                    showDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = stringResource(option.titleRes),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                                if (option != AppLanguageOption.SYSTEM && option.country.isNotBlank()) {
-                                    Text(
-                                        text = "Catálogo de podcasts: ${option.country}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                androidx.compose.material3.TextButton(onClick = { showDialog = false }) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
-    }
-}
-
-

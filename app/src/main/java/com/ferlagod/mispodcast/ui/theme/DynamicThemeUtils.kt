@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.theme
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
@@ -38,9 +39,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
-import coil.imageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
+import coil3.asDrawable
+import coil3.imageLoader
+import coil3.request.allowHardware
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -116,7 +119,7 @@ suspend fun extractDominantColorFromUrl(
 
         val result = loader.execute(request)
         if (result is SuccessResult) {
-            val bitmap = result.drawable.toBitmap(width = 160, height = 160, config = Bitmap.Config.ARGB_8888)
+            val bitmap = result.image.asDrawable(context.resources).toBitmap(width = 160, height = 160, config = Bitmap.Config.ARGB_8888)
             val palette = Palette.from(bitmap)
                 .maximumColorCount(16)
                 .generate()
@@ -132,7 +135,8 @@ suspend fun extractDominantColorFromUrl(
         } else {
             fallbackColor
         }
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        e.rethrowIfCancellation()
         fallbackColor
     }
 }

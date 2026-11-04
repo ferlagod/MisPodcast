@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.withTransaction
@@ -223,7 +225,10 @@ object AntennaPodDatabaseImporter {
                             }
                         }
                     }
-                } catch (ignored: Exception) {}
+                } catch (e: Exception) {
+                    e.rethrowIfCancellation()
+                    android.util.Log.w("AntennaPodImporter", "No se pudieron leer los favoritos de AntennaPod: ${e.message}")
+                }
             }
 
             // 3. Extraer Cola de Reproducción si existe la tabla Queue
@@ -240,7 +245,10 @@ object AntennaPodDatabaseImporter {
                             }
                         }
                     }
-                } catch (ignored: Exception) {}
+                } catch (e: Exception) {
+                    e.rethrowIfCancellation()
+                    android.util.Log.w("AntennaPodImporter", "No se pudo leer la cola de AntennaPod: ${e.message}")
+                }
             }
 
             // 4. Preparar consulta flexible para FeedItems y FeedMedia según columnas existentes
@@ -503,19 +511,19 @@ object AntennaPodDatabaseImporter {
             val playedCount = episodesToInsert.count { it.isPlayed }
             val totalHours = statsToInsert.sumOf { it.totalTimeListenedMs } / (1000 * 60 * 60)
 
-            val summary = "¡Base de datos de AntennaPod importada con éxito!\n" +
-                    "• ${podcastsToInsert.size} podcasts suscritos\n" +
-                    "• ${episodesToInsert.size} episodios ($playedCount escuchados)\n" +
-                    "• $totalHours h de estadísticas y ${historyToInsert.size} registros de historial\n" +
-                    (if (queueToInsert.isNotEmpty()) "• ${queueToInsert.size} episodios añadidos a la cola" else "")
+            val summary = context.getString(
+                R.string.msg_antennapod_imported,
+                podcastsToInsert.size, episodesToInsert.size, playedCount, totalHours.toInt(), historyToInsert.size
+            ) + (if (queueToInsert.isNotEmpty()) context.getString(R.string.msg_antennapod_queue, queueToInsert.size) else "")
 
             com.ferlagod.mispodcast.sync.NextcloudSyncManager.getInstance(context).triggerSyncIfConfigured(debounceMs = 3000L)
 
             Result.success(summary)
         } catch (e: Exception) {
+            e.rethrowIfCancellation()
             Result.failure(e)
         } finally {
-            try { sqliteDb?.close() } catch (ignored: Exception) {}
+            try { sqliteDb?.close() } catch (e: Exception) { e.rethrowIfCancellation() }
         }
     }
 }

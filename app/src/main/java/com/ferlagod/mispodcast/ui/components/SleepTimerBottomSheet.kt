@@ -154,13 +154,13 @@ fun SleepTimerBottomSheet(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = "Temporizador de apagado",
+                            text = stringResource(R.string.sleep_timer_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Pausa la reproducción automáticamente",
+                            text = stringResource(R.string.sleep_timer_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -224,7 +224,7 @@ fun SleepTimerBottomSheet(
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = sleepTimerState.formattedRemaining,
+                                text = if (sleepTimerState.mode is com.ferlagod.mispodcast.playback.SleepTimerMode.EndOfEpisode) stringResource(R.string.sleep_end_of_episode) else sleepTimerState.formattedRemaining,
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -234,9 +234,9 @@ fun SleepTimerBottomSheet(
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = if (sleepTimerState.mode is SleepTimerMode.EndOfEpisode) {
-                                "La reproducción se detendrá al terminar el capítulo actual"
+                                stringResource(R.string.sleep_timer_eoe_active)
                             } else {
-                                "Tiempo restante antes del apagado automático"
+                                stringResource(R.string.sleep_timer_remaining)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
@@ -277,7 +277,7 @@ fun SleepTimerBottomSheet(
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Apagar", color = MaterialTheme.colorScheme.onError)
+                                Text(stringResource(R.string.sleep_timer_off), color = MaterialTheme.colorScheme.onError)
                             }
                         }
                     }
@@ -286,7 +286,7 @@ fun SleepTimerBottomSheet(
 
             // Opciones de configuración
             Text(
-                text = "Elegir duración",
+                text = stringResource(R.string.sleep_timer_choose),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -348,13 +348,13 @@ fun SleepTimerBottomSheet(
                         Spacer(modifier = Modifier.width(14.dp))
                         Column {
                             Text(
-                                text = "Al final del episodio",
+                                text = stringResource(R.string.sleep_end_of_episode),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Pausa la reproducción al acabar el capítulo",
+                                text = stringResource(R.string.sleep_end_of_episode_sub),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -474,13 +474,13 @@ fun SleepTimerBottomSheet(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Agitar para prolongar",
+                                text = stringResource(R.string.sleep_shake_title),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Agita el teléfono para añadir 15 minutos",
+                                text = stringResource(R.string.sleep_shake_sub),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

@@ -693,6 +693,9 @@ interface PodcastDao {
     @Query("SELECT * FROM listening_history WHERE episodeId = :episodeId ORDER BY listenedAt DESC, id DESC LIMIT 1")
     suspend fun getLatestListeningHistoryEntry(episodeId: String): ListeningHistoryEntity?
 
+    @Query("SELECT MIN(listenedAt) FROM listening_history WHERE listenedAt > 0")
+    suspend fun getFirstListenedAt(): Long?
+
     @Query("""
         SELECT h.id AS historyId,
                latest.maxListenedAt AS listenedAt,

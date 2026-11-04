@@ -23,6 +23,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.ferlagod.mispodcast.data.local.PodcastDatabase
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
@@ -56,17 +57,37 @@ class DatabaseMigrationTest {
 
     @Test
     fun testAllMigrationsArrayPreservesIntegrity() {
-        // Verificar que todas las migraciones registradas son ejecutables
-        val db = helper.createDatabase(TEST_DB, 6)
+        // Migrar desde la versión anterior y validar contra el esquema exportado actual
+        val db = helper.createDatabase(TEST_DB, PodcastDatabase.DB_VERSION - 1)
         db.close()
 
         val migratedDb = helper.runMigrationsAndValidate(
             TEST_DB,
-            7,
+            PodcastDatabase.DB_VERSION,
             true,
-            PodcastDatabase.MIGRATION_6_7
+            *PodcastDatabase.ALL_MIGRATIONS
         )
         assertNotNull(migratedDb)
+        migratedDb.close()
+    }
+
+    @Test
+    fun testMigrationFixesLegacyPlayedState() {
+        val db = helper.createDatabase(TEST_DB, PodcastDatabase.DB_VERSION - 1)
+        db.execSQL("INSERT INTO podcasts (id, title, author, description, feedUrl, artworkUrl, isSubscribed, subscribedAt, unsubscribedAt, lastUpdated, category, link, isLocalFolder, skipIntroSeconds, skipEndingSeconds, episodeSortOrder, autoEnqueueRule, newEpisodeNotifications, autoDeleteRule) VALUES ('p1', '', '', '', 'https://x/feed', '', 0, 0, 0, 0, '', '', 0, 0, 0, '', '', 0, '')")
+        db.execSQL("INSERT INTO episodes (id, podcastId, title, description, audioUrl, imageUrl, pubDate, duration, currentPositionMs, positionUpdatedAt, isPlayed, isFavorite, isDownloaded, fileSizeBytes, isDismissedFromNewReleases) VALUES ('e1', 'p1', '', '', 'https://x/a.mp3', '', 0, 600000, 60000, 0, 1, 0, 0, 0, 0)")
+        db.close()
+
+        val migratedDb = helper.runMigrationsAndValidate(
+            TEST_DB,
+            PodcastDatabase.DB_VERSION,
+            true,
+            *PodcastDatabase.ALL_MIGRATIONS
+        )
+        migratedDb.query("SELECT isPlayed FROM episodes WHERE id = 'e1'").use { cursor ->
+            cursor.moveToFirst()
+            assertEquals(0, cursor.getInt(0))
+        }
         migratedDb.close()
     }
 }

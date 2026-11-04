@@ -80,7 +80,7 @@ data class SleepTimerState(
     val formattedRemaining: String
         get() {
             if (!isActive) return ""
-            if (mode is SleepTimerMode.EndOfEpisode) return "Al final del episodio"
+            if (mode is SleepTimerMode.EndOfEpisode) return "" // La UI muestra su propio texto traducido
             val totalSeconds = (remainingMillis / 1000L).coerceAtLeast(0L)
             val minutes = totalSeconds / 60L
             val seconds = totalSeconds % 60L

@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.ui.components
 
+import androidx.compose.ui.res.stringResource
+import com.ferlagod.mispodcast.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -128,13 +130,13 @@ fun AudioEffectsBottomSheet(
 
                 Column {
                     Text(
-                        text = "Efectos de audio",
+                        text = stringResource(R.string.effects_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Se aplican a todos los episodios",
+                        text = stringResource(R.string.effects_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -146,8 +148,8 @@ fun AudioEffectsBottomSheet(
             // 1. MEJORA DE VOZ Y NORMALIZACIÓN (LOUDNESS ENHANCER)
             AudioEffectCard(
                 icon = Icons.Filled.RecordVoiceOver,
-                title = "Mejora de voz y volumen",
-                description = "Amplifica las frecuencias vocales y comprime picos en grabaciones con volumen bajo o dispar.",
+                title = stringResource(R.string.voice_boost_title),
+                description = stringResource(R.string.effects_voice_desc),
                 isChecked = userSettings.voiceBoostEnabled,
                 onCheckedChange = { playerViewModel.setVoiceBoostEnabled(it) }
             ) {
@@ -158,7 +160,7 @@ fun AudioEffectsBottomSheet(
                 ) {
                     Column(modifier = Modifier.padding(top = 12.dp)) {
                         Text(
-                            text = "Nivel de amplificación:",
+                            text = stringResource(R.string.effects_gain_label),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -171,19 +173,19 @@ fun AudioEffectsBottomSheet(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             GainPresetChip(
-                                label = "Suave (+4 dB)",
+                                label = stringResource(R.string.gain_soft_short),
                                 isSelected = userSettings.voiceBoostGainMb == AudioEffectsManager.GAIN_SOFT_MB,
                                 onClick = { playerViewModel.setVoiceBoostGainMb(AudioEffectsManager.GAIN_SOFT_MB) },
                                 modifier = Modifier.weight(1f)
                             )
                             GainPresetChip(
-                                label = "Medio (+8 dB)",
+                                label = stringResource(R.string.gain_medium_short),
                                 isSelected = userSettings.voiceBoostGainMb == AudioEffectsManager.GAIN_BALANCED_MB,
                                 onClick = { playerViewModel.setVoiceBoostGainMb(AudioEffectsManager.GAIN_BALANCED_MB) },
                                 modifier = Modifier.weight(1f)
                             )
                             GainPresetChip(
-                                label = "Fuerte (+12 dB)",
+                                label = stringResource(R.string.gain_strong),
                                 isSelected = userSettings.voiceBoostGainMb == AudioEffectsManager.GAIN_STRONG_MB,
                                 onClick = { playerViewModel.setVoiceBoostGainMb(AudioEffectsManager.GAIN_STRONG_MB) },
                                 modifier = Modifier.weight(1f)
@@ -198,8 +200,8 @@ fun AudioEffectsBottomSheet(
             // 2. MODO MONO (UN SOLO AURICULAR)
             AudioEffectCard(
                 icon = Icons.Filled.Headphones,
-                title = "Modo mono (un solo auricular)",
-                description = "Combina los canales izquierdo y derecho para no perder detalles si escuchas con un solo auricular.",
+                title = stringResource(R.string.mono_mode_title),
+                description = stringResource(R.string.effects_mono_desc),
                 isChecked = userSettings.monoAudioEnabled,
                 onCheckedChange = { playerViewModel.setMonoAudioEnabled(it) }
             )
@@ -209,8 +211,8 @@ fun AudioEffectsBottomSheet(
             // 3. SALTO DE SILENCIOS
             AudioEffectCard(
                 icon = Icons.Filled.GraphicEq,
-                title = "Saltar silencios",
-                description = "Omite las pausas prolongadas y espacios mudos sin alterar el tono de los locutores.",
+                title = stringResource(R.string.effects_skip_silence_title),
+                description = stringResource(R.string.effects_skip_silence_desc),
                 isChecked = userSettings.skipSilence,
                 onCheckedChange = { playerViewModel.setSkipSilence(it) }
             )

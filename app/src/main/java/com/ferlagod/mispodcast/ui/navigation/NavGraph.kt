@@ -210,7 +210,6 @@ fun NavGraph(
                 composable(Screen.Stats.route) {
                     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
                         StatsScreen(
-                            podcastViewModel = podcastViewModel,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }

@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.repository
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import androidx.annotation.OptIn
 import androidx.media3.common.Metadata
 import androidx.media3.common.util.UnstableApi
@@ -123,7 +124,8 @@ class ChapterRepository(
                         }
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 // Fallback silencioso a ID3 local
             }
         }

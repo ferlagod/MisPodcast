@@ -161,7 +161,7 @@ fun PodcastSettingsBottomSheet(
                     }
                     Column {
                         Text(
-                            text = "Ajustes del podcast",
+                            text = stringResource(R.string.podcast_settings_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -201,11 +201,11 @@ fun PodcastSettingsBottomSheet(
             // SECCIÓN 1: VELOCIDAD DE REPRODUCCIÓN
             SettingsSection(
                 icon = Icons.Default.Speed,
-                title = "Velocidad de reproducción propia",
-                description = "Velocidad fija para este podcast (los audiolibros a 1.0x, las noticias a 1.6x). Si se elige global, heredará el ajuste general."
+                title = stringResource(R.string.ps_custom_speed_title),
+                description = stringResource(R.string.ps_custom_speed_desc)
             ) {
                 val speedOptions = listOf(
-                    null to "Global",
+                    null to stringResource(R.string.ps_global),
                     0.8f to "0.8x",
                     1.0f to "1.0x",
                     1.2f to "1.2x",
@@ -239,11 +239,11 @@ fun PodcastSettingsBottomSheet(
             // SECCIÓN 2: SALTO DE INTRODUCCIÓN
             SettingsSection(
                 icon = Icons.Default.FastForward,
-                title = "Saltar introducción (intro)",
-                description = "Segundos a omitir automáticamente al inicio de cada episodio."
+                title = stringResource(R.string.ps_skip_intro_title),
+                description = stringResource(R.string.ps_skip_intro_desc)
             ) {
                 val introOptions = listOf(
-                    0 to "Desactivado",
+                    0 to stringResource(R.string.ps_disabled),
                     15 to "15 s",
                     30 to "30 s",
                     45 to "45 s",
@@ -272,11 +272,11 @@ fun PodcastSettingsBottomSheet(
             // SECCIÓN 3: SALTO DE CRÉDITOS / FINAL
             SettingsSection(
                 icon = Icons.Default.FastRewind,
-                title = "Saltar créditos y final",
-                description = "Segundos a omitir al final del episodio (créditos y despedidas repetitivas)."
+                title = stringResource(R.string.ps_skip_ending_title),
+                description = stringResource(R.string.ps_skip_ending_desc)
             ) {
                 val endingOptions = listOf(
-                    0 to "Desactivado",
+                    0 to stringResource(R.string.ps_disabled),
                     15 to "15 s",
                     30 to "30 s",
                     45 to "45 s",
@@ -304,13 +304,13 @@ fun PodcastSettingsBottomSheet(
             // SECCIÓN 4: DESCARGA AUTOMÁTICA
             SettingsSection(
                 icon = Icons.Default.Download,
-                title = "Descarga automática",
-                description = "Controla si se descargan automáticamente los episodios nuevos de este programa."
+                title = stringResource(R.string.ps_auto_download_title),
+                description = stringResource(R.string.ps_auto_download_desc)
             ) {
                 val downloadOptions = listOf(
-                    null to "Ajuste global",
-                    true to "Siempre descargar",
-                    false to "Nunca descargar"
+                    null to stringResource(R.string.ps_global_setting),
+                    true to stringResource(R.string.ps_always_download),
+                    false to stringResource(R.string.ps_never_download)
                 )
 
                 FlowRow(
@@ -333,13 +333,13 @@ fun PodcastSettingsBottomSheet(
             // Borrado automático de descargas al terminar de escuchar
             SettingsSection(
                 icon = Icons.Default.Delete,
-                title = "Borrar descargas tras escuchar",
-                description = "Libera espacio eliminando el audio descargado cuando terminas un episodio."
+                title = stringResource(R.string.ps_delete_title),
+                description = stringResource(R.string.ps_delete_desc)
             ) {
                 val deleteOptions = listOf(
-                    "DEFAULT" to "Ajuste global",
-                    "AFTER_PLAYED" to "Borrar siempre",
-                    "NEVER" to "Conservar"
+                    "DEFAULT" to stringResource(R.string.ps_global_setting),
+                    "AFTER_PLAYED" to stringResource(R.string.ps_delete_always),
+                    "NEVER" to stringResource(R.string.ps_keep)
                 )
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -361,20 +361,20 @@ fun PodcastSettingsBottomSheet(
             // Notificaciones de episodios nuevos de este podcast
             SettingsSection(
                 icon = Icons.Default.Notifications,
-                title = "Notificar episodios nuevos",
-                description = "Recibe un aviso cuando este programa publique (si las notificaciones globales están activas)."
+                title = stringResource(R.string.ps_notify_title),
+                description = stringResource(R.string.ps_notify_desc)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ChoiceChip(
-                        label = "Notificar",
+                        label = stringResource(R.string.ps_notify),
                         isSelected = currentNotifications,
                         onClick = { currentNotifications = true }
                     )
                     ChoiceChip(
-                        label = "Silenciar",
+                        label = stringResource(R.string.ps_mute),
                         isSelected = !currentNotifications,
                         onClick = { currentNotifications = false }
                     )
@@ -386,16 +386,16 @@ fun PodcastSettingsBottomSheet(
             // SECCIÓN 5: ORDEN DE EPISODIOS
             SettingsSection(
                 icon = Icons.AutoMirrored.Filled.Sort,
-                title = "Orden de episodios",
-                description = "Elige el orden adecuado según la naturaleza del podcast."
+                title = stringResource(R.string.ps_order_title),
+                description = stringResource(R.string.ps_order_desc)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     ChoiceCard(
-                        title = "Más recientes primero",
-                        subtitle = "Nuevo → Viejo (noticias, actualidad)",
+                        title = stringResource(R.string.sort_newest_first_label),
+                        subtitle = stringResource(R.string.ps_order_newest_sub),
                         isSelected = currentSortOrder == "NEWEST_FIRST",
                         icon = Icons.Default.ArrowDownward,
                         modifier = Modifier.weight(1f),
@@ -403,8 +403,8 @@ fun PodcastSettingsBottomSheet(
                     )
 
                     ChoiceCard(
-                        title = "Cronológico",
-                        subtitle = "Viejo → Nuevo (series, audiolibros)",
+                        title = stringResource(R.string.ps_order_chrono),
+                        subtitle = stringResource(R.string.ps_order_chrono_sub),
                         isSelected = currentSortOrder == "OLDEST_FIRST",
                         icon = Icons.Default.ArrowUpward,
                         modifier = Modifier.weight(1f),
@@ -421,8 +421,8 @@ fun PodcastSettingsBottomSheet(
             // SECCIÓN 6: BANDEJA DE ENTRADA / UP NEXT INTELIGENTE
             SettingsSection(
                 icon = Icons.AutoMirrored.Filled.QueueMusic,
-                title = "Añadir a la cola automáticamente (\"Up Next\")",
-                description = "¿Dónde encolar los nuevos episodios publicados de este podcast?"
+                title = stringResource(R.string.ps_auto_enqueue_title),
+                description = stringResource(R.string.ps_auto_enqueue_desc)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
@@ -430,12 +430,12 @@ fun PodcastSettingsBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ChoiceChip(
-                            label = "Por defecto global",
+                            label = stringResource(R.string.ps_enqueue_default),
                             isSelected = currentAutoEnqueue == "DEFAULT" || currentAutoEnqueue.isBlank(),
                             onClick = { currentAutoEnqueue = "DEFAULT" }
                         )
                         ChoiceChip(
-                            label = "No añadir",
+                            label = stringResource(R.string.ps_enqueue_none),
                             isSelected = currentAutoEnqueue == "DISABLED",
                             onClick = { currentAutoEnqueue = "DISABLED" }
                         )
@@ -445,12 +445,12 @@ fun PodcastSettingsBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ChoiceChip(
-                            label = "Al principio (siguiente)",
+                            label = stringResource(R.string.ps_enqueue_top),
                             isSelected = currentAutoEnqueue == "TOP",
                             onClick = { currentAutoEnqueue = "TOP" }
                         )
                         ChoiceChip(
-                            label = "Al final de la cola",
+                            label = stringResource(R.string.auto_enqueue_bottom),
                             isSelected = currentAutoEnqueue == "BOTTOM",
                             onClick = { currentAutoEnqueue = "BOTTOM" }
                         )
@@ -474,7 +474,7 @@ fun PodcastSettingsBottomSheet(
                         .height(48.dp),
                     shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
 
                 Button(
@@ -505,7 +505,7 @@ fun PodcastSettingsBottomSheet(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Guardar ajustes", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.ps_save), fontWeight = FontWeight.Bold)
                 }
             }
         }

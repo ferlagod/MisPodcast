@@ -199,6 +199,17 @@ object PodcastLanguageMapper {
         }
     }
 
+    fun getRecommendedSubtitle(selectedLanguageCode: String, basedOnTitle: String): String {
+        return when (resolveLanguageCode(selectedLanguageCode)) {
+            "es" -> "Basado en tu interés por '$basedOnTitle'"
+            "fr" -> "D'après votre intérêt pour « $basedOnTitle »"
+            "de" -> "Basierend auf deinem Interesse an „$basedOnTitle“"
+            "it" -> "In base al tuo interesse per '$basedOnTitle'"
+            "pt" -> "Com base no seu interesse por '$basedOnTitle'"
+            else -> "Based on your interest in '$basedOnTitle'"
+        }
+    }
+
     fun getRecommendedTitle(selectedLanguageCode: String): String {
         return when (resolveLanguageCode(selectedLanguageCode)) {
             "es" -> "Recomendados para ti"

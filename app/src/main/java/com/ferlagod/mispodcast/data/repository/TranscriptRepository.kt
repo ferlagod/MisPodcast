@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.repository
 
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
 import com.ferlagod.mispodcast.data.model.TranscriptSegment
 import kotlinx.coroutines.Dispatchers
@@ -105,7 +106,8 @@ class TranscriptRepository(
                     }
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.rethrowIfCancellation()
             // Manejo silencioso ante errores de red o formato
         } finally {
             _isLoading.value = false

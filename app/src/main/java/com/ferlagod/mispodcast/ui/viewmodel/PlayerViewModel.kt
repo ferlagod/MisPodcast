@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
@@ -73,18 +75,12 @@ import kotlin.math.min
  */
 class PlayerViewModel @JvmOverloads constructor(
     application: Application,
-    private val repository: PodcastRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.podcastRepository
-        ?: PodcastRepository(PodcastDatabase.getInstance(application).podcastDao()),
-    private val syncManager: NextcloudSyncManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.nextcloudSyncManager
-        ?: NextcloudSyncManager.getInstance(application),
-    private val preferencesManager: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.preferencesManager
-        ?: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager.getInstance(application),
-    private val sleepTimerManager: com.ferlagod.mispodcast.playback.SleepTimerManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.sleepTimerManager
-        ?: com.ferlagod.mispodcast.playback.SleepTimerManager.getInstance(application),
-    private val chapterRepository: ChapterRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.chapterRepository
-        ?: ChapterRepository(okhttp3.OkHttpClient()),
-    private val transcriptRepository: TranscriptRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.transcriptRepository
-        ?: TranscriptRepository(okhttp3.OkHttpClient())
+    private val repository: PodcastRepository = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.podcastRepository,
+    private val syncManager: NextcloudSyncManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.nextcloudSyncManager,
+    private val preferencesManager: com.ferlagod.mispodcast.data.preferences.UserPreferencesManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.preferencesManager,
+    private val sleepTimerManager: com.ferlagod.mispodcast.playback.SleepTimerManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.sleepTimerManager,
+    private val chapterRepository: ChapterRepository = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.chapterRepository,
+    private val transcriptRepository: TranscriptRepository = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.transcriptRepository
 ) : AndroidViewModel(application) {
 
     val chapters: StateFlow<List<Chapter>> = chapterRepository.activeChapters
@@ -181,7 +177,8 @@ class PlayerViewModel @JvmOverloads constructor(
                 } else {
                     restoreLastStateIfIdle()
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                e.rethrowIfCancellation()
             }
         }, ContextCompat.getMainExecutor(getApplication()))
     }
@@ -314,7 +311,8 @@ class PlayerViewModel @JvmOverloads constructor(
             val controller = mediaController ?: withContext(Dispatchers.IO) {
                 try {
                     controllerFuture?.get()
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    e.rethrowIfCancellation()
                     null
                 }
             } ?: return@launch
@@ -629,7 +627,7 @@ class PlayerViewModel @JvmOverloads constructor(
         val ep = currentEpisode.value ?: return
         val pos = currentPositionMs.value
         val formattedTime = formatBookmarkTime(pos)
-        val defaultNote = if (note.isBlank()) "Momento en $formattedTime" else note.trim()
+        val defaultNote = note.trim().ifBlank { formattedTime }
 
         viewModelScope.launch {
             val bookmark = BookmarkEntity(
@@ -653,7 +651,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    fun generateShareText(bookmark: BookmarkEntity): String {
+    fun generateShareText(context: Context, bookmark: BookmarkEntity): String {
         val timeFormatted = formatBookmarkTime(bookmark.positionMs)
         val ep = currentEpisode.value
         val epTitle = ep?.title ?: bookmark.episodeTitle
@@ -667,12 +665,14 @@ class PlayerViewModel @JvmOverloads constructor(
             ""
         }
 
-        val notePart = if (bookmark.note.isNotBlank() && !bookmark.note.startsWith("Momento en")) " \"${bookmark.note}\"" else ""
+        // Las notas automáticas ("Momento en 12:34") no aportan nada al texto compartido
+        val autoNote = context.getString(R.string.bookmark_default_note, timeFormatted)
+        val notePart = if (bookmark.note.isNotBlank() && bookmark.note != autoNote && bookmark.note != timeFormatted) " \"${bookmark.note}\"" else ""
 
         return buildString {
-            append("🎧 Escucha")
+            append(context.getString(R.string.bookmark_share_listen))
             if (notePart.isNotBlank()) append(notePart)
-            append(" en \"$epTitle\" ($pTitle) desde el minuto $timeFormatted:")
+            append(context.getString(R.string.bookmark_share_where, epTitle, pTitle, timeFormatted))
             if (shareLink.isNotBlank()) {
                 append("\n$shareLink")
             }
@@ -680,13 +680,13 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     fun shareBookmark(context: Context, bookmark: BookmarkEntity) {
-        val text = generateShareText(bookmark)
+        val text = generateShareText(context, bookmark)
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "Momento en ${bookmark.episodeTitle}")
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.bookmark_share_subject, bookmark.episodeTitle))
             putExtra(Intent.EXTRA_TEXT, text)
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Compartir momento del podcast")
+        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.bookmark_share_chooser))
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(shareIntent)
     }

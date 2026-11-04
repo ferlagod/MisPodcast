@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
@@ -27,11 +29,8 @@ import com.ferlagod.mispodcast.data.download.EpisodeDownloadManager
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 import com.ferlagod.mispodcast.data.local.PodcastDatabase
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
-import com.ferlagod.mispodcast.data.local.entities.PlaybackStatsEntity
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
-import com.ferlagod.mispodcast.data.local.model.GlobalStats
-import com.ferlagod.mispodcast.data.model.WrappedData
 import com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem
 import com.ferlagod.mispodcast.data.local.model.QueueEpisodeItem
 import com.ferlagod.mispodcast.data.local.model.QueueSortOption
@@ -39,6 +38,7 @@ import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
 import com.ferlagod.mispodcast.data.repository.PodcastRepository
 import com.ferlagod.mispodcast.sync.NextcloudSyncManager
 import com.ferlagod.mispodcast.sync.SyncWorker
+import com.ferlagod.mispodcast.util.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -64,14 +64,10 @@ import kotlinx.coroutines.flow.map
  */
 class PodcastViewModel @JvmOverloads constructor(
     application: Application,
-    private val repository: PodcastRepository = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.podcastRepository
-        ?: PodcastRepository(PodcastDatabase.getInstance(application).podcastDao()),
-    private val preferencesManager: UserPreferencesManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.preferencesManager
-        ?: UserPreferencesManager.getInstance(application),
-    private val syncManager: NextcloudSyncManager = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.nextcloudSyncManager
-        ?: NextcloudSyncManager.getInstance(application),
-    private val database: PodcastDatabase = (application as? com.ferlagod.mispodcast.MisPodcastApplication)?.container?.database
-        ?: PodcastDatabase.getInstance(application)
+    private val repository: PodcastRepository = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.podcastRepository,
+    private val preferencesManager: UserPreferencesManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.preferencesManager,
+    private val syncManager: NextcloudSyncManager = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.nextcloudSyncManager,
+    private val database: PodcastDatabase = (application as com.ferlagod.mispodcast.MisPodcastApplication).container.database
 ) : AndroidViewModel(application) {
 
     private val downloadManager = EpisodeDownloadManager.getInstance(application, database.podcastDao())
@@ -121,37 +117,6 @@ class PodcastViewModel @JvmOverloads constructor(
     val history: StateFlow<List<HistoryEpisodeItem>> = repository.getListeningHistory()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val podcastStats: StateFlow<List<PlaybackStatsEntity>> = repository.getPodcastStats()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val globalStats: StateFlow<GlobalStats> = repository.getGlobalStats()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GlobalStats())
-
-    val timeSavedMs: StateFlow<Long> = preferencesManager.timeSavedMsFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
-
-    // ==========================================
-    // RESUMEN ANUAL "WRAPPED"
-    // ==========================================
-
-    private val _wrappedData = MutableStateFlow<WrappedData?>(null)
-    val wrappedData: StateFlow<WrappedData?> = _wrappedData.asStateFlow()
-
-    private val _selectedWrappedYear = MutableStateFlow(2026)
-    val selectedWrappedYear: StateFlow<Int> = _selectedWrappedYear.asStateFlow()
-
-    private val _isLoadingWrapped = MutableStateFlow(false)
-    val isLoadingWrapped: StateFlow<Boolean> = _isLoadingWrapped.asStateFlow()
-
-    fun loadWrapped(year: Int = _selectedWrappedYear.value) {
-        _selectedWrappedYear.value = year
-        viewModelScope.launch {
-            _isLoadingWrapped.value = true
-            _wrappedData.value = repository.getWrappedStats(year)
-            _isLoadingWrapped.value = false
-        }
-    }
-
     // ==========================================
     // RECOMENDACIONES DIRECTAS APPLE PODCASTS
     // ==========================================
@@ -159,17 +124,18 @@ class PodcastViewModel @JvmOverloads constructor(
     private val _recommendations = MutableStateFlow<List<ApplePodcastDto>>(emptyList())
     val recommendations: StateFlow<List<ApplePodcastDto>> = _recommendations.asStateFlow()
 
-    private val _recommendationTitle = MutableStateFlow("Tendencias en España")
+    // Vacíos hasta la primera carga: la UI muestra entonces su título por defecto traducido
+    private val _recommendationTitle = MutableStateFlow("")
     val recommendationTitle: StateFlow<String> = _recommendationTitle.asStateFlow()
 
-    private val _recommendationSubtitle = MutableStateFlow("Los podcasts más populares del momento en Apple Podcasts")
+    private val _recommendationSubtitle = MutableStateFlow("")
     val recommendationSubtitle: StateFlow<String> = _recommendationSubtitle.asStateFlow()
 
     private val _isLoadingRecommendations = MutableStateFlow(false)
     val isLoadingRecommendations: StateFlow<Boolean> = _isLoadingRecommendations.asStateFlow()
 
-    private val _recommendationError = MutableStateFlow<String?>(null)
-    val recommendationError: StateFlow<String?> = _recommendationError.asStateFlow()
+    private val _recommendationError = MutableStateFlow<UiText?>(null)
+    val recommendationError: StateFlow<UiText?> = _recommendationError.asStateFlow()
 
     fun loadRecommendations(languageCode: String? = null) {
         val targetLang = languageCode ?: currentLanguageCode.value
@@ -182,15 +148,13 @@ class PodcastViewModel @JvmOverloads constructor(
                 _recommendationSubtitle.value = data.subtitle
                 _recommendations.value = data.podcasts
             }.onFailure {
-                _recommendationError.value = it.localizedMessage ?: "Error al obtener recomendaciones de Apple Podcasts"
+                _recommendationError.value = it.localizedMessage?.let(UiText::Raw) ?: UiText.Res(R.string.msg_recommendations_error)
             }
             _isLoadingRecommendations.value = false
         }
     }
 
     init {
-        // Programar sincronización periódica en segundo plano
-        SyncWorker.schedulePeriodicSync(application)
         // Traer al abrir la app lo hecho en otros dispositivos (posición, cola, favoritos...)
         viewModelScope.launch {
             val settings = preferencesManager.userSettingsFlow.first()
@@ -210,8 +174,6 @@ class PodcastViewModel @JvmOverloads constructor(
                     loadRecommendations(langCode)
                 }
         }
-        // Carga inicial del resumen anual Wrapped
-        loadWrapped(2026)
     }
 
     // ==========================================
@@ -239,6 +201,7 @@ class PodcastViewModel @JvmOverloads constructor(
                     onFinished?.invoke(0)
                 }
             } catch (e: Exception) {
+                e.rethrowIfCancellation()
                 onFinished?.invoke(0)
             } finally {
                 _isRefreshing.value = false
@@ -255,16 +218,8 @@ class PodcastViewModel @JvmOverloads constructor(
     }
 
     // ==========================================
-    // ESTADOS DE SINCRONIZACIÓN NEXTCLOUD
+    // SINCRONIZACIÓN NEXTCLOUD
     // ==========================================
-
-    private val _isSyncing = MutableStateFlow(false)
-    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
-
-    private val _syncMessage = MutableStateFlow<String?>(null)
-    val syncMessage: StateFlow<String?> = _syncMessage.asStateFlow()
-
-    private var syncJob: kotlinx.coroutines.Job? = null
 
     fun syncWithNextcloud(debounceMs: Long = 1500L) {
         syncManager.triggerSyncIfConfigured(debounceMs)
@@ -280,14 +235,14 @@ class PodcastViewModel @JvmOverloads constructor(
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
-    private val _searchError = MutableStateFlow<String?>(null)
-    val searchError: StateFlow<String?> = _searchError.asStateFlow()
+    private val _searchError = MutableStateFlow<UiText?>(null)
+    val searchError: StateFlow<UiText?> = _searchError.asStateFlow()
 
     private val _subscriptionLoading = MutableStateFlow(false)
     val subscriptionLoading: StateFlow<Boolean> = _subscriptionLoading.asStateFlow()
 
-    private val _subscriptionMessage = MutableStateFlow<String?>(null)
-    val subscriptionMessage: StateFlow<String?> = _subscriptionMessage.asStateFlow()
+    private val _subscriptionMessage = MutableStateFlow<UiText?>(null)
+    val subscriptionMessage: StateFlow<UiText?> = _subscriptionMessage.asStateFlow()
 
     fun searchApplePodcasts(term: String) {
         if (term.isBlank()) {
@@ -305,7 +260,7 @@ class PodcastViewModel @JvmOverloads constructor(
             result.onSuccess {
                 _searchResults.value = it
             }.onFailure {
-                _searchError.value = "Error al buscar: ${it.localizedMessage}"
+                _searchError.value = UiText.Res(R.string.msg_search_error, it.localizedMessage.orEmpty())
             }
             _isSearching.value = false
         }
@@ -356,47 +311,15 @@ class PodcastViewModel @JvmOverloads constructor(
 
         viewModelScope.launch {
             _subscriptionLoading.value = true
-            _subscriptionMessage.value = "Descargando feed RSS…"
+            _subscriptionMessage.value = UiText.Res(R.string.msg_downloading_feed)
             val result = repository.subscribeToFeed(feedUrl)
             result.onSuccess {
-                _subscriptionMessage.value = "Suscrito con éxito a ${it.title}"
+                _subscriptionMessage.value = UiText.Res(R.string.msg_subscribed_to, it.title)
                 syncWithNextcloud()
                 onFinished(true)
             }.onFailure {
-                _subscriptionMessage.value = "Error al suscribir: ${it.localizedMessage}"
+                _subscriptionMessage.value = UiText.Res(R.string.msg_subscribe_error, it.localizedMessage.orEmpty())
                 onFinished(false)
-            }
-            _subscriptionLoading.value = false
-        }
-    }
-
-    fun searchAndSubscribe(searchTerm: String, onFinished: (Boolean, String) -> Unit = { _, _ -> }) {
-        if (searchTerm.isBlank()) return
-
-        viewModelScope.launch {
-            _subscriptionLoading.value = true
-            _subscriptionMessage.value = "Buscando '$searchTerm'…"
-            val searchResult = repository.searchApplePodcasts(searchTerm)
-            searchResult.onSuccess { results ->
-                val firstWithFeed = results.firstOrNull { !it.feedUrl.isNullOrBlank() }
-                if (firstWithFeed != null && !firstWithFeed.feedUrl.isNullOrBlank()) {
-                    _subscriptionMessage.value = "Suscribiendo a ${firstWithFeed.collectionName ?: searchTerm}…"
-                    val subResult = repository.subscribeToFeed(firstWithFeed.feedUrl)
-                    subResult.onSuccess { podcast ->
-                        _subscriptionMessage.value = "¡Suscrito a ${podcast.title}!"
-                        syncWithNextcloud()
-                        onFinished(true, podcast.title)
-                    }.onFailure { err ->
-                        _subscriptionMessage.value = "Error al suscribirse: ${err.localizedMessage}"
-                        onFinished(false, err.localizedMessage ?: "Error al suscribirse")
-                    }
-                } else {
-                    _subscriptionMessage.value = "No se encontró feed RSS para '$searchTerm'"
-                    onFinished(false, "No se encontró feed RSS")
-                }
-            }.onFailure { err ->
-                _subscriptionMessage.value = "Error al buscar: ${err.localizedMessage}"
-                onFinished(false, err.localizedMessage ?: "Error al buscar")
             }
             _subscriptionLoading.value = false
         }
@@ -497,20 +420,25 @@ class PodcastViewModel @JvmOverloads constructor(
         val (currentActive, subsequent) = splitActiveFromQueue(currentQueue, activeEpisodeId)
         if (subsequent.size < 2) return
 
-        val sortedSubsequent = when (sortOption) {
-            QueueSortOption.DURATION_ASC -> subsequent.sortedBy { it.episode.duration }
-            QueueSortOption.DURATION_DESC -> subsequent.sortedByDescending { it.episode.duration }
-            QueueSortOption.SIZE_ASC -> subsequent.sortedBy { getEpisodeSizeBytes(it) }
-            QueueSortOption.SIZE_DESC -> subsequent.sortedByDescending { getEpisodeSizeBytes(it) }
-            QueueSortOption.NAME_ASC -> subsequent.sortedBy { it.episode.title.lowercase() }
-            QueueSortOption.NAME_DESC -> subsequent.sortedByDescending { it.episode.title.lowercase() }
-            QueueSortOption.DATE_DESC -> subsequent.sortedByDescending { it.episode.pubDate }
-            QueueSortOption.DATE_ASC -> subsequent.sortedBy { it.episode.pubDate }
-        }
-
-        val newOrderedIds = listOfNotNull(currentActive?.episode?.id) + sortedSubsequent.map { it.episode.id }
-
         viewModelScope.launch {
+            val sortedSubsequent = when (sortOption) {
+                QueueSortOption.DURATION_ASC -> subsequent.sortedBy { it.episode.duration }
+                QueueSortOption.DURATION_DESC -> subsequent.sortedByDescending { it.episode.duration }
+                QueueSortOption.SIZE_ASC, QueueSortOption.SIZE_DESC -> {
+                    // Leer el tamaño de cada fichero una sola vez y fuera del hilo principal
+                    val sizes = withContext(Dispatchers.IO) {
+                        subsequent.associate { it.episode.id to getEpisodeSizeBytes(it) }
+                    }
+                    if (sortOption == QueueSortOption.SIZE_ASC) subsequent.sortedBy { sizes[it.episode.id] }
+                    else subsequent.sortedByDescending { sizes[it.episode.id] }
+                }
+                QueueSortOption.NAME_ASC -> subsequent.sortedBy { it.episode.title.lowercase() }
+                QueueSortOption.NAME_DESC -> subsequent.sortedByDescending { it.episode.title.lowercase() }
+                QueueSortOption.DATE_DESC -> subsequent.sortedByDescending { it.episode.pubDate }
+                QueueSortOption.DATE_ASC -> subsequent.sortedBy { it.episode.pubDate }
+            }
+
+            val newOrderedIds = listOfNotNull(currentActive?.episode?.id) + sortedSubsequent.map { it.episode.id }
             repository.reorderQueue(newOrderedIds)
             syncWithNextcloud()
         }
@@ -554,7 +482,9 @@ class PodcastViewModel @JvmOverloads constructor(
                 if (file.exists() && file.isFile) {
                     return file.length()
                 }
-            } catch (_: Exception) {}
+            } catch (_: SecurityException) {
+                // Sin acceso al fichero: se estima el tamaño por la duración
+            }
         }
         return item.episode.duration * 16L
     }
@@ -577,6 +507,7 @@ class PodcastViewModel @JvmOverloads constructor(
             val newOrderedIds = reordered.toList()
             viewModelScope.launch {
                 repository.reorderQueue(newOrderedIds)
+                syncWithNextcloud()
             }
         }
     }
@@ -688,17 +619,17 @@ class PodcastViewModel @JvmOverloads constructor(
     ) {
         viewModelScope.launch {
             _subscriptionLoading.value = true
-            _subscriptionMessage.value = "Importando audios de carpeta local…"
+            _subscriptionMessage.value = UiText.Res(R.string.msg_importing_folder)
             val result = repository.importLocalFolder(context, treeUri, title, artworkUri)
             result.onSuccess {
-                _subscriptionMessage.value = "Carpeta importada con éxito: ${it.title}"
+                _subscriptionMessage.value = UiText.Res(R.string.msg_folder_imported, it.title)
                 _subscriptionLoading.value = false
                 onSuccess(it)
                 syncWithNextcloud()
             }.onFailure {
-                _subscriptionMessage.value = "Error importando carpeta: ${it.localizedMessage}"
+                _subscriptionMessage.value = UiText.Res(R.string.msg_folder_import_error, it.localizedMessage.orEmpty())
                 _subscriptionLoading.value = false
-                onError(it.localizedMessage ?: "Error al importar carpeta local")
+                onError(it.localizedMessage.orEmpty())
             }
         }
     }

@@ -96,7 +96,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.data.mapper.PodcastLanguageMapper
 import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
@@ -188,7 +188,7 @@ fun AddPodcastScreen(
             },
             title = {
                 Text(
-                    text = "Añadir carpeta local",
+                    text = stringResource(R.string.add_local_folder),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -199,7 +199,7 @@ fun AddPodcastScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Se escanearán los audios (.mp3, .m4a, .wav, .ogg, .flac) de esta carpeta para agregarlos a tu biblioteca como episodios con reproducción instantánea.",
+                        text = stringResource(R.string.local_folder_scan_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -207,8 +207,8 @@ fun AddPodcastScreen(
                     OutlinedTextField(
                         value = folderCustomTitle,
                         onValueChange = { folderCustomTitle = it },
-                        label = { Text("Nombre del podcast") },
-                        placeholder = { Text("Ej: Audiolibros, Mis Audios…") },
+                        label = { Text(stringResource(R.string.podcast_name_label)) },
+                        placeholder = { Text(stringResource(R.string.podcast_name_placeholder)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true
@@ -257,12 +257,12 @@ fun AddPodcastScreen(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
-                                        text = "Portada de podcast",
+                                        text = stringResource(R.string.podcast_cover),
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
-                                        text = if (folderArtworkUri != null) "Personalizada" else "Imagen de la carpeta o tarjeta",
+                                        text = if (folderArtworkUri != null) stringResource(R.string.cover_custom) else stringResource(R.string.cover_from_folder),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -278,7 +278,7 @@ fun AddPodcastScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                             ) {
-                                Text("Cambiar", style = MaterialTheme.typography.labelSmall)
+                                Text(stringResource(R.string.action_change), style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -311,9 +311,9 @@ fun AddPodcastScreen(
                             color = LocalContentColor.current
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Importando…")
+                        Text(stringResource(R.string.importing))
                     } else {
-                        Text("Importar podcast", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.import_podcast), fontWeight = FontWeight.Bold)
                     }
                 }
             },
@@ -322,7 +322,7 @@ fun AddPodcastScreen(
                     onClick = { showFolderDialog = false },
                     enabled = !isSubscribing
                 ) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -469,7 +469,7 @@ fun AddPodcastScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                         }
                         Text(
-                            text = subscriptionMsg.orEmpty(),
+                            text = subscriptionMsg?.asString().orEmpty(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.weight(1f)
@@ -544,7 +544,7 @@ fun AddPodcastScreen(
                     if (searchError != null) {
                         item {
                             Text(
-                                text = searchError.orEmpty(),
+                                text = searchError?.asString().orEmpty(),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -575,12 +575,12 @@ fun AddPodcastScreen(
                         item {
                             Column {
                                 Text(
-                                    text = "Búsquedas sugeridas ($regionDisplayName)",
+                                    text = stringResource(R.string.suggested_searches, regionDisplayName),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Catálogo oficial de Apple Podcasts",
+                                    text = stringResource(R.string.apple_catalog_official),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -593,7 +593,7 @@ fun AddPodcastScreen(
                             "fr" -> listOf("Technologie", "Science", "Histoire", "Comédie", "Actualités", "Livres")
                             "de" -> listOf("Technologie", "Wissenschaft", "Geschichte", "Comedy", "Nachrichten", "Bücher")
                             "it" -> listOf("Tecnologia", "Scienza", "Storia", "Commedia", "Notizie", "Libri")
-                            "pt" -> listOf("Tecnologia", "Ciência", "História", "Comédia", "Notícias", "Libros")
+                            "pt" -> listOf("Tecnologia", "Ciência", "História", "Comédia", "Notícias", "Livros")
                             else -> listOf("Tecnología", "Ciencia", "Historia", "Comedia", "Noticias", "Libros")
                         }
                         items(sampleQueries, key = { it }) { query ->
@@ -639,13 +639,13 @@ fun AddPodcastScreen(
                         ) {
                             Column(modifier = Modifier.padding(18.dp)) {
                                 Text(
-                                    text = "Añadir por URL",
+                                    text = stringResource(R.string.add_by_url),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Pega la dirección del feed RSS o Atom del podcast.",
+                                    text = stringResource(R.string.add_by_url_hint),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -692,9 +692,9 @@ fun AddPodcastScreen(
                                             strokeWidth = 2.dp
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Importando feed…")
+                                        Text(stringResource(R.string.importing_feed))
                                     } else {
-                                        Text("Añadir podcast", fontWeight = FontWeight.Bold)
+                                        Text(stringResource(R.string.menu_add_podcast), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -731,7 +731,7 @@ fun AddPodcastScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 Text(
-                                    text = "Podcasts de carpetas locales",
+                                    text = stringResource(R.string.local_folder_podcasts_title),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -740,7 +740,7 @@ fun AddPodcastScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Elige una carpeta del almacenamiento interno o de la tarjeta SD. Los audios se reproducen desde su ubicación, sin duplicarse.",
+                                    text = stringResource(R.string.local_folder_podcasts_hint),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -763,7 +763,7 @@ fun AddPodcastScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "Formatos compatibles: MP3, M4A, WAV, OGG, FLAC",
+                                                text = stringResource(R.string.supported_formats),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.SemiBold
                                             )
@@ -778,7 +778,7 @@ fun AddPodcastScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "Detecta los audios nuevos que añadas",
+                                                text = stringResource(R.string.detects_new_audio),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.SemiBold
                                             )
@@ -796,7 +796,7 @@ fun AddPodcastScreen(
                                 ) {
                                     Icon(Icons.Default.FolderOpen, contentDescription = null)
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Seleccionar carpeta de audios", fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.select_audio_folder), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -851,21 +851,21 @@ private fun SearchResultCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = result.collectionName ?: "Sin título",
+                    text = result.collectionName ?: stringResource(R.string.untitled),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = result.artistName ?: "Autor desconocido",
+                    text = result.artistName ?: stringResource(R.string.unknown_author),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = result.primaryGenreName ?: "General",
+                    text = result.primaryGenreName ?: stringResource(R.string.genre_general),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )

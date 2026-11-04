@@ -46,7 +46,6 @@ import com.ferlagod.mispodcast.R
  */
 sealed class Screen(
     val route: String,
-    val title: String,
     @get:StringRes val titleRes: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector = selectedIcon
@@ -54,7 +53,6 @@ sealed class Screen(
     // 4 pestañas principales del NavigationBar
     data object Home : Screen(
         route = "home",
-        title = "Inicio",
         titleRes = R.string.nav_home,
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
@@ -62,7 +60,6 @@ sealed class Screen(
 
     data object Queue : Screen(
         route = "queue",
-        title = "Cola",
         titleRes = R.string.nav_queue,
         selectedIcon = Icons.AutoMirrored.Filled.QueueMusic,
         unselectedIcon = Icons.AutoMirrored.Outlined.QueueMusic
@@ -70,7 +67,6 @@ sealed class Screen(
 
     data object NewReleases : Screen(
         route = "new_releases",
-        title = "Novedades",
         titleRes = R.string.nav_new_releases,
         selectedIcon = Icons.Filled.NewReleases,
         unselectedIcon = Icons.Outlined.NewReleases
@@ -78,7 +74,6 @@ sealed class Screen(
 
     data object Subscriptions : Screen(
         route = "subscriptions",
-        title = "Suscripciones",
         titleRes = R.string.nav_subscriptions,
         selectedIcon = Icons.Filled.LibraryMusic,
         unselectedIcon = Icons.Outlined.LibraryMusic
@@ -87,49 +82,42 @@ sealed class Screen(
     // Destinos accesibles desde el menú emergente "Más"
     data object History : Screen(
         route = "history",
-        title = "Historial",
         titleRes = R.string.menu_history,
         selectedIcon = Icons.Filled.History
     )
 
     data object Favorites : Screen(
         route = "favorites",
-        title = "Episodios favoritos",
         titleRes = R.string.menu_favorites,
         selectedIcon = Icons.Filled.Favorite
     )
 
     data object Stats : Screen(
         route = "stats",
-        title = "Estadísticas",
         titleRes = R.string.menu_stats,
         selectedIcon = Icons.Filled.BarChart
     )
 
     data object AddPodcast : Screen(
         route = "add_podcast",
-        title = "Añadir podcast",
         titleRes = R.string.menu_add_podcast,
         selectedIcon = Icons.Filled.AddCircle
     )
 
     data object Settings : Screen(
         route = "settings",
-        title = "Ajustes",
         titleRes = R.string.menu_settings,
         selectedIcon = Icons.Filled.Settings
     )
 
     data object About : Screen(
         route = "about",
-        title = "Acerca de",
         titleRes = R.string.menu_about,
         selectedIcon = Icons.Filled.Info
     )
 
     data object PodcastDetail : Screen(
         route = "podcast_detail?podcastId={podcastId}&feedUrl={feedUrl}",
-        title = "Detalle del podcast",
         titleRes = R.string.podcast_detail_title,
         selectedIcon = Icons.Filled.LibraryMusic
     ) {
@@ -142,7 +130,6 @@ sealed class Screen(
 
     data object CategoryPodcasts : Screen(
         route = "category_podcasts?categoryName={categoryName}&genreId={genreId}",
-        title = "Categoría",
         titleRes = R.string.category_title,
         selectedIcon = Icons.Filled.Podcasts
     ) {

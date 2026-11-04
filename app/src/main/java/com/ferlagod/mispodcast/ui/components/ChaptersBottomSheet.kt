@@ -64,7 +64,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.model.Chapter
@@ -111,12 +111,12 @@ fun ChaptersBottomSheet(
             ) {
                 Column {
                     Text(
-                        text = "Capítulos del episodio",
+                        text = stringResource(R.string.chapters_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${chapters.size} capítulos disponibles",
+                        text = stringResource(R.string.chapters_available, chapters.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -239,7 +239,7 @@ fun ChaptersBottomSheet(
                                 val timeText = if (chapter.endTimeMs != null && chapter.endTimeMs > chapter.startTimeMs) {
                                     "${formatChapterTime(chapter.startTimeMs)} – ${formatChapterTime(chapter.endTimeMs)}"
                                 } else {
-                                    "Inicio: ${formatChapterTime(chapter.startTimeMs)}"
+                                    stringResource(R.string.chapter_start_format, formatChapterTime(chapter.startTimeMs))
                                 }
 
                                 Text(
@@ -261,7 +261,9 @@ fun ChaptersBottomSheet(
                                             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(chapter.linkUrl))
                                             browserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                             context.startActivity(browserIntent)
-                                        } catch (_: Exception) {}
+                                        } catch (e: Exception) {
+                                            android.util.Log.w("ChaptersBottomSheet", "No se pudo abrir el enlace del capítulo: ${e.message}")
+                                        }
                                     },
                                     modifier = Modifier.size(36.dp)
                                 ) {

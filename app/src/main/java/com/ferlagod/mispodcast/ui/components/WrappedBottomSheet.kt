@@ -22,6 +22,8 @@ import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,12 +69,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.model.WrappedData
@@ -92,11 +95,13 @@ fun WrappedBottomSheet(
     sheetState: SheetState,
     wrappedData: WrappedData?,
     selectedYear: Int,
+    availableYears: List<Int>,
     isLoading: Boolean,
     onYearSelected: (Int) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val wrappedGold = wrappedGoldColor()
 
     ModalBottomSheet(
@@ -146,10 +151,11 @@ fun WrappedBottomSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf(2026, 2025, 0).forEach { year ->
+                (availableYears + 0).forEach { year ->
                     val label = if (year > 0) "$year" else stringResource(R.string.wrapped_historic_label)
                     val isSelected = selectedYear == year
                     FilterChip(
@@ -277,7 +283,7 @@ fun WrappedBottomSheet(
                                                 letterSpacing = 1.2.sp
                                             )
                                             Text(
-                                                text = wrappedData.archetype,
+                                                text = stringResource(wrappedData.archetype.titleRes),
                                                 style = MaterialTheme.typography.titleLarge,
                                                 fontWeight = FontWeight.Black,
                                                 color = Color.White
@@ -286,7 +292,7 @@ fun WrappedBottomSheet(
                                     }
                                     Spacer(modifier = Modifier.height(10.dp))
                                     Text(
-                                        text = wrappedData.archetypeDescription,
+                                        text = stringResource(wrappedData.archetype.descriptionRes),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = Color.White.copy(alpha = 0.85f)
                                     )
@@ -437,14 +443,14 @@ fun WrappedBottomSheet(
                     item {
                         Button(
                             onClick = {
-                                val textToShare = wrappedData.generateShareText()
+                                val textToShare = wrappedData.generateShareText(context)
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
-                                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.wrapped_share_chooser_title))
+                                    putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.wrapped_share_chooser_title))
                                     putExtra(Intent.EXTRA_TEXT, textToShare)
                                 }
                                 context.startActivity(
-                                    Intent.createChooser(shareIntent, context.getString(R.string.wrapped_share_chooser_title))
+                                    Intent.createChooser(shareIntent, resources.getString(R.string.wrapped_share_chooser_title))
                                 )
                             },
                             modifier = Modifier
