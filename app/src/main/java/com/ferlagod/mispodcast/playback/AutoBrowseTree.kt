@@ -309,30 +309,12 @@ class AutoBrowseTree(
      */
     suspend fun getItem(mediaId: String): MediaItem? = withContext(Dispatchers.IO) {
         when {
-            mediaId == ROOT_ID -> {
-                MediaItem.Builder()
-                    .setMediaId(ROOT_ID)
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(getString(R.string.auto_my_podcasts))
-                            .setIsBrowsable(true)
-                            .setIsPlayable(false)
-                            .build()
-                    )
-                    .build()
-            }
-            mediaId == MEDIA_ID_QUEUE -> {
-                MediaItem.Builder()
-                    .setMediaId(MEDIA_ID_QUEUE)
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(getString(R.string.auto_queue))
-                            .setIsBrowsable(true)
-                            .setIsPlayable(false)
-                            .build()
-                    )
-                    .build()
-            }
+            mediaId == ROOT_ID -> createBrowsableFolder(ROOT_ID, getString(R.string.auto_my_podcasts))
+            mediaId == MEDIA_ID_QUEUE -> createBrowsableFolder(MEDIA_ID_QUEUE, getString(R.string.auto_queue))
+            mediaId == MEDIA_ID_PODCASTS -> createBrowsableFolder(MEDIA_ID_PODCASTS, getString(R.string.auto_my_podcasts))
+            mediaId == MEDIA_ID_NEW_RELEASES -> createBrowsableFolder(MEDIA_ID_NEW_RELEASES, getString(R.string.auto_new_episodes))
+            mediaId == MEDIA_ID_DOWNLOADS -> createBrowsableFolder(MEDIA_ID_DOWNLOADS, getString(R.string.auto_downloads))
+            mediaId == MEDIA_ID_HISTORY -> createBrowsableFolder(MEDIA_ID_HISTORY, getString(R.string.auto_history))
             mediaId.startsWith(PREFIX_PODCAST) -> {
                 val podId = mediaId.removePrefix(PREFIX_PODCAST)
                 val pod = database.podcastDao().getPodcastById(podId)
