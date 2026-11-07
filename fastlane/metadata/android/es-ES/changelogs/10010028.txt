@@ -1,0 +1,3 @@
+• Pantalla de bienvenida y consejos de gestos para nuevos usuarios.
+• Mejorada la pantalla de cola vacía.
+• Compartir enlaces útiles por episodio, momentos concretos y firma opcional.

@@ -1,0 +1,8 @@
+• Rediseño completo de la interfaz, revisada pestaña a pestaña.
+• Opciones de ordenación en suscripciones.
+• Los botones de la ficha del episodio ocupan ahora dos filas.
+• Android Auto: todas las pestañas del catálogo cargan bien y se muestran las portadas.
+• Corregidas las carpetas locales importadas de AntennaPod.
+• Corregido el episodio repetido en el historial.
+• Correcciones en la pantalla de reproducción, la pestaña Novedades y la sincronización.
+• Mejoras de estabilidad, traducciones y limpieza técnica.

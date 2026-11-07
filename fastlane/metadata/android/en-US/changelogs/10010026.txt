@@ -1,0 +1,8 @@
+• Complete interface redesign, reviewed tab by tab.
+• Sorting options for subscriptions.
+• Episode detail buttons now span two rows.
+• Android Auto: all catalog tabs load correctly and artwork is shown.
+• Fixed local folders imported from AntennaPod.
+• Fixed the same episode being repeated in History.
+• Fixes in the player screen, the New tab and synchronization.
+• Stability, translation and technical improvements.
