@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.components
 
+import androidx.compose.material.icons.filled.Swipe
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -79,8 +80,18 @@ fun MainScaffold(
     playerViewModel: PlayerViewModel = viewModel(),
     intentPodcastId: String? = null,
     intentFeedUrl: String? = null,
-    onIntentHandled: () -> Unit = {}
+    onIntentHandled: () -> Unit = {},
+    initialRoute: String? = null,
+    onInitialRouteHandled: () -> Unit = {}
 ) {
+    // Destino elegido en la pantalla de bienvenida (Explorar, Añadir feed, Ajustes…)
+    androidx.compose.runtime.LaunchedEffect(initialRoute) {
+        if (!initialRoute.isNullOrBlank()) {
+            navController.navigate(initialRoute) { launchSingleTop = true }
+            onInitialRouteHandled()
+        }
+    }
+
     androidx.compose.runtime.LaunchedEffect(intentPodcastId, intentFeedUrl) {
         if (!intentPodcastId.isNullOrBlank() || !intentFeedUrl.isNullOrBlank()) {
             navController.navigate(Screen.PodcastDetail.createRoute(intentPodcastId ?: "", intentFeedUrl ?: "")) {
@@ -248,14 +259,22 @@ fun MainScaffold(
                     animationSpec = tween(durationMillis = 250)
                 ) + fadeOut(animationSpec = tween(durationMillis = 250))
             ) {
-                MiniPlayer(
-                    playerViewModel = playerViewModel,
-                    onNavigateToQueue = {
-                        navController.navigate(Screen.Queue.route) {
-                            launchSingleTop = true
+                Column {
+                    OneTimeHint(
+                        hintId = HintIds.MINI_PLAYER_GESTURES,
+                        text = stringResource(R.string.hint_mini_player_gestures),
+                        icon = Icons.Filled.Swipe,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)
+                    )
+                    MiniPlayer(
+                        playerViewModel = playerViewModel,
+                        onNavigateToQueue = {
+                            navController.navigate(Screen.Queue.route) {
+                                launchSingleTop = true
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

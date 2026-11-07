@@ -18,6 +18,9 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.material.icons.filled.SwipeRight
+import com.ferlagod.mispodcast.ui.components.HintIds
+import com.ferlagod.mispodcast.ui.components.OneTimeHint
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.animation.core.LinearEasing
@@ -827,6 +830,14 @@ fun HomeScreen(
                     )
                 }
             } else {
+                item(key = "hint_episode_swipe") {
+                    OneTimeHint(
+                        hintId = HintIds.EPISODE_SWIPE,
+                        text = stringResource(R.string.hint_episode_swipe),
+                        icon = Icons.Filled.SwipeRight,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                    )
+                }
                 items(newReleases.take(6), key = { it.episode.id }) { item ->
                     val isPlayingThis = isPlaying && currentPlayingEpisode?.id == item.episode.id
                     val progressRatio = if (isPlayingThis && durationMs > 0) {

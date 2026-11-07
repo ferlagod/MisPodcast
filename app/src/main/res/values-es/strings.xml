@@ -124,7 +124,6 @@
     <string name="library">BIBLIOTECA</string>
     <string name="from_your_subscriptions">DE TUS SUSCRIPCIONES</string>
     <string name="empty_queue">Tu cola está vacía</string>
-    <string name="empty_queue_subtitle">Añade episodios desde tus suscripciones o recomendaciones para escuchar seguido sin pausas.</string>
     <string name="empty_subscriptions">Aún no tienes suscripciones</string>
     <string name="empty_subscriptions_subtitle">Explora programas populares, categorías o añade la URL de un feed RSS directamente.</string>
     <string name="add_first_podcast">Añadir primer podcast</string>
@@ -624,4 +623,35 @@
     <string name="msg_db_restored">¡Base de datos de MisPodcast restaurada con éxito! Reinicia la app para recargar los cambios.</string>
     <string name="msg_antennapod_imported">¡Base de datos de AntennaPod importada con éxito!\n• %1$d podcasts suscritos\n• %2$d episodios (%3$d escuchados)\n• %4$d h de estadísticas y %5$d registros de historial</string>
     <string name="msg_antennapod_queue">\n• %1$d episodios añadidos a la cola</string>
+
+    <!-- Bienvenida y consejos de primer uso -->
+    <string name="hint_got_it">Entendido</string>
+    <string name="hint_episode_swipe">Desliza un episodio a la derecha para añadirlo a la cola, o a la izquierda para marcarlo como escuchado.</string>
+    <string name="hint_queue_swipe">Desliza a la izquierda para quitar un episodio de la cola, o a la derecha para marcarlo como escuchado.</string>
+    <string name="hint_mini_player_gestures">Desliza el mini reproductor hacia arriba para abrir el reproductor completo, o a los lados para cambiar de episodio.</string>
+    <string name="onboarding_title">Te damos la bienvenida a Mis Podcast</string>
+    <string name="onboarding_subtitle">Reproductor de podcasts libre, sin anuncios ni rastreo. ¿Cómo quieres empezar?</string>
+    <string name="onboarding_import_opml_title">Importar suscripciones (OPML)</string>
+    <string name="onboarding_import_opml_desc">Trae tus podcasts desde AntennaPod, Podcast Addict u otra app.</string>
+    <string name="onboarding_restore_title">Restaurar una copia de seguridad</string>
+    <string name="onboarding_restore_desc">Copia .zip de Mis Podcast o base de datos de AntennaPod, con historial y cola.</string>
+    <string name="onboarding_explore_title">Explorar podcasts</string>
+    <string name="onboarding_explore_desc">Descubre programas populares y categorías.</string>
+    <string name="onboarding_add_url_title">Añadir por dirección RSS</string>
+    <string name="onboarding_add_url_desc">Busca un podcast o pega la URL de su feed.</string>
+    <string name="onboarding_nextcloud_title">Sincronizar con Nextcloud</string>
+    <string name="onboarding_nextcloud_desc">Configura tu servidor en Ajustes para sincronizar suscripciones y progreso.</string>
+    <string name="onboarding_notifications_title">Avisos de nuevos episodios</string>
+    <string name="onboarding_notifications_desc">Recibe un aviso cuando tus podcasts publiquen algo nuevo.</string>
+    <string name="onboarding_notifications_enabled">Activados. Puedes cambiarlo en Ajustes.</string>
+    <string name="onboarding_notifications_enable">Activar</string>
+    <string name="onboarding_skip">Saltar por ahora</string>
+    <string name="onboarding_importing">Importando…</string>
+    <string name="onboarding_continue">Continuar</string>
+    <string name="onboarding_other_option">Elegir otra opción</string>
+    <string name="empty_queue_subtitle_swipe">Desliza un episodio a la derecha en Inicio o Novedades para añadirlo aquí; sonará justo después del actual.</string>
+    <string name="action_see_new_releases">Ver novedades</string>
+    <string name="settings_reset_hints_title">Volver a mostrar los consejos</string>
+    <string name="settings_reset_hints_subtitle">Recupera los avisos que explican los gestos.</string>
+    <string name="settings_reset_hints_done">Los consejos se volverán a mostrar</string>
 </resources>

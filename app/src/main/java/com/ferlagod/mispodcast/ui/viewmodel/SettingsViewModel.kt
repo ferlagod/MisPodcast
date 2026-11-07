@@ -221,6 +221,11 @@ class SettingsViewModel @JvmOverloads constructor(
         com.ferlagod.mispodcast.worker.PodcastCheckWorker.scheduleImmediateCheck(getApplication())
     }
 
+    /** Vuelve a mostrar los consejos contextuales de gestos (ver [com.ferlagod.mispodcast.ui.components.OneTimeHint]). */
+    fun resetHints() {
+        viewModelScope.launch { preferencesManager.resetHints() }
+    }
+
     fun clearBackupMessage() {
         _backupMessage.value = null
     }

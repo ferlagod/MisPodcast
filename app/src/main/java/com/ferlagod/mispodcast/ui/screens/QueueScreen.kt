@@ -18,6 +18,9 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.material.icons.filled.SwipeLeft
+import com.ferlagod.mispodcast.ui.components.HintIds
+import com.ferlagod.mispodcast.ui.components.OneTimeHint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -132,7 +135,8 @@ import com.ferlagod.mispodcast.ui.theme.AccentGreen
 @Composable
 fun QueueScreen(
     podcastViewModel: PodcastViewModel,
-    playerViewModel: PlayerViewModel
+    playerViewModel: PlayerViewModel,
+    onNavigateToNewReleases: () -> Unit = {}
 ) {
     val queueItems by podcastViewModel.queue.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -326,7 +330,9 @@ fun QueueScreen(
                     EmptyStateView(
                         icon = Icons.Filled.Headphones,
                         title = stringResource(R.string.empty_queue_title),
-                        subtitle = stringResource(R.string.empty_queue_subtitle)
+                        subtitle = stringResource(R.string.empty_queue_subtitle_swipe),
+                        actionLabel = stringResource(R.string.action_see_new_releases),
+                        onAction = onNavigateToNewReleases
                     )
                 }
             }
@@ -548,6 +554,15 @@ fun QueueScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+
+                item(key = "hint_queue_swipe") {
+                    OneTimeHint(
+                        hintId = HintIds.QUEUE_SWIPE,
+                        text = stringResource(R.string.hint_queue_swipe),
+                        icon = Icons.Filled.SwipeLeft,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                    )
                 }
 
                 itemsIndexed(

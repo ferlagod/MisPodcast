@@ -124,7 +124,6 @@
     <string name="library">BIBLIOTHEK</string>
     <string name="from_your_subscriptions">AUS DEINEN ABONNEMENTS</string>
     <string name="empty_queue">Deine Warteschlange ist leer</string>
-    <string name="empty_queue_subtitle">Füge Episoden aus deinen Abonnements hinzu oder entdecke neue Podcasts</string>
     <string name="empty_subscriptions">Noch keine Abonnements</string>
     <string name="empty_subscriptions_subtitle">Finde deine Lieblingssendungen in der Suche oder füge eine RSS-Feed-URL ein.</string>
     <string name="add_first_podcast">Ersten Podcast hinzufügen</string>
@@ -622,4 +621,35 @@
     <string name="msg_db_restored">MisPodcast-Datenbank wiederhergestellt! Starte die App neu, um die Änderungen zu laden.</string>
     <string name="msg_antennapod_imported">AntennaPod-Datenbank importiert!\n• %1$d abonnierte Podcasts\n• %2$d Folgen (%3$d gehört)\n• %4$d Std. Statistik und %5$d Verlaufseinträge</string>
     <string name="msg_antennapod_queue">\n• %1$d Folgen zur Warteschlange hinzugefügt</string>
+
+    <!-- Bienvenida y consejos de primer uso -->
+    <string name="hint_got_it">Verstanden</string>
+    <string name="hint_episode_swipe">Wische eine Folge nach rechts, um sie zur Warteschlange hinzuzufügen, oder nach links, um sie als gehört zu markieren.</string>
+    <string name="hint_queue_swipe">Wische nach links, um eine Folge aus der Warteschlange zu entfernen, oder nach rechts, um sie als gehört zu markieren.</string>
+    <string name="hint_mini_player_gestures">Wische den Mini-Player nach oben, um den vollständigen Player zu öffnen, oder seitwärts, um die Folge zu wechseln.</string>
+    <string name="onboarding_title">Willkommen bei Mis Podcast</string>
+    <string name="onboarding_subtitle">Freier Podcast-Player ohne Werbung und Tracking. Wie möchtest du beginnen?</string>
+    <string name="onboarding_import_opml_title">Abos importieren (OPML)</string>
+    <string name="onboarding_import_opml_desc">Übernimm deine Podcasts aus AntennaPod, Podcast Addict oder einer anderen App.</string>
+    <string name="onboarding_restore_title">Sicherung wiederherstellen</string>
+    <string name="onboarding_restore_desc">Mis-Podcast-Sicherung (.zip) oder AntennaPod-Datenbank, mit Verlauf und Warteschlange.</string>
+    <string name="onboarding_explore_title">Podcasts entdecken</string>
+    <string name="onboarding_explore_desc">Entdecke beliebte Sendungen und Kategorien.</string>
+    <string name="onboarding_add_url_title">Per RSS-Adresse hinzufügen</string>
+    <string name="onboarding_add_url_desc">Suche einen Podcast oder füge die URL seines Feeds ein.</string>
+    <string name="onboarding_nextcloud_title">Mit Nextcloud synchronisieren</string>
+    <string name="onboarding_nextcloud_desc">Richte deinen Server in den Einstellungen ein, um Abos und Fortschritt zu synchronisieren.</string>
+    <string name="onboarding_notifications_title">Benachrichtigungen bei neuen Folgen</string>
+    <string name="onboarding_notifications_desc">Erhalte eine Benachrichtigung, wenn deine Podcasts etwas Neues veröffentlichen.</string>
+    <string name="onboarding_notifications_enabled">Aktiviert. Du kannst das in den Einstellungen ändern.</string>
+    <string name="onboarding_notifications_enable">Aktivieren</string>
+    <string name="onboarding_skip">Vorerst überspringen</string>
+    <string name="onboarding_importing">Wird importiert…</string>
+    <string name="onboarding_continue">Weiter</string>
+    <string name="onboarding_other_option">Andere Option wählen</string>
+    <string name="empty_queue_subtitle_swipe">Wische eine Folge auf der Startseite oder in Neuheiten nach rechts, um sie hier hinzuzufügen; sie wird direkt nach der aktuellen abgespielt.</string>
+    <string name="action_see_new_releases">Neuheiten ansehen</string>
+    <string name="settings_reset_hints_title">Tipps erneut anzeigen</string>
+    <string name="settings_reset_hints_subtitle">Zeigt die Hinweise zu den Gesten wieder an.</string>
+    <string name="settings_reset_hints_done">Tipps werden wieder angezeigt</string>
 </resources>

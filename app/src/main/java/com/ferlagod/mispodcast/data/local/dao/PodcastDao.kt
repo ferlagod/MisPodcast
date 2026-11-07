@@ -88,6 +88,9 @@ interface PodcastDao {
     @Query("SELECT * FROM podcasts WHERE isSubscribed = 1 ORDER BY subscribedAt DESC")
     suspend fun getSubscribedPodcasts(): List<PodcastEntity>
 
+    @Query("SELECT COUNT(*) FROM podcasts WHERE isSubscribed = 1")
+    suspend fun getSubscribedPodcastCount(): Int
+
     @Query("""
         UPDATE podcasts 
         SET isSubscribed = :isSubscribed, 

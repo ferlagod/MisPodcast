@@ -27,6 +27,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -154,6 +155,8 @@ class UserPreferencesManager(private val context: Context) {
         private val KEY_SUBSCRIPTION_SORT_OPTION = stringPreferencesKey("subscription_sort_option")
         private val KEY_LAST_SYNC = longPreferencesKey("last_sync_timestamp")
         private val KEY_TIME_SAVED = longPreferencesKey("time_saved_ms")
+        private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+        private val KEY_DISMISSED_HINTS = stringSetPreferencesKey("dismissed_hints")
 
         @Volatile
         private var INSTANCE: UserPreferencesManager? = null
@@ -300,6 +303,32 @@ class UserPreferencesManager(private val context: Context) {
     suspend fun addTimeSaved(deltaMs: Long) {
         if (deltaMs <= 0L) return
         context.dataStore.edit { it[KEY_TIME_SAVED] = (it[KEY_TIME_SAVED] ?: 0L) + deltaMs }
+    }
+
+    /**
+     * Indica si el usuario ya ha pasado por la pantalla de bienvenida (o la ha saltado).
+     * Va aparte de [userSettingsFlow] porque solo se consulta al arrancar.
+     */
+    val onboardingCompletedFlow: Flow<Boolean> = context.dataStore.data
+        .map { it[KEY_ONBOARDING_COMPLETED] ?: false }
+        .distinctUntilChanged()
+
+    suspend fun setOnboardingCompleted(completed: Boolean = true) {
+        context.dataStore.edit { it[KEY_ONBOARDING_COMPLETED] = completed }
+    }
+
+    /** Identificadores de los consejos contextuales que el usuario ya ha descartado. */
+    val dismissedHintsFlow: Flow<Set<String>> = context.dataStore.data
+        .map { it[KEY_DISMISSED_HINTS] ?: emptySet() }
+        .distinctUntilChanged()
+
+    suspend fun dismissHint(hintId: String) {
+        context.dataStore.edit { it[KEY_DISMISSED_HINTS] = (it[KEY_DISMISSED_HINTS] ?: emptySet()) + hintId }
+    }
+
+    /** Vuelve a mostrar todos los consejos contextuales. */
+    suspend fun resetHints() {
+        context.dataStore.edit { it.remove(KEY_DISMISSED_HINTS) }
     }
 
     suspend fun setLastSyncTimestamp(timestamp: Long) {

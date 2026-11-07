@@ -124,7 +124,6 @@
     <string name="library">LIBRARY</string>
     <string name="from_your_subscriptions">FROM YOUR SUBSCRIPTIONS</string>
     <string name="empty_queue">Your queue is empty</string>
-    <string name="empty_queue_subtitle">Add episodes from your subscriptions or discover new podcasts</string>
     <string name="empty_subscriptions">No subscriptions yet</string>
     <string name="empty_subscriptions_subtitle">Find your favorite shows in search or paste an RSS feed URL.</string>
     <string name="add_first_podcast">Add first podcast</string>
@@ -622,4 +621,35 @@
     <string name="msg_db_restored">MisPodcast database restored! Restart the app to load the changes.</string>
     <string name="msg_antennapod_imported">AntennaPod database imported!\n• %1$d subscribed podcasts\n• %2$d episodes (%3$d played)\n• %4$d h of statistics and %5$d history entries</string>
     <string name="msg_antennapod_queue">\n• %1$d episodes added to the queue</string>
+
+    <!-- Bienvenida y consejos de primer uso -->
+    <string name="hint_got_it">Got it</string>
+    <string name="hint_episode_swipe">Swipe an episode right to add it to the queue, or left to mark it as played.</string>
+    <string name="hint_queue_swipe">Swipe left to remove an episode from the queue, or right to mark it as played.</string>
+    <string name="hint_mini_player_gestures">Swipe the mini player up to open the full player, or sideways to change episode.</string>
+    <string name="onboarding_title">Welcome to Mis Podcast</string>
+    <string name="onboarding_subtitle">Free podcast player with no ads or tracking. How would you like to start?</string>
+    <string name="onboarding_import_opml_title">Import subscriptions (OPML)</string>
+    <string name="onboarding_import_opml_desc">Bring your podcasts from AntennaPod, Podcast Addict or any other app.</string>
+    <string name="onboarding_restore_title">Restore a backup</string>
+    <string name="onboarding_restore_desc">A Mis Podcast .zip backup or an AntennaPod database, with history and queue.</string>
+    <string name="onboarding_explore_title">Explore podcasts</string>
+    <string name="onboarding_explore_desc">Discover popular shows and categories.</string>
+    <string name="onboarding_add_url_title">Add by RSS address</string>
+    <string name="onboarding_add_url_desc">Search for a podcast or paste its feed URL.</string>
+    <string name="onboarding_nextcloud_title">Sync with Nextcloud</string>
+    <string name="onboarding_nextcloud_desc">Set up your server in Settings to sync subscriptions and progress.</string>
+    <string name="onboarding_notifications_title">New episode alerts</string>
+    <string name="onboarding_notifications_desc">Get notified when your podcasts publish something new.</string>
+    <string name="onboarding_notifications_enabled">Enabled. You can change this in Settings.</string>
+    <string name="onboarding_notifications_enable">Enable</string>
+    <string name="onboarding_skip">Skip for now</string>
+    <string name="onboarding_importing">Importing…</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_other_option">Choose another option</string>
+    <string name="empty_queue_subtitle_swipe">Swipe an episode right in Home or New Releases to add it here, and it will play straight after the current one.</string>
+    <string name="action_see_new_releases">See new releases</string>
+    <string name="settings_reset_hints_title">Show tips again</string>
+    <string name="settings_reset_hints_subtitle">Bring back the hints that explain gestures.</string>
+    <string name="settings_reset_hints_done">Tips will be shown again</string>
 </resources>

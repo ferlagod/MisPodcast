@@ -18,6 +18,9 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.material.icons.filled.SwipeRight
+import com.ferlagod.mispodcast.ui.components.HintIds
+import com.ferlagod.mispodcast.ui.components.OneTimeHint
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.foundation.background
@@ -288,6 +291,14 @@ fun NewReleasesScreen(
                 }
             }
         } else {
+            item(key = "hint_episode_swipe") {
+                OneTimeHint(
+                    hintId = HintIds.EPISODE_SWIPE,
+                    text = stringResource(R.string.hint_episode_swipe),
+                    icon = Icons.Filled.SwipeRight,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                )
+            }
             items(newReleases, key = { it.episode.id }) { item ->
                 val downloadState = downloadStates[item.episode.id] ?: podcastViewModel.getEpisodeDownloadState(item.episode)
                 val inQueue = remember(queue, item.episode.id) {

@@ -32,6 +32,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -155,7 +156,13 @@ fun NavGraph(
                     CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
                         QueueScreen(
                             podcastViewModel = podcastViewModel,
-                            playerViewModel = playerViewModel
+                            playerViewModel = playerViewModel,
+                            onNavigateToNewReleases = {
+                                navController.navigate(Screen.NewReleases.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                                    launchSingleTop = true
+                                }
+                            }
                         )
                     }
                 }
