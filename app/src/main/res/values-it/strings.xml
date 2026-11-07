@@ -657,4 +657,8 @@
     <string name="player_share_from_time">Condividi da %1$s</string>
     <string name="settings_share_signature_title">Firma nella condivisione</string>
     <string name="settings_share_signature_subtitle">Aggiunge una riga con il link a Mis Podcast quando condividi episodi o podcast.</string>
+    <string name="action_undo">Annulla</string>
+    <string name="snackbar_removed_from_queue">Rimosso dalla coda</string>
+    <string name="snackbar_marked_played_removed">Segnato come ascoltato e rimosso dalla coda</string>
+    <string name="cd_new_episodes_count">%1$d nuovi episodi</string>
 </resources>

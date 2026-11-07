@@ -36,6 +36,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -78,6 +89,7 @@ import com.ferlagod.mispodcast.ui.viewmodel.PlayerViewModel
 fun MainScaffold(
     navController: NavHostController = rememberNavController(),
     playerViewModel: PlayerViewModel = viewModel(),
+    podcastViewModel: PodcastViewModel = viewModel(),
     intentPodcastId: String? = null,
     intentFeedUrl: String? = null,
     onIntentHandled: () -> Unit = {},
@@ -107,6 +119,27 @@ fun MainScaffold(
     var showMoreMenu by remember { mutableStateOf(false) }
 
     val currentEpisode by playerViewModel.currentEpisode.collectAsState()
+    val newReleasesCount = podcastViewModel.newReleases.collectAsState().value.size
+
+    // Snackbar global con «Deshacer» para las acciones rápidas de deslizar de cualquier pestaña
+    val snackbarHostState = remember { SnackbarHostState() }
+    val undoableAction by podcastViewModel.undoableAction.collectAsState()
+    val context = LocalContext.current
+    val undoLabel = stringResource(R.string.action_undo)
+    androidx.compose.runtime.LaunchedEffect(undoableAction?.id) {
+        val action = undoableAction ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = action.message.asString(context),
+            actionLabel = undoLabel,
+            withDismissAction = true,
+            duration = SnackbarDuration.Short
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            podcastViewModel.undoAction(action.id)
+        } else {
+            podcastViewModel.dismissUndoableAction(action.id)
+        }
+    }
 
     val bottomTabRoutes = remember {
         setOf(
@@ -166,10 +199,27 @@ fun MainScaffold(
                     },
                     icon = {
                         val iconVector = if (selected) item.selectedIcon else (item.unselectedIcon ?: item.selectedIcon)
-                        Icon(
-                            imageVector = iconVector,
-                            contentDescription = stringResource(item.titleRes)
-                        )
+                        val badgeCount = if (item.route == Screen.NewReleases.route) newReleasesCount else 0
+                        if (badgeCount > 0) {
+                            val badgeDescription = stringResource(R.string.cd_new_episodes_count, badgeCount)
+                            BadgedBox(
+                                badge = {
+                                    Badge(modifier = Modifier.semantics { contentDescription = badgeDescription }) {
+                                        Text(if (badgeCount > 99) "99+" else badgeCount.toString())
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = iconVector,
+                                    contentDescription = stringResource(item.titleRes)
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = iconVector,
+                                contentDescription = stringResource(item.titleRes)
+                            )
+                        }
                     },
                     label = {
                         Text(
@@ -243,7 +293,14 @@ fun MainScaffold(
             Box(modifier = Modifier.weight(1f)) {
                 NavGraph(
                     navController = navController,
-                    playerViewModel = playerViewModel
+                    playerViewModel = playerViewModel,
+                    podcastViewModel = podcastViewModel
+                )
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
                 )
             }
 

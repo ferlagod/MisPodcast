@@ -848,10 +848,10 @@ fun HomeScreen(
 
                     SwipeableEpisodeRow(
                         onSwipeToQueue = {
-                            podcastViewModel.addEpisodeToQueue(item.episode.id)
+                            podcastViewModel.swipeAddToQueue(item.episode.id)
                         },
                         onSwipeToComplete = {
-                            podcastViewModel.toggleEpisodePlayed(item.episode.id, item.episode.isPlayed)
+                            podcastViewModel.swipeTogglePlayed(item.episode.id, item.episode.isPlayed)
                         }
                     ) {
                         EpisodeRowCard(

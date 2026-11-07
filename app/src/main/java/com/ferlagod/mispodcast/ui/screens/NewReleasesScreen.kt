@@ -94,6 +94,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.ferlagod.mispodcast.ui.components.EqualizerIndicator
 import com.ferlagod.mispodcast.ui.components.SwipeableEpisodeRow
+import com.ferlagod.mispodcast.ui.components.EpisodeDetailSheet
+import com.ferlagod.mispodcast.util.ShareHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -108,7 +110,8 @@ import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 fun NewReleasesScreen(
     podcastViewModel: PodcastViewModel,
     playerViewModel: PlayerViewModel,
-    onNavigateToAddPodcast: () -> Unit = {}
+    onNavigateToAddPodcast: () -> Unit = {},
+    onPodcastClick: (podcastId: String, feedUrl: String) -> Unit = { _, _ -> }
 ) {
     val newReleases by podcastViewModel.newReleases.collectAsState()
     val downloadStates by podcastViewModel.downloadStates.collectAsState()
@@ -116,6 +119,13 @@ fun NewReleasesScreen(
     val queue by podcastViewModel.queue.collectAsState()
     val currentPlayingEpisode by playerViewModel.currentEpisode.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
+    val context = LocalContext.current
+
+    // Ficha del episodio abierta al pulsar su título
+    var selectedEpisodeId by remember { mutableStateOf<String?>(null) }
+    val selectedItem = remember(selectedEpisodeId, newReleases) {
+        newReleases.find { it.episode.id == selectedEpisodeId }
+    }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -308,10 +318,10 @@ fun NewReleasesScreen(
 
                 SwipeableEpisodeRow(
                     onSwipeToQueue = {
-                        podcastViewModel.addEpisodeToQueue(item.episode.id)
+                        podcastViewModel.swipeAddToQueue(item.episode.id)
                     },
                     onSwipeToComplete = {
-                        podcastViewModel.toggleEpisodePlayed(item.episode.id, item.episode.isPlayed)
+                        podcastViewModel.swipeTogglePlayed(item.episode.id, item.episode.isPlayed)
                     }
                 ) {
                     NewReleaseCard(
@@ -339,13 +349,51 @@ fun NewReleasesScreen(
                         },
                         onMarkAsPlayed = {
                             podcastViewModel.markEpisodeAsPlayed(item.episode.id)
-                        }
+                        },
+                        onEpisodeClick = { selectedEpisodeId = item.episode.id },
+                        onPodcastClick = { onPodcastClick(item.episode.podcastId, item.podcastFeedUrl) }
                     )
                 }
             }
         }
     }
 }
+
+    selectedItem?.let { item ->
+        val isItemPlaying = isPlaying && currentPlayingEpisode?.id == item.episode.id
+        val itemDownloadState = downloadStates[item.episode.id] ?: podcastViewModel.getEpisodeDownloadState(item.episode)
+        EpisodeDetailSheet(
+            episode = item.episode,
+            podcastTitle = item.podcastTitle,
+            podcastArtwork = item.podcastArtworkUrl,
+            isPlaying = isItemPlaying,
+            downloadState = itemDownloadState,
+            onDismiss = { selectedEpisodeId = null },
+            onSeekToPosition = { pos ->
+                playerViewModel.playEpisodeFrom(item.episode, item.podcastTitle, item.podcastArtworkUrl, pos)
+            },
+            onPlayClick = {
+                if (isItemPlaying) {
+                    playerViewModel.togglePlayPause()
+                } else {
+                    playerViewModel.playEpisode(item.episode, item.podcastTitle, item.podcastArtworkUrl)
+                }
+            },
+            onAddToQueue = { podcastViewModel.swipeAddToQueue(item.episode.id) },
+            onToggleFavorite = { podcastViewModel.toggleFavorite(item.episode.id, item.episode.isFavorite) },
+            onDownloadClick = { podcastViewModel.downloadEpisode(item.episode) },
+            onTogglePlayed = { podcastViewModel.swipeTogglePlayed(item.episode.id, item.episode.isPlayed) },
+            onShareClick = {
+                ShareHelper.shareEpisode(
+                    context = context,
+                    episodeTitle = item.episode.title,
+                    podcastTitle = item.podcastTitle,
+                    episodeLink = item.episode.link,
+                    audioUrl = item.episode.audioUrl
+                )
+            }
+        )
+    }
 }
 
 @Composable
@@ -360,7 +408,9 @@ private fun NewReleaseCard(
     onRemoveFromQueue: () -> Unit,
     onToggleFavorite: () -> Unit,
     onDownload: () -> Unit,
-    onMarkAsPlayed: () -> Unit
+    onMarkAsPlayed: () -> Unit,
+    onEpisodeClick: () -> Unit,
+    onPodcastClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -426,7 +476,12 @@ private fun NewReleaseCard(
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f, fill = false)
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable(onClick = onPodcastClick)
                         )
                         if (isPlaying) {
                             EqualizerIndicator(
@@ -512,7 +567,10 @@ private fun NewReleaseCard(
             Text(
                 text = item.episode.title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onEpisodeClick)
             )
 
             if (item.episode.description.isNotBlank()) {

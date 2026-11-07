@@ -584,6 +584,15 @@ class PodcastRepository(
         podcastDao.markAsPlayedAndRemoveFromQueue(episodeId)
     }
 
+    suspend fun captureEpisodeUndoSnapshot(episodeId: String) = withContext(Dispatchers.IO) {
+        podcastDao.captureEpisodeUndoSnapshot(episodeId)
+    }
+
+    suspend fun restoreEpisodeUndoSnapshot(snapshot: com.ferlagod.mispodcast.data.local.model.EpisodeUndoSnapshot) =
+        withContext(Dispatchers.IO) {
+            podcastDao.restoreEpisodeUndoSnapshot(snapshot)
+        }
+
     suspend fun clearQueue() = withContext(Dispatchers.IO) {
         podcastDao.clearQueue()
     }

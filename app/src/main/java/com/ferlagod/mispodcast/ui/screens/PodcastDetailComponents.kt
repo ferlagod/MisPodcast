@@ -340,13 +340,10 @@ internal fun LazyListScope.episodesListContent(
 
             SwipeableEpisodeRow(
                 onSwipeToQueue = {
-                    podcastViewModel.addEpisodeToQueue(episode.id)
-                    Toast.makeText(context, context.getString(R.string.toast_added_to_queue), Toast.LENGTH_SHORT).show()
+                    podcastViewModel.swipeAddToQueue(episode.id)
                 },
                 onSwipeToComplete = {
-                    val willBePlayed = !episode.isPlayed
-                    podcastViewModel.toggleEpisodePlayed(episode.id, episode.isPlayed)
-                    Toast.makeText(context, context.getString(if (willBePlayed) R.string.toast_marked_played else R.string.toast_marked_unplayed), Toast.LENGTH_SHORT).show()
+                    podcastViewModel.swipeTogglePlayed(episode.id, episode.isPlayed)
                 }
             ) {
                 EpisodeDetailItem(

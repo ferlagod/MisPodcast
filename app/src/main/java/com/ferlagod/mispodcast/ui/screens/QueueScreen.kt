@@ -577,12 +577,12 @@ fun QueueScreen(
                                 when (value) {
                                     SwipeToDismissBoxValue.EndToStart -> {
                                         // Deslizar izquierda: Eliminar de la cola
-                                        podcastViewModel.removeEpisodeFromQueue(item.episode.id)
+                                        podcastViewModel.swipeRemoveFromQueue(item.episode.id)
                                         true
                                     }
                                     SwipeToDismissBoxValue.StartToEnd -> {
                                         // Deslizar derecha: Marcar como reproducido y eliminar de la cola
-                                        podcastViewModel.markEpisodeAsPlayedAndRemoveFromQueue(item.episode.id)
+                                        podcastViewModel.swipeMarkPlayedAndRemoveFromQueue(item.episode.id)
                                         true
                                     }
                                     SwipeToDismissBoxValue.Settled -> false

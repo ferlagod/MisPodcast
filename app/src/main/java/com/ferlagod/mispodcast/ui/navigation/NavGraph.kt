@@ -174,6 +174,9 @@ fun NavGraph(
                             playerViewModel = playerViewModel,
                             onNavigateToAddPodcast = {
                                 navController.navigate(Screen.AddPodcast.route)
+                            },
+                            onPodcastClick = { podcastId, feedUrl ->
+                                navController.navigate(Screen.PodcastDetail.createRoute(podcastId, feedUrl))
                             }
                         )
                     }

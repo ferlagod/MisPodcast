@@ -34,6 +34,7 @@ import com.ferlagod.mispodcast.data.local.entities.QueueItemEntity
 import com.ferlagod.mispodcast.data.local.entities.SyncStateEntity
 import com.ferlagod.mispodcast.data.local.entities.SyncStatsContributionEntity
 import com.ferlagod.mispodcast.data.local.model.EpisodeOwner
+import com.ferlagod.mispodcast.data.local.model.EpisodeUndoSnapshot
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
 import com.ferlagod.mispodcast.data.local.model.GlobalStats
 import com.ferlagod.mispodcast.data.local.model.HistoryEpisodeItem
@@ -699,6 +700,61 @@ interface PodcastDao {
 
     @Query("SELECT * FROM listening_history WHERE episodeId = :episodeId ORDER BY listenedAt DESC, id DESC LIMIT 1")
     suspend fun getLatestListeningHistoryEntry(episodeId: String): ListeningHistoryEntity?
+
+    @Query("SELECT COALESCE(MAX(id), 0) FROM listening_history WHERE episodeId = :episodeId")
+    suspend fun getMaxListeningHistoryId(episodeId: String): Long
+
+    @Query("DELETE FROM listening_history WHERE episodeId = :episodeId AND id > :afterId")
+    suspend fun deleteListeningHistoryAfter(episodeId: String, afterId: Long): Int
+
+    @Query("SELECT * FROM queue_items WHERE episodeId = :episodeId LIMIT 1")
+    suspend fun getQueueItemByEpisodeId(episodeId: String): QueueItemEntity?
+
+    // ==========================================
+    // DESHACER ACCIONES RÁPIDAS
+    // ==========================================
+
+    @Transaction
+    suspend fun captureEpisodeUndoSnapshot(episodeId: String): EpisodeUndoSnapshot? {
+        val episode = getEpisodeById(episodeId) ?: return null
+        return EpisodeUndoSnapshot(
+            episodeId = episodeId,
+            isPlayed = episode.isPlayed,
+            currentPositionMs = episode.currentPositionMs,
+            queueItem = getQueueItemByEpisodeId(episodeId),
+            latestHistory = getLatestListeningHistoryEntry(episodeId),
+            maxHistoryId = getMaxListeningHistoryId(episodeId)
+        )
+    }
+
+    /**
+     * Devuelve el episodio al estado capturado: reproducido/posición, su sitio en la cola
+     * (sin tocar el resto de episodios) y el historial que la acción hubiera creado o modificado.
+     */
+    @Transaction
+    suspend fun restoreEpisodeUndoSnapshot(snapshot: EpisodeUndoSnapshot) {
+        val id = snapshot.episodeId
+        updateEpisodePlaybackState(id, snapshot.isPlayed, snapshot.currentPositionMs)
+
+        val original = snapshot.queueItem
+        if (original == null) {
+            if (removeFromQueue(id) > 0) reindexQueue()
+        } else if (!isEpisodeInQueue(id)) {
+            val queue = getQueueItemsSync()
+            val insertIndex = original.positionIndex.coerceIn(0, queue.size)
+            queue.asReversed().forEach { item ->
+                if (item.positionIndex >= insertIndex) {
+                    updateQueuePosition(item.episodeId, item.positionIndex + 1)
+                }
+            }
+            val stillPlaying = original.isCurrentlyPlaying && queue.none { it.isCurrentlyPlaying }
+            insertQueueItem(original.copy(positionIndex = insertIndex, isCurrentlyPlaying = stillPlaying))
+            reindexQueue()
+        }
+
+        deleteListeningHistoryAfter(id, snapshot.maxHistoryId)
+        snapshot.latestHistory?.let { updateListeningHistory(it) }
+    }
 
     @Query("SELECT MIN(listenedAt) FROM listening_history WHERE listenedAt > 0")
     suspend fun getFirstListenedAt(): Long?

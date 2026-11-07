@@ -392,6 +392,67 @@ class PodcastViewModel @JvmOverloads constructor(
         }
     }
 
+    // ==========================================
+    // ACCIONES RÁPIDAS (DESLIZAR) CON DESHACER
+    // ==========================================
+
+    /** Acción rápida recién aplicada que la interfaz ofrece deshacer en un Snackbar. */
+    data class UndoableAction(
+        val id: Long,
+        val message: UiText,
+        internal val snapshot: com.ferlagod.mispodcast.data.local.model.EpisodeUndoSnapshot
+    )
+
+    private val _undoableAction = MutableStateFlow<UndoableAction?>(null)
+    val undoableAction: StateFlow<UndoableAction?> = _undoableAction.asStateFlow()
+
+    private fun performUndoable(episodeId: String, message: UiText, action: suspend () -> Unit) {
+        viewModelScope.launch {
+            val snapshot = repository.captureEpisodeUndoSnapshot(episodeId)
+            action()
+            syncWithNextcloud()
+            if (snapshot != null) {
+                _undoableAction.value = UndoableAction(System.nanoTime(), message, snapshot)
+            }
+        }
+    }
+
+    fun swipeAddToQueue(episodeId: String) =
+        performUndoable(episodeId, UiText.Res(R.string.toast_added_to_queue)) {
+            repository.addEpisodeToQueue(episodeId)
+        }
+
+    fun swipeTogglePlayed(episodeId: String, currentStatus: Boolean) =
+        performUndoable(
+            episodeId,
+            UiText.Res(if (currentStatus) R.string.toast_marked_unplayed else R.string.toast_marked_played)
+        ) {
+            repository.markEpisodePlayed(episodeId, !currentStatus)
+        }
+
+    fun swipeRemoveFromQueue(episodeId: String) =
+        performUndoable(episodeId, UiText.Res(R.string.snackbar_removed_from_queue)) {
+            repository.removeEpisodeFromQueue(episodeId)
+        }
+
+    fun swipeMarkPlayedAndRemoveFromQueue(episodeId: String) =
+        performUndoable(episodeId, UiText.Res(R.string.snackbar_marked_played_removed)) {
+            repository.markEpisodeAsPlayedAndRemoveFromQueue(episodeId)
+        }
+
+    fun undoAction(actionId: Long) {
+        val action = _undoableAction.value?.takeIf { it.id == actionId } ?: return
+        _undoableAction.value = null
+        viewModelScope.launch {
+            repository.restoreEpisodeUndoSnapshot(action.snapshot)
+            syncWithNextcloud()
+        }
+    }
+
+    fun dismissUndoableAction(actionId: Long) {
+        if (_undoableAction.value?.id == actionId) _undoableAction.value = null
+    }
+
     fun clearAllNewReleases() {
         viewModelScope.launch {
             repository.clearAllNewReleases()

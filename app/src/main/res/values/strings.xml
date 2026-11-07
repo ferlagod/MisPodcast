@@ -659,4 +659,8 @@
     <string name="player_share_from_time">Share from %1$s</string>
     <string name="settings_share_signature_title">Signature when sharing</string>
     <string name="settings_share_signature_subtitle">Adds a line with a link to Mis Podcast when you share episodes or podcasts.</string>
+    <string name="action_undo">Undo</string>
+    <string name="snackbar_removed_from_queue">Removed from queue</string>
+    <string name="snackbar_marked_played_removed">Marked as played and removed from queue</string>
+    <string name="cd_new_episodes_count">%1$d new episodes</string>
 </resources>

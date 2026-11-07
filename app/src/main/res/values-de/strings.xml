@@ -657,4 +657,8 @@
     <string name="player_share_from_time">Ab %1$s teilen</string>
     <string name="settings_share_signature_title">Signatur beim Teilen</string>
     <string name="settings_share_signature_subtitle">Fügt beim Teilen von Folgen oder Podcasts eine Zeile mit einem Link zu Mis Podcast hinzu.</string>
+    <string name="action_undo">Rückgängig</string>
+    <string name="snackbar_removed_from_queue">Aus der Warteschlange entfernt</string>
+    <string name="snackbar_marked_played_removed">Als gehört markiert und aus der Warteschlange entfernt</string>
+    <string name="cd_new_episodes_count">%1$d neue Folgen</string>
 </resources>
