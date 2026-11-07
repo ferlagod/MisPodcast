@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import com.ferlagod.mispodcast.util.ShareHelper
 import androidx.compose.material.icons.filled.SwipeLeft
 import com.ferlagod.mispodcast.ui.components.HintIds
 import com.ferlagod.mispodcast.ui.components.OneTimeHint
@@ -106,7 +107,6 @@ import com.ferlagod.mispodcast.data.local.model.QueueSortOption
 import com.ferlagod.mispodcast.ui.theme.AccentRed
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
 import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -885,15 +885,13 @@ fun QueueScreen(
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             },
             onShareClick = {
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, item.episode.title)
-                    putExtra(
-                        Intent.EXTRA_TEXT,
-                        resources.getString(R.string.share_episode_format, item.episode.title, item.podcastTitle, item.episode.audioUrl)
-                    )
-                }
-                context.startActivity(Intent.createChooser(shareIntent, resources.getString(R.string.share_episode)))
+                ShareHelper.shareEpisode(
+                    context = context,
+                    episodeTitle = item.episode.title,
+                    podcastTitle = item.podcastTitle,
+                    episodeLink = item.episode.link,
+                    audioUrl = item.episode.audioUrl
+                )
             }
         )
     }

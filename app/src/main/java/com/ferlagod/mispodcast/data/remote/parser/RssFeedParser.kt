@@ -154,6 +154,7 @@ class RssFeedParser(
         var itemPubDate = 0L
         var itemDurationMs = 0L
         var itemImageUrl = ""
+        var itemLink = ""
         var itemChaptersUrl: String? = null
         var itemTranscriptUrl: String? = null
         var itemFundingUrl: String? = null
@@ -184,6 +185,7 @@ class RssFeedParser(
                             itemPubDate = 0L
                             itemDurationMs = 0L
                             itemImageUrl = ""
+                            itemLink = ""
                             itemChaptersUrl = null
                             itemTranscriptUrl = null
                             itemFundingUrl = null
@@ -217,6 +219,18 @@ class RssFeedParser(
                                     itemAudioLength = length.toLongOrNull() ?: 0L
                                 }
                                 "guid", "id" -> itemGuid = parser.nextTextSafe()
+                                "link" -> {
+                                    // RSS: <link>url</link> · Atom: <link rel="alternate" href="url"/>
+                                    val href = parser.getAttributeValueSafe("href")
+                                    val rel = parser.getAttributeValueSafe("rel")
+                                    if (href.isNotBlank()) {
+                                        if (itemLink.isBlank() && (rel.isBlank() || rel.equals("alternate", ignoreCase = true))) {
+                                            itemLink = href.trim()
+                                        }
+                                    } else if (itemLink.isBlank()) {
+                                        itemLink = parser.nextTextSafe().trim()
+                                    }
+                                }
                                 "pubdate", "published", "updated" -> {
                                     itemPubDate = parseDateToMillis(parser.nextTextSafe())
                                 }
@@ -399,7 +413,8 @@ class RssFeedParser(
                                         fundingUrl = itemFundingUrl,
                                         valueForValueInfo = itemValueForValue,
                                         persons = itemPersons.toList(),
-                                        soundbites = itemSoundbites.toList()
+                                        soundbites = itemSoundbites.toList(),
+                                        link = itemLink.takeIf { it.startsWith("http://", true) || it.startsWith("https://", true) }
                                     )
                                 )
                             }

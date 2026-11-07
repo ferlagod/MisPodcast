@@ -64,7 +64,7 @@ abstract class PodcastDatabase : RoomDatabase() {
         private var INSTANCE: PodcastDatabase? = null
 
         /** Versión actual del esquema (usada también en la anotación [Database]). */
-        const val DB_VERSION = 13
+        const val DB_VERSION = 14
 
         /**
          * Migración directa desde cualquier versión anterior a [DB_VERSION].
@@ -169,6 +169,7 @@ abstract class PodcastDatabase : RoomDatabase() {
             addColumnIfNotExists(db, "episodes", "positionUpdatedAt", "INTEGER NOT NULL DEFAULT 0")
             addColumnIfNotExists(db, "episodes", "isDismissedFromNewReleases", "INTEGER NOT NULL DEFAULT 0")
             addColumnIfNotExists(db, "episodes", "soundbites", "TEXT DEFAULT NULL")
+            addColumnIfNotExists(db, "episodes", "link", "TEXT DEFAULT NULL")
 
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_podcastId` ON `episodes` (`podcastId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_episodes_pubDate` ON `episodes` (`pubDate`)")

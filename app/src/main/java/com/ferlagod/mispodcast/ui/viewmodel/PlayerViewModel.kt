@@ -18,12 +18,12 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.util.ShareHelper
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.content.ContextCompat
@@ -651,44 +651,60 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    fun generateShareText(context: Context, bookmark: BookmarkEntity): String {
-        val timeFormatted = formatBookmarkTime(bookmark.positionMs)
-        val ep = currentEpisode.value
-        val epTitle = ep?.title ?: bookmark.episodeTitle
-        val pTitle = podcastTitle.value.ifBlank { bookmark.podcastTitle }
-        val audioUrl = ep?.audioUrl.orEmpty()
-        val seconds = bookmark.positionMs / 1000L
+    /**
+     * Comparte un marcador: episodio, minuto exacto y la nota del usuario (si la escribió él).
+     * Se busca el episodio del marcador, no el que suena, por si no coinciden.
+     */
+    fun shareBookmark(context: Context, bookmark: BookmarkEntity) {
+        viewModelScope.launch {
+            val episode = repository.getEpisodeById(bookmark.episodeId)
+                ?: currentEpisode.value?.takeIf { it.id == bookmark.episodeId }
+            val podcast = (episode?.podcastId ?: bookmark.podcastId).takeIf { it.isNotBlank() }
+                ?.let { repository.getPodcastByIdSync(it) }
 
-        val shareLink = if (audioUrl.isNotBlank()) {
-            if (audioUrl.contains("?")) "$audioUrl&t=$seconds" else "$audioUrl?t=$seconds"
-        } else {
-            ""
-        }
+            // Las notas automáticas ("Momento en 12:34") no aportan nada al texto compartido
+            val timeFormatted = formatBookmarkTime(bookmark.positionMs)
+            val autoNote = context.getString(R.string.bookmark_default_note, timeFormatted)
+            val note = bookmark.note.takeIf { it.isNotBlank() && it != autoNote && it != timeFormatted }
 
-        // Las notas automáticas ("Momento en 12:34") no aportan nada al texto compartido
-        val autoNote = context.getString(R.string.bookmark_default_note, timeFormatted)
-        val notePart = if (bookmark.note.isNotBlank() && bookmark.note != autoNote && bookmark.note != timeFormatted) " \"${bookmark.note}\"" else ""
-
-        return buildString {
-            append(context.getString(R.string.bookmark_share_listen))
-            if (notePart.isNotBlank()) append(notePart)
-            append(context.getString(R.string.bookmark_share_where, epTitle, pTitle, timeFormatted))
-            if (shareLink.isNotBlank()) {
-                append("\n$shareLink")
-            }
+            val text = ShareHelper.buildEpisodeShareText(
+                context = context,
+                episodeTitle = episode?.title ?: bookmark.episodeTitle,
+                podcastTitle = podcast?.title ?: bookmark.podcastTitle.ifBlank { podcastTitle.value },
+                episodeLink = episode?.link,
+                audioUrl = episode?.audioUrl,
+                podcastLink = podcast?.link,
+                positionMs = bookmark.positionMs,
+                note = note
+            )
+            ShareHelper.launchShare(
+                context,
+                text,
+                subject = context.getString(R.string.bookmark_share_subject, bookmark.episodeTitle),
+                chooserTitle = context.getString(R.string.bookmark_share_chooser)
+            )
         }
     }
 
-    fun shareBookmark(context: Context, bookmark: BookmarkEntity) {
-        val text = generateShareText(context, bookmark)
-        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.bookmark_share_subject, bookmark.episodeTitle))
-            putExtra(Intent.EXTRA_TEXT, text)
+    /**
+     * Comparte el episodio que está sonando; con [fromCurrentPosition] el enlace y el texto
+     * apuntan al minuto actual.
+     */
+    fun shareCurrentEpisode(context: Context, fromCurrentPosition: Boolean) {
+        val episode = currentEpisode.value ?: return
+        val positionMs = if (fromCurrentPosition) currentPositionMs.value else null
+        viewModelScope.launch {
+            val podcast = repository.getPodcastByIdSync(episode.podcastId)
+            ShareHelper.shareEpisode(
+                context = context,
+                episodeTitle = episode.title,
+                podcastTitle = podcast?.title ?: podcastTitle.value,
+                episodeLink = episode.link,
+                audioUrl = episode.audioUrl,
+                podcastLink = podcast?.link,
+                positionMs = positionMs
+            )
         }
-        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.bookmark_share_chooser))
-        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(shareIntent)
     }
 
     fun formatBookmarkTime(millis: Long): String {

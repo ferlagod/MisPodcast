@@ -38,7 +38,9 @@ data class ParsedEpisode(
     val fundingUrl: String? = null,
     val valueForValueInfo: String? = null,
     val persons: List<PodcastPerson> = emptyList(),
-    val soundbites: List<PodcastSoundbite> = emptyList()
+    val soundbites: List<PodcastSoundbite> = emptyList(),
+    /** Página web del episodio (`<link>` en RSS, `<link href>` en Atom). */
+    val link: String? = null
 )
 
 data class ParsedPodcastFeed(

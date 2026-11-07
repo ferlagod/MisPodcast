@@ -80,7 +80,8 @@ fun ParsedEpisode.toEpisodeEntity(podcastId: String): EpisodeEntity {
         fundingUrl = fundingUrl,
         valueForValueInfo = valueForValueInfo,
         persons = personsJson,
-        soundbites = com.ferlagod.mispodcast.data.remote.parser.PodcastSoundbite.encode(soundbites)
+        soundbites = com.ferlagod.mispodcast.data.remote.parser.PodcastSoundbite.encode(soundbites),
+        link = link
     )
 }
 

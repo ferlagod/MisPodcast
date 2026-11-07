@@ -206,6 +206,10 @@ class SettingsViewModel @JvmOverloads constructor(
         viewModelScope.launch { preferencesManager.setStripAudioTrackers(enabled) }
     }
 
+    fun setShareSignature(enabled: Boolean) {
+        viewModelScope.launch { preferencesManager.setShareSignature(enabled) }
+    }
+
     fun setNewEpisodeNotifications(enabled: Boolean) {
         viewModelScope.launch { preferencesManager.setNewEpisodeNotifications(enabled) }
     }

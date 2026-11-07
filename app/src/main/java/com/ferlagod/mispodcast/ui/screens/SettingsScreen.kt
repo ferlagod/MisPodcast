@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -957,6 +958,19 @@ fun SettingsScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        SettingsSwitchRow(
+                            icon = Icons.Filled.Share,
+                            title = stringResource(R.string.settings_share_signature_title),
+                            subtitle = stringResource(R.string.settings_share_signature_subtitle),
+                            checked = settings.shareSignature,
+                            onCheckedChange = { settingsViewModel.setShareSignature(it) }
+                        )
 
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),

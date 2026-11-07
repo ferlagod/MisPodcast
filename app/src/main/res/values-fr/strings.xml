@@ -159,7 +159,6 @@
     <string name="toast_downloading_episode">Téléchargement de l\'épisode...</string>
     <string name="toast_marked_as_played">Marqué comme lu</string>
     <string name="toast_marked_as_unplayed">Marqué comme non lu</string>
-    <string name="share_episode_format">Écoutez \'%1$s\' de %2$s : %3$s</string>
     <string name="widget_description">Commandes de lecture pour Mis Podcast sur l\'écran d\'accueil</string>
     <string name="tile_label">Mis Podcast</string>
     <string name="tile_play">Lecture</string>
@@ -445,7 +444,6 @@
     <string name="folder_scan_error">Erreur d\'analyse du dossier : %1$s</string>
     <string name="feed_download_failed">Impossible de télécharger le flux du podcast</string>
     <string name="feed_update_error">Erreur de mise à jour du flux : %1$s</string>
-    <string name="share_podcast_text">Écoutez %1$s : %2$s</string>
     <string name="this_podcast">ce podcast</string>
     <string name="loading_podcast">Chargement du podcast…</string>
     <string name="may_take_seconds">Cela peut prendre quelques secondes</string>
@@ -602,8 +600,6 @@
     <string name="gain_soft_short">Doux (+4 dB)</string>
     <string name="gain_medium_short">Moyen (+8 dB)</string>
     <string name="notif_programs_with_news">%1$d émissions avec des nouveautés</string>
-    <string name="bookmark_share_listen">🎧 Écoutez</string>
-    <string name="bookmark_share_where"> dans « %1$s » (%2$s) à partir de %3$s :</string>
     <string name="bookmark_share_subject">Moment dans %1$s</string>
     <string name="bookmark_share_chooser">Partager le moment du podcast</string>
     <string name="notif_channel_playback">Lecture de podcasts</string>
@@ -652,4 +648,13 @@
     <string name="settings_reset_hints_title">Réafficher les astuces</string>
     <string name="settings_reset_hints_subtitle">Fait réapparaître les conseils qui expliquent les gestes.</string>
     <string name="settings_reset_hints_done">Les astuces seront de nouveau affichées</string>
+
+    <!-- Compartir -->
+    <string name="share_signature">Partagé depuis Mis Podcast, un lecteur de podcasts libre et sans publicité : %1$s</string>
+    <string name="share_from_time">À écouter à partir de %1$s</string>
+    <string name="share_podcast_rss">Flux RSS : %1$s</string>
+    <string name="player_share_episode">Partager l\'épisode</string>
+    <string name="player_share_from_time">Partager à partir de %1$s</string>
+    <string name="settings_share_signature_title">Signature lors du partage</string>
+    <string name="settings_share_signature_subtitle">Ajoute une ligne avec un lien vers Mis Podcast quand vous partagez des épisodes ou des podcasts.</string>
 </resources>

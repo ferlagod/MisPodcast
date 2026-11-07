@@ -208,13 +208,15 @@ interface PodcastDao {
             duration = CASE WHEN :duration > 0 THEN :duration ELSE duration END,
             chaptersUrl = COALESCE(:chaptersUrl, chaptersUrl),
             transcriptUrl = COALESCE(:transcriptUrl, transcriptUrl),
-            soundbites = COALESCE(:soundbites, soundbites)
+            soundbites = COALESCE(:soundbites, soundbites),
+            link = COALESCE(:link, link)
         WHERE id = :id AND podcastId = :podcastId AND (
             title != :title OR description != :description OR audioUrl != :audioUrl OR imageUrl != :imageUrl
             OR (:duration > 0 AND duration != :duration)
             OR (:chaptersUrl IS NOT NULL AND IFNULL(chaptersUrl, '') != :chaptersUrl)
             OR (:transcriptUrl IS NOT NULL AND IFNULL(transcriptUrl, '') != :transcriptUrl)
             OR (:soundbites IS NOT NULL AND IFNULL(soundbites, '') != :soundbites)
+            OR (:link IS NOT NULL AND IFNULL(link, '') != :link)
         )
     """)
     suspend fun updateEpisodeFeedMetadata(
@@ -227,7 +229,8 @@ interface PodcastDao {
         duration: Long,
         chaptersUrl: String?,
         transcriptUrl: String?,
-        soundbites: String?
+        soundbites: String?,
+        link: String?
     ): Int
 
     /**
@@ -275,7 +278,8 @@ interface PodcastDao {
                 duration = ep.duration,
                 chaptersUrl = ep.chaptersUrl,
                 transcriptUrl = ep.transcriptUrl,
-                soundbites = ep.soundbites
+                soundbites = ep.soundbites,
+                link = ep.link
             )
         }
         return inserted

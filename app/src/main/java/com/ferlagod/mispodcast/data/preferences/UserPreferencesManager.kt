@@ -109,6 +109,7 @@ data class UserSettings(
     val newEpisodeNotifications: Boolean = true,
     val episodeCheckFrequency: EpisodeCheckFrequency = EpisodeCheckFrequency.EVERY_24_HOURS,
     val stripAudioTrackers: Boolean = true,
+    val shareSignature: Boolean = true,
     val nextcloudServerUrl: String = "",
     val nextcloudUsername: String = "",
     val nextcloudAppPassword: String = "",
@@ -145,6 +146,7 @@ class UserPreferencesManager(private val context: Context) {
         private val KEY_NOTIFICATIONS = booleanPreferencesKey("new_episode_notifications")
         private val KEY_CHECK_FREQUENCY = stringPreferencesKey("episode_check_frequency")
         private val KEY_STRIP_AUDIO_TRACKERS = booleanPreferencesKey("strip_audio_trackers")
+        private val KEY_SHARE_SIGNATURE = booleanPreferencesKey("share_signature")
         private val KEY_NEXTCLOUD_SERVER_URL = stringPreferencesKey("nextcloud_server_url")
         private val KEY_NEXTCLOUD_USERNAME = stringPreferencesKey("nextcloud_username")
         private val KEY_NEXTCLOUD_APP_PASSWORD = stringPreferencesKey("nextcloud_app_password")
@@ -203,6 +205,7 @@ class UserPreferencesManager(private val context: Context) {
             newEpisodeNotifications = preferences[KEY_NOTIFICATIONS] ?: true,
             episodeCheckFrequency = checkFrequency,
             stripAudioTrackers = preferences[KEY_STRIP_AUDIO_TRACKERS] ?: true,
+            shareSignature = preferences[KEY_SHARE_SIGNATURE] ?: true,
             nextcloudServerUrl = preferences[KEY_NEXTCLOUD_SERVER_URL] ?: "",
             nextcloudUsername = preferences[KEY_NEXTCLOUD_USERNAME] ?: "",
             nextcloudAppPassword = decryptedPassword,
@@ -274,6 +277,10 @@ class UserPreferencesManager(private val context: Context) {
 
     suspend fun setStripAudioTrackers(enabled: Boolean) {
         context.dataStore.edit { it[KEY_STRIP_AUDIO_TRACKERS] = enabled }
+    }
+
+    suspend fun setShareSignature(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_SHARE_SIGNATURE] = enabled }
     }
 
     suspend fun setVoiceBoostEnabled(enabled: Boolean) {

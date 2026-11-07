@@ -159,7 +159,6 @@
     <string name="toast_downloading_episode">Descargando episodio...</string>
     <string name="toast_marked_as_played">Marcado como escuchado</string>
     <string name="toast_marked_as_unplayed">Marcado como no escuchado</string>
-    <string name="share_episode_format">Escucha \'%1$s\' de %2$s: %3$s</string>
     <string name="widget_description">Controles de reproducción de Mis Podcast en la pantalla de inicio</string>
     <string name="tile_label">Mis Podcast</string>
     <string name="tile_play">Reproducir</string>
@@ -447,7 +446,6 @@
     <string name="folder_scan_error">Error al escanear carpeta: %1$s</string>
     <string name="feed_download_failed">No se pudo descargar el feed del podcast</string>
     <string name="feed_update_error">Error al actualizar feed: %1$s</string>
-    <string name="share_podcast_text">Escucha %1$s: %2$s</string>
     <string name="this_podcast">este podcast</string>
     <string name="loading_podcast">Cargando podcast…</string>
     <string name="may_take_seconds">Esto puede tardar unos segundos</string>
@@ -604,8 +602,6 @@
     <string name="gain_soft_short">Suave (+4 dB)</string>
     <string name="gain_medium_short">Medio (+8 dB)</string>
     <string name="notif_programs_with_news">%1$d programas con novedades</string>
-    <string name="bookmark_share_listen">🎧 Escucha</string>
-    <string name="bookmark_share_where"> en \"%1$s\" (%2$s) desde el minuto %3$s:</string>
     <string name="bookmark_share_subject">Momento en %1$s</string>
     <string name="bookmark_share_chooser">Compartir momento del podcast</string>
     <string name="notif_channel_playback">Reproducción de Podcast</string>
@@ -654,4 +650,13 @@
     <string name="settings_reset_hints_title">Volver a mostrar los consejos</string>
     <string name="settings_reset_hints_subtitle">Recupera los avisos que explican los gestos.</string>
     <string name="settings_reset_hints_done">Los consejos se volverán a mostrar</string>
+
+    <!-- Compartir -->
+    <string name="share_signature">Compartido desde Mis Podcast, un reproductor de podcasts libre y sin anuncios: %1$s</string>
+    <string name="share_from_time">Escúchalo desde el %1$s</string>
+    <string name="share_podcast_rss">Feed RSS: %1$s</string>
+    <string name="player_share_episode">Compartir episodio</string>
+    <string name="player_share_from_time">Compartir desde el %1$s</string>
+    <string name="settings_share_signature_title">Firma al compartir</string>
+    <string name="settings_share_signature_subtitle">Añade una línea con el enlace a Mis Podcast al compartir episodios o podcasts.</string>
 </resources>

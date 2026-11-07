@@ -18,6 +18,11 @@
 
 package com.ferlagod.mispodcast.ui.components
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Share
+import com.ferlagod.mispodcast.util.ShareHelper
 import android.os.Build
 import android.text.Html
 import androidx.compose.animation.core.animateDpAsState
@@ -147,6 +152,7 @@ fun FullPlayerSheet(
     onNavigateToQueue: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
     val currentEpisode by playerViewModel.currentEpisode.collectAsState()
     val podcastTitle by playerViewModel.podcastTitle.collectAsState()
     val podcastArtworkUrl by playerViewModel.podcastArtworkUrl.collectAsState()
@@ -342,6 +348,29 @@ fun FullPlayerSheet(
                                         showEpisodeNotes = !showEpisodeNotes
                                     }
                                 )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.player_share_episode)) },
+                                    leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        playerViewModel.shareCurrentEpisode(context, fromCurrentPosition = false)
+                                    },
+                                    modifier = Modifier.testTag("player_share_episode")
+                                )
+                                if (currentPosMs >= 1000L) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(stringResource(R.string.player_share_from_time, ShareHelper.formatTimestamp(currentPosMs)))
+                                        },
+                                        leadingIcon = { Icon(Icons.Filled.Schedule, contentDescription = null) },
+                                        onClick = {
+                                            showMoreMenu = false
+                                            playerViewModel.shareCurrentEpisode(context, fromCurrentPosition = true)
+                                        },
+                                        modifier = Modifier.testTag("player_share_from_time")
+                                    )
+                                }
                             }
                         }
                     }

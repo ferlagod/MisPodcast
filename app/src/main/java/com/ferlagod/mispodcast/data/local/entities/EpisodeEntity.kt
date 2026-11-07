@@ -72,5 +72,6 @@ data class EpisodeEntity(
     val valueForValueInfo: String? = null,
     val persons: String? = null, // Serializado como JSON String
     val isDismissedFromNewReleases: Boolean = false,
-    val soundbites: String? = null // Podcasting 2.0 <podcast:soundbite>, serializado como JSON
+    val soundbites: String? = null, // Podcasting 2.0 <podcast:soundbite>, serializado como JSON
+    val link: String? = null // Página web del episodio (<link> del item RSS); se usa al compartir
 )

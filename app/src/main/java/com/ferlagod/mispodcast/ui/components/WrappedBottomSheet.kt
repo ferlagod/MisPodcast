@@ -443,7 +443,7 @@ fun WrappedBottomSheet(
                     item {
                         Button(
                             onClick = {
-                                val textToShare = wrappedData.generateShareText(context)
+                                val textToShare = com.ferlagod.mispodcast.util.ShareHelper.withSignature(context, wrappedData.generateShareText(context))
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.wrapped_share_chooser_title))

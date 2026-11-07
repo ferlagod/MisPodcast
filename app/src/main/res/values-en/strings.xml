@@ -159,7 +159,6 @@
     <string name="toast_downloading_episode">Downloading episode...</string>
     <string name="toast_marked_as_played">Marked as played</string>
     <string name="toast_marked_as_unplayed">Marked as unplayed</string>
-    <string name="share_episode_format">Listen to \'%1$s\' by %2$s: %3$s</string>
     <string name="widget_description">Playback controls for Mis Podcast on the home screen</string>
     <string name="tile_label">Mis Podcast</string>
     <string name="tile_play">Play</string>
@@ -445,7 +444,6 @@
     <string name="folder_scan_error">Error scanning folder: %1$s</string>
     <string name="feed_download_failed">Could not download the podcast feed</string>
     <string name="feed_update_error">Error updating feed: %1$s</string>
-    <string name="share_podcast_text">Listen to %1$s: %2$s</string>
     <string name="this_podcast">this podcast</string>
     <string name="loading_podcast">Loading podcast…</string>
     <string name="may_take_seconds">This may take a few seconds</string>
@@ -602,8 +600,6 @@
     <string name="gain_soft_short">Soft (+4 dB)</string>
     <string name="gain_medium_short">Medium (+8 dB)</string>
     <string name="notif_programs_with_news">%1$d shows with new episodes</string>
-    <string name="bookmark_share_listen">🎧 Listen</string>
-    <string name="bookmark_share_where"> in \"%1$s\" (%2$s) from minute %3$s:</string>
     <string name="bookmark_share_subject">Moment in %1$s</string>
     <string name="bookmark_share_chooser">Share podcast moment</string>
     <string name="notif_channel_playback">Podcast playback</string>
@@ -652,4 +648,13 @@
     <string name="settings_reset_hints_title">Show tips again</string>
     <string name="settings_reset_hints_subtitle">Bring back the hints that explain gestures.</string>
     <string name="settings_reset_hints_done">Tips will be shown again</string>
+
+    <!-- Compartir -->
+    <string name="share_signature">Shared from Mis Podcast, a free podcast player with no ads: %1$s</string>
+    <string name="share_from_time">Listen from %1$s</string>
+    <string name="share_podcast_rss">RSS feed: %1$s</string>
+    <string name="player_share_episode">Share episode</string>
+    <string name="player_share_from_time">Share from %1$s</string>
+    <string name="settings_share_signature_title">Signature when sharing</string>
+    <string name="settings_share_signature_subtitle">Adds a line with a link to Mis Podcast when you share episodes or podcasts.</string>
 </resources>

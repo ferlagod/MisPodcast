@@ -18,9 +18,9 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import com.ferlagod.mispodcast.util.ShareHelper
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.text.Html
 import android.widget.Toast
@@ -371,15 +371,15 @@ fun PodcastDetailScreen(
                             )
                         }
                         IconButton(onClick = {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, roomPodcast?.title ?: "Podcast")
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    resources.getString(R.string.share_podcast_text, roomPodcast?.title ?: resources.getString(R.string.this_podcast), roomPodcast?.link ?: targetUrl)
-                                )
-                            }
-                            context.startActivity(Intent.createChooser(shareIntent, resources.getString(R.string.action_share)))
+                            val title = roomPodcast?.title ?: resources.getString(R.string.this_podcast)
+                            val text = ShareHelper.buildPodcastShareText(
+                                context = context,
+                                podcastTitle = title,
+                                author = roomPodcast?.author,
+                                websiteUrl = roomPodcast?.link,
+                                feedUrl = roomPodcast?.feedUrl ?: targetUrl
+                            )
+                            ShareHelper.launchShare(context, text, subject = title, chooserTitle = resources.getString(R.string.action_share))
                         }, modifier = iconBg) {
                             Icon(
                                 imageVector = Icons.Filled.Share,
@@ -650,15 +650,14 @@ fun PodcastDetailScreen(
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     },
                     onShareClick = {
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, ep.title)
-                            putExtra(
-                                Intent.EXTRA_TEXT,
-                                resources.getString(R.string.share_episode_format, ep.title, effectiveTitle, ep.audioUrl)
-                            )
-                        }
-                        context.startActivity(Intent.createChooser(shareIntent, resources.getString(R.string.share_episode)))
+                        ShareHelper.shareEpisode(
+                            context = context,
+                            episodeTitle = ep.title,
+                            podcastTitle = effectiveTitle,
+                            episodeLink = ep.link,
+                            audioUrl = ep.audioUrl,
+                            podcastLink = roomPodcast?.link
+                        )
                     }
                 )
             }

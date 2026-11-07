@@ -55,6 +55,12 @@ class MisPodcastApplication : Application() {
                 .distinctUntilChanged()
                 .collect { com.ferlagod.mispodcast.util.AudioTrackingSanitizer.isEnabled = it }
         }
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default).launch {
+            container.preferencesManager.userSettingsFlow
+                .map { it.shareSignature }
+                .distinctUntilChanged()
+                .collect { com.ferlagod.mispodcast.util.ShareHelper.includeSignature = it }
+        }
     }
 
     companion object {
