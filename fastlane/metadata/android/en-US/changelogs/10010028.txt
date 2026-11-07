@@ -1,3 +1,6 @@
 • Welcome screen and gesture tips for new users.
 • Improved empty queue screen.
 • Share useful links per episode, specific moments and an optional signature.
+• New Releases: tap an episode title to open its details, or the podcast name to open the podcast.
+• Badge with the number of new episodes on the New Releases tab.
+• Undo after swiping (queue, played, remove).

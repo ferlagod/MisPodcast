@@ -1,3 +1,6 @@
 • Pantalla de bienvenida y consejos de gestos para nuevos usuarios.
 • Mejorada la pantalla de cola vacía.
 • Compartir enlaces útiles por episodio, momentos concretos y firma opcional.
+• Novedades: pulsa el título de un episodio para abrir su ficha, o el nombre del podcast para abrir el podcast.
+• Contador de episodios nuevos sobre la pestaña Novedades.
+• Opción de deshacer tras deslizar (cola, escuchado, quitar).
