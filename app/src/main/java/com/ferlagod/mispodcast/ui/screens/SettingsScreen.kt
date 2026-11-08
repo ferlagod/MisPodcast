@@ -569,7 +569,7 @@ fun SettingsScreen(
                                 settingsViewModel.setNextcloudConfig(it, usernameInput, appPasswordInput)
                             },
                             label = { Text(stringResource(R.string.settings_server_url)) },
-                            placeholder = { Text("https://mi-nextcloud.com") },
+                            placeholder = { Text(stringResource(R.string.placeholder_nextcloud_url)) },
                             leadingIcon = {
                                 Icon(Icons.Filled.Dns, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             },
@@ -588,7 +588,7 @@ fun SettingsScreen(
                                 settingsViewModel.setNextcloudConfig(serverUrlInput, it, appPasswordInput)
                             },
                             label = { Text(stringResource(R.string.settings_username)) },
-                            placeholder = { Text("mi_usuario") },
+                            placeholder = { Text(stringResource(R.string.placeholder_username)) },
                             leadingIcon = {
                                 Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             },

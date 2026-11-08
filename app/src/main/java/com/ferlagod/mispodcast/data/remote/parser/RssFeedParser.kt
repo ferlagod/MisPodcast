@@ -27,9 +27,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.InputStream
 import java.io.StringReader
-import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import com.ferlagod.mispodcast.data.model.ValueForValueConfig
 import com.ferlagod.mispodcast.data.model.ValueRecipient
@@ -231,8 +229,15 @@ class RssFeedParser(
                                         itemLink = parser.nextTextSafe().trim()
                                     }
                                 }
-                                "pubdate", "published", "updated" -> {
-                                    itemPubDate = parseDateToMillis(parser.nextTextSafe())
+                                // RSS <pubDate> y Atom <published> mandan; <updated> solo si no hay otra fecha,
+                                // para que editar un episodio antiguo no lo haga pasar por nuevo
+                                "pubdate", "published" -> {
+                                    val parsed = FeedDateParser.parseToMillis(parser.nextTextSafe())
+                                    if (parsed > 0) itemPubDate = parsed
+                                }
+                                "updated" -> {
+                                    val parsed = FeedDateParser.parseToMillis(parser.nextTextSafe())
+                                    if (parsed > 0 && itemPubDate <= 0) itemPubDate = parsed
                                 }
                                 "itunes:duration" -> {
                                     itemDurationMs = parseDurationToMillis(parser.nextTextSafe())
@@ -494,35 +499,6 @@ class RssFeedParser(
             }
         }
         return recipients
-    }
-
-    /**
-     * Parsea formatos de fecha RFC 2822 / ISO 8601 a milisegundos de época.
-     */
-    private fun parseDateToMillis(dateStr: String): Long {
-        if (dateStr.isBlank()) return System.currentTimeMillis()
-
-        val formats = listOf(
-            "EEE, dd MMM yyyy HH:mm:ss z",
-            "EEE, dd MMM yyyy HH:mm:ss Z",
-            "EEE, dd MMM yyyy HH:mm z",
-            "dd MMM yyyy HH:mm:ss Z",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ssXXX",
-            "yyyy-MM-dd HH:mm:ss"
-        )
-
-        for (format in formats) {
-            try {
-                val sdf = SimpleDateFormat(format, Locale.US).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
-                val date = sdf.parse(dateStr.trim())
-                if (date != null) return date.time
-            } catch (_: Exception) {
-            }
-        }
-        return System.currentTimeMillis()
     }
 
     /**

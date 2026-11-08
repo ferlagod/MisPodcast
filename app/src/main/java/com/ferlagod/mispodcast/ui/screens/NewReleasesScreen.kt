@@ -634,7 +634,7 @@ private fun NewReleaseCard(
                     ) {
                         Icon(Icons.Filled.Queue, contentDescription = stringResource(R.string.play_last), modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("+ Cola", maxLines = 1, softWrap = false)
+                        Text(stringResource(R.string.action_enqueue_short), maxLines = 1, softWrap = false)
                     }
                 } else {
                     OutlinedButton(

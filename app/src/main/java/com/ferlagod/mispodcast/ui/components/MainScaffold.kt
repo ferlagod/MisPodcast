@@ -141,6 +141,24 @@ fun MainScaffold(
         }
     }
 
+    // Errores de reproducción (sin red, episodio no disponible…) con opción de reintentar
+    val playbackError by playerViewModel.playbackError.collectAsState()
+    val retryLabel = stringResource(R.string.retry)
+    androidx.compose.runtime.LaunchedEffect(playbackError?.id) {
+        val error = playbackError ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = error.message.asString(context),
+            actionLabel = retryLabel,
+            withDismissAction = true,
+            duration = SnackbarDuration.Long
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            playerViewModel.retryPlayback()
+        } else {
+            playerViewModel.dismissPlaybackError(error.id)
+        }
+    }
+
     val bottomTabRoutes = remember {
         setOf(
             Screen.Home.route,

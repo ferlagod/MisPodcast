@@ -661,4 +661,17 @@
     <string name="snackbar_removed_from_queue">Aus der Warteschlange entfernt</string>
     <string name="snackbar_marked_played_removed">Als gehört markiert und aus der Warteschlange entfernt</string>
     <string name="cd_new_episodes_count">%1$d neue Folgen</string>
+    <string name="playback_error_network">Die Folge konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.</string>
+    <string name="playback_error_unavailable">Diese Folge ist auf dem Server des Podcasts nicht mehr verfügbar.</string>
+    <string name="playback_error_unsupported">Das Audioformat dieser Folge wird auf diesem Gerät nicht unterstützt.</string>
+    <string name="playback_error_generic">Die Folge konnte nicht abgespielt werden.</string>
+    <string name="notif_download_failed_title">Download fehlgeschlagen</string>
+    <string name="download_error_unavailable">Die Folge ist auf dem Server des Podcasts nicht mehr verfügbar.</string>
+    <string name="download_error_no_space">Nicht genügend freier Speicherplatz.</string>
+    <string name="download_error_network">Keine Verbindung zum Server nach mehreren Versuchen.</string>
+    <string name="action_enqueue_short">+ Liste</string>
+    <string name="queue_total_duration_approx">Ca. %1$s</string>
+    <string name="placeholder_nextcloud_url">https://mein-nextcloud.de</string>
+    <string name="placeholder_username">mein_benutzer</string>
+    <string name="placeholder_feed_url">https://beispiel.de/feed.xml</string>
 </resources>

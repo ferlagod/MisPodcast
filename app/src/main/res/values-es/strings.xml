@@ -663,4 +663,17 @@
     <string name="snackbar_removed_from_queue">Quitado de la cola</string>
     <string name="snackbar_marked_played_removed">Marcado como escuchado y quitado de la cola</string>
     <string name="cd_new_episodes_count">%1$d episodios nuevos</string>
+    <string name="playback_error_network">No se pudo cargar el episodio. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="playback_error_unavailable">Este episodio ya no está disponible en el servidor del podcast.</string>
+    <string name="playback_error_unsupported">El formato de audio de este episodio no es compatible con este dispositivo.</string>
+    <string name="playback_error_generic">No se pudo reproducir el episodio.</string>
+    <string name="notif_download_failed_title">No se pudo descargar</string>
+    <string name="download_error_unavailable">El episodio ya no está disponible en el servidor del podcast.</string>
+    <string name="download_error_no_space">No hay suficiente espacio libre en el almacenamiento.</string>
+    <string name="download_error_network">No se pudo conectar con el servidor tras varios intentos.</string>
+    <string name="action_enqueue_short">+ Cola</string>
+    <string name="queue_total_duration_approx">Aprox. %1$s</string>
+    <string name="placeholder_nextcloud_url">https://mi-nextcloud.com</string>
+    <string name="placeholder_username">mi_usuario</string>
+    <string name="placeholder_feed_url">https://ejemplo.com/feed.xml</string>
 </resources>

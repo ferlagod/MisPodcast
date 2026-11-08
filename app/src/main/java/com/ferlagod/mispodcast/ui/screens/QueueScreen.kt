@@ -268,7 +268,7 @@ fun QueueScreen(
                     if (totalDurationMs > 0) {
                         SuggestionChip(
                             onClick = { },
-                            label = { Text("Aprox. ${if (totalHours > 0) "${totalHours}h " else ""}${totalMins}m") }
+                            label = { Text(stringResource(R.string.queue_total_duration_approx, "${if (totalHours > 0) "${totalHours}h " else ""}${totalMins}m")) }
                         )
                     }
                     if (undownloadedCount > 0) {

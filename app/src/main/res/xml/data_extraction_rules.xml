@@ -5,8 +5,9 @@
         <exclude domain="file" path="datastore" />
         <exclude domain="sharedpref" path="." />
     </cloud-backup>
-    <device-transfer>
-        <!-- Permitir transferencia directa offline de dispositivo a dispositivo -->
-        <include domain="file" path="datastore" />
-    </device-transfer>
+    <!-- Transferencia directa entre dispositivos: sin reglas se copia todo (base de datos con suscripciones,
+         cola e historial, y ajustes). Un <include> aquí actuaría como lista blanca y dejaría fuera la base
+         de datos. La contraseña de Nextcloud viaja cifrada con una clave del KeyStore que no se transfiere,
+         así que habrá que volver a introducirla en el dispositivo nuevo. -->
+    <device-transfer />
 </data-extraction-rules>

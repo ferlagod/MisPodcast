@@ -658,7 +658,7 @@ fun AddPodcastScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .testTag("rss_input_field"),
-                                    placeholder = { Text("https://ejemplo.com/feed.xml") },
+                                    placeholder = { Text(stringResource(R.string.placeholder_feed_url)) },
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Filled.RssFeed,

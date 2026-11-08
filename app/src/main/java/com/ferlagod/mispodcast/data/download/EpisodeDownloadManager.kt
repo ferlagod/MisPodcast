@@ -97,11 +97,25 @@ class EpisodeDownloadManager private constructor(
         if (inMemory != null) {
             return inMemory
         }
-        return if (episode.isDownloaded && !episode.localFilePath.isNullOrBlank() && File(episode.localFilePath).exists()) {
+        return if (episode.isDownloaded && !episode.localFilePath.isNullOrBlank() && fileExistsCached(episode.localFilePath)) {
             EpisodeDownloadState(status = DownloadStatus.DOWNLOADED, progress = 1f)
         } else {
             EpisodeDownloadState(status = DownloadStatus.NOT_DOWNLOADED, progress = 0f)
         }
+    }
+
+    // Caché breve de File.exists(): esta consulta se hace desde la interfaz en cada recomposición
+    // de las listas, y evitarla repetidamente ahorra accesos a disco en el hilo principal.
+    private val fileExistsCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Boolean, Long>>()
+
+    private fun fileExistsCached(path: String): Boolean {
+        val now = android.os.SystemClock.elapsedRealtime()
+        fileExistsCache[path]?.let { (exists, checkedAt) ->
+            if (now - checkedAt < FILE_EXISTS_CACHE_MS) return exists
+        }
+        val exists = File(path).exists()
+        fileExistsCache[path] = exists to now
+        return exists
     }
 
     /**
@@ -217,6 +231,8 @@ class EpisodeDownloadManager private constructor(
     }
 
     companion object {
+        private const val FILE_EXISTS_CACHE_MS = 5_000L
+
         @Volatile
         private var INSTANCE: EpisodeDownloadManager? = null
 

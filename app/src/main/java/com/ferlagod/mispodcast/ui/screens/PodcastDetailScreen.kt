@@ -171,9 +171,12 @@ fun PodcastDetailScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // 1. Observar si el podcast ya existe en la base de datos Room
-    val roomPodcast by podcastViewModel.getPodcastFlow(podcastId, feedUrl).collectAsState(initial = null)
+    // Flujos recordados: crearlos en cada recomposición volvería a suscribir las consultas de Room continuamente
+    val podcastFlow = remember(podcastId, feedUrl) { podcastViewModel.getPodcastFlow(podcastId, feedUrl) }
+    val roomPodcast by podcastFlow.collectAsState(initial = null)
     val effectivePodcastId = roomPodcast?.id ?: podcastId.ifBlank { feedUrl }
-    val roomEpisodes by podcastViewModel.getEpisodesForPodcastFlow(effectivePodcastId).collectAsState(initial = emptyList())
+    val episodesFlow = remember(effectivePodcastId) { podcastViewModel.getEpisodesForPodcastFlow(effectivePodcastId) }
+    val roomEpisodes by episodesFlow.collectAsState(initial = emptyList())
     val downloadStates by podcastViewModel.downloadStates.collectAsState()
 
     // 2. Estados para descarga y parseo de feed en tiempo real con RssFeedParser o rescaneo de carpeta local

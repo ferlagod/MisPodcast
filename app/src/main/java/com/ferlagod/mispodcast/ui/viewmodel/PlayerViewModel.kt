@@ -31,10 +31,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.ferlagod.mispodcast.util.UiText
 import com.ferlagod.mispodcast.data.local.PodcastDatabase
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
@@ -112,6 +114,40 @@ class PlayerViewModel @JvmOverloads constructor(
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+
+    /** Error de reproducción pendiente de mostrar (id único para no repetir el aviso). */
+    data class PlaybackErrorEvent(val id: Long, val message: UiText)
+
+    private val _playbackError = MutableStateFlow<PlaybackErrorEvent?>(null)
+    val playbackError: StateFlow<PlaybackErrorEvent?> = _playbackError.asStateFlow()
+
+    fun dismissPlaybackError(id: Long) {
+        if (_playbackError.value?.id == id) _playbackError.value = null
+    }
+
+    /** Reintenta el episodio actual tras un error, conservando la posición. */
+    fun retryPlayback() {
+        _playbackError.value = null
+        val controller = mediaController ?: return
+        controller.prepare()
+        controller.play()
+    }
+
+    private fun playbackErrorMessage(error: PlaybackException): UiText = UiText.Res(
+        when (error.errorCode) {
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> R.string.playback_error_network
+            PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
+            PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
+            PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE -> R.string.playback_error_unavailable
+            PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
+            PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
+            PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
+            PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED,
+            PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES -> R.string.playback_error_unsupported
+            else -> R.string.playback_error_generic
+        }
+    )
 
     private val _currentPositionMs = MutableStateFlow(0L)
     val currentPositionMs: StateFlow<Long> = _currentPositionMs.asStateFlow()
@@ -240,6 +276,13 @@ class PlayerViewModel @JvmOverloads constructor(
 
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
                 _playbackSpeed.value = playbackParameters.speed
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                // Sin esto el reproductor se detenía en silencio ante un 404, falta de red o formato no soportado
+                android.util.Log.w("PlayerViewModel", "Error de reproducción (${error.errorCodeName})", error)
+                _isPlaying.value = false
+                _playbackError.value = PlaybackErrorEvent(System.nanoTime(), playbackErrorMessage(error))
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

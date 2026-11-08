@@ -48,6 +48,7 @@ object NotificationHelper {
     private const val NOTIFICATION_GROUP_KEY = "com.ferlagod.mispodcast.NEW_EPISODES_GROUP"
     private const val SUMMARY_NOTIFICATION_ID = 9999
     private const val BATCH_SUMMARY_NOTIFICATION_ID = 8888
+    private const val DOWNLOAD_FAILED_NOTIFICATION_BASE = 12000
 
     /**
      * Limpia todas las notificaciones pendientes de la aplicación.
@@ -101,6 +102,39 @@ object NotificationHelper {
      * Si varios podcasts tienen novedades o son muchos episodios, emite UNA SOLA notificación resumen (InboxStyle)
      * para evitar saturar la barra de estado y el sonido del usuario.
      */
+    /**
+     * Avisa de que la descarga de un episodio ha fallado definitivamente (sin espacio, episodio
+     * retirado del servidor…); sin esto el botón volvía a «Descargar» sin ninguna explicación.
+     */
+    fun notifyDownloadFailed(context: Context, episodeId: String, episodeTitle: String, reason: String) {
+        createNotificationChannels(context)
+        val notificationManager = NotificationManagerCompat.from(context)
+        if (!notificationManager.areNotificationsEnabled()) return
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val notificationId = (DOWNLOAD_FAILED_NOTIFICATION_BASE + episodeId.hashCode()) and 0x7FFFFFFF
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val builder = NotificationCompat.Builder(context, CHANNEL_DOWNLOADS_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.notif_download_failed_title))
+            .setContentText(episodeTitle)
+            .setStyle(NotificationCompat.BigTextStyle().bigText("$episodeTitle\n$reason"))
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        try {
+            notificationManager.notify(notificationId, builder.build())
+        } catch (_: SecurityException) {
+        }
+    }
+
     suspend fun notifyBatchNewEpisodes(
         context: Context,
         podcastsWithEpisodes: Map<PodcastEntity, List<EpisodeEntity>>

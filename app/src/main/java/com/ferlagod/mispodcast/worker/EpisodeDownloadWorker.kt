@@ -112,6 +112,12 @@ class EpisodeDownloadWorker(
             if (!response.isSuccessful && response.code != 206) {
                 val code = response.code
                 response.close()
+                // Episodio retirado o inaccesible: reintentar no lo arreglaría
+                if (code in PERMANENT_HTTP_ERRORS) {
+                    throw PermanentDownloadException(
+                        applicationContext.getString(R.string.download_error_unavailable)
+                    )
+                }
                 throw IOException("Error HTTP $code al descargar $audioUrl")
             }
 
@@ -201,15 +207,30 @@ class EpisodeDownloadWorker(
             if (isStopped) {
                 return Result.retry()
             }
-            if (runAttemptCount < 3) {
+            val outOfSpace = targetDir.usableSpace < MIN_FREE_SPACE_BYTES
+            if (runAttemptCount < 3 && !outOfSpace) {
                 return Result.retry()
             } else {
                 if (tempFile.exists()) {
                     tempFile.delete()
                 }
                 downloadManager.reportProgress(episodeId, DownloadStatus.NOT_DOWNLOADED, 0f)
+                NotificationHelper.notifyDownloadFailed(
+                    applicationContext,
+                    episodeId,
+                    episodeTitle,
+                    applicationContext.getString(
+                        if (outOfSpace) R.string.download_error_no_space else R.string.download_error_network
+                    )
+                )
                 return Result.failure()
             }
+        } catch (pe: PermanentDownloadException) {
+            if (tempFile.exists()) tempFile.delete()
+            downloadManager.reportProgress(episodeId, DownloadStatus.NOT_DOWNLOADED, 0f)
+            Log.w(TAG, "Descarga descartada para $episodeTitle: ${pe.message}")
+            NotificationHelper.notifyDownloadFailed(applicationContext, episodeId, episodeTitle, pe.message.orEmpty())
+            return Result.failure()
         } catch (e: Exception) {
             // La limpieza también se aplica si el usuario cancela la descarga
             if (tempFile.exists()) {
@@ -252,8 +273,13 @@ class EpisodeDownloadWorker(
         }
     }
 
+    /** Error que no se resuelve reintentando (p. ej. el episodio ya no existe en el servidor). */
+    private class PermanentDownloadException(message: String) : Exception(message)
+
     companion object {
         private const val TAG = "EpisodeDownloadWorker"
+        private val PERMANENT_HTTP_ERRORS = setOf(401, 403, 404, 410, 451)
+        private const val MIN_FREE_SPACE_BYTES = 20L * 1024 * 1024
         private const val KEY_DOWNLOAD_NOTIFICATION_BASE = 8000
 
         const val KEY_EPISODE_ID = "key_episode_id"
