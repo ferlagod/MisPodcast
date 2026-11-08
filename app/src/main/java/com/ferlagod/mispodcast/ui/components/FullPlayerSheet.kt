@@ -110,6 +110,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -214,6 +215,15 @@ fun FullPlayerSheet(
 
     // Desplazamiento horizontal para arrastrar carátula (cambio de episodio en cola)
     var swipeOffsetX by remember { mutableFloatStateOf(0f) }
+    // Gesto de la portada con resorte: actúa al soltar pasado el umbral y vuelve a su sitio animado
+    val swipeDensity = LocalDensity.current
+    val maxArtworkSwipePx = with(swipeDensity) { 140.dp.toPx() }
+    val artworkSwipeThresholdPx = with(swipeDensity) { 110.dp.toPx() }
+    val animatedSwipeOffsetX by animateFloatAsState(
+        targetValue = swipeOffsetX,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "artwork_swipe_x"
+    )
 
     MaterialTheme(colorScheme = dynamicColorScheme) {
         ModalBottomSheet(
@@ -382,18 +392,22 @@ fun FullPlayerSheet(
                         modifier = Modifier
                             .size(artworkSize)
                             .scale(artworkScale)
-                            .offset { IntOffset(swipeOffsetX.roundToInt(), 0) }
+                            .offset { IntOffset(animatedSwipeOffsetX.roundToInt(), 0) }
                             .draggable(
                                 orientation = Orientation.Horizontal,
                                 state = rememberDraggableState { delta ->
-                                    swipeOffsetX = (swipeOffsetX + delta).coerceIn(-180f, 180f)
+                                    val wasArmed = abs(swipeOffsetX) >= artworkSwipeThresholdPx
+                                    swipeOffsetX = (swipeOffsetX + delta * 0.6f).coerceIn(-maxArtworkSwipePx, maxArtworkSwipePx)
+                                    if (!wasArmed && abs(swipeOffsetX) >= artworkSwipeThresholdPx) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    }
                                 },
                                 onDragStopped = {
-                                    if (swipeOffsetX > 90f) {
+                                    if (swipeOffsetX >= artworkSwipeThresholdPx) {
                                         // Gesto hacia la derecha: reanudar / repetir
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         playerViewModel.seekBack()
-                                    } else if (swipeOffsetX < -90f) {
+                                    } else if (swipeOffsetX <= -artworkSwipeThresholdPx) {
                                         // Gesto hacia la izquierda: siguiente episodio si existe en la cola
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         val nextInQueue = queueEpisodes.firstOrNull()

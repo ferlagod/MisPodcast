@@ -66,9 +66,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import kotlinx.coroutines.launch
+import kotlin.math.abs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -300,12 +315,99 @@ fun AnimatedSubscribeButton(
     }
 }
 
+/** Fracción del ancho de la fila que hay que recorrer (y soltar) para ejecutar una acción de deslizar. */
+private const val SWIPE_ACTION_THRESHOLD = 0.6f
+
+/**
+ * Contenedor de deslizar con «resorte»: la acción solo se ejecuta si el dedo se suelta tras
+ * recorrer al menos [SWIPE_ACTION_THRESHOLD] del ancho. Si no, la fila vuelve a su sitio sin hacer
+ * nada, también ante un gesto rápido y corto. Al cruzar el umbral vibra para avisar de que,
+ * al soltar, se aplicará la acción.
+ *
+ * @param dismissOnAction true si la fila desaparece tras la acción (p. ej. quitar de la cola);
+ *   false si debe volver a su sitio tras ejecutarla.
+ * @param backgroundContent fondo según la dirección del gesto y si ya se ha cruzado el umbral.
+ */
+@Composable
+fun DeliberateSwipeBox(
+    onSwipeStartToEnd: () -> Unit,
+    onSwipeEndToStart: () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissOnAction: Boolean = false,
+    backgroundContent: @Composable (direction: SwipeToDismissBoxValue, armed: Boolean) -> Unit,
+    content: @Composable () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val currentStartToEnd by rememberUpdatedState(onSwipeStartToEnd)
+    val currentEndToStart by rememberUpdatedState(onSwipeEndToStart)
+
+    // Estado no restaurable: una fila que vuelve a la lista (p. ej. tras «Deshacer») empieza en reposo
+    val state = remember {
+        SwipeToDismissBoxState(SwipeToDismissBoxValue.Settled) { total -> total * SWIPE_ACTION_THRESHOLD }
+    }
+    var widthPx by remember { mutableFloatStateOf(0f) }
+    var fingerDown by remember { mutableStateOf(false) }
+    var releasedArmed by remember { mutableStateOf(false) }
+    val armed by remember {
+        derivedStateOf {
+            // requireOffset() falla mientras la fila aún no se ha medido
+            val offset = runCatching { state.requireOffset() }.getOrDefault(0f)
+            widthPx > 0f && !offset.isNaN() && abs(offset) >= widthPx * SWIPE_ACTION_THRESHOLD
+        }
+    }
+
+    LaunchedEffect(armed) {
+        if (armed && fingerDown) haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+    }
+
+    val onDismiss: (SwipeToDismissBoxValue) -> Unit = remember(state) {
+        { direction ->
+            if (releasedArmed) {
+                releasedArmed = false
+                when (direction) {
+                    SwipeToDismissBoxValue.StartToEnd -> currentStartToEnd()
+                    SwipeToDismissBoxValue.EndToStart -> currentEndToStart()
+                    SwipeToDismissBoxValue.Settled -> Unit
+                }
+                if (!dismissOnAction) scope.launch { state.reset() }
+            } else {
+                // Gesto rápido sin recorrido suficiente: vuelve a su sitio sin aplicar nada
+                scope.launch { state.reset() }
+            }
+        }
+    }
+
+    SwipeToDismissBox(
+        state = state,
+        modifier = modifier
+            .onSizeChanged { widthPx = it.width.toFloat() }
+            .pointerInput(Unit) {
+                // Observa (sin consumir) dónde se suelta el dedo para decidir si la acción procede
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    fingerDown = true
+                    releasedArmed = false
+                    do {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                    } while (event.changes.any { it.pressed })
+                    releasedArmed = armed
+                    fingerDown = false
+                }
+            },
+        onDismiss = onDismiss,
+        backgroundContent = { backgroundContent(state.dismissDirection, armed) }
+    ) {
+        content()
+    }
+}
+
 /**
  * Envoltorio deslizable (Swipe-to-action) para filas de episodios:
- * - Deslizar a la derecha (StartToEnd): Añadir a la cola con icono animado y vibración.
- * - Deslizar a la izquierda (EndToStart): Marcar como completado/escuchado con vibración.
+ * - Deslizar a la derecha (StartToEnd): Añadir a la cola.
+ * - Deslizar a la izquierda (EndToStart): Marcar como completado/escuchado.
+ * La fila vuelve a su sitio tras la acción; ver [DeliberateSwipeBox].
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeableEpisodeRow(
     onSwipeToQueue: () -> Unit,
@@ -313,80 +415,80 @@ fun SwipeableEpisodeRow(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
-
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSwipeToQueue()
-                    false // Permanecer visible tras la acción
-                }
-                SwipeToDismissBoxValue.EndToStart -> {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSwipeToComplete()
-                    false // Permanecer visible tras la acción
-                }
-                SwipeToDismissBoxValue.Settled -> false
-            }
-        }
-    )
-
-    SwipeToDismissBox(
-        state = dismissState,
+    DeliberateSwipeBox(
+        onSwipeStartToEnd = onSwipeToQueue,
+        onSwipeEndToStart = onSwipeToComplete,
         modifier = modifier,
-        enableDismissFromStartToEnd = true,
-        enableDismissFromEndToStart = true,
-        backgroundContent = {
-            val direction = dismissState.dismissDirection
-
+        backgroundContent = { direction, armed ->
             val (bgColor, icon, label, alignment) = when (direction) {
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    Quadruple(
-                        RoyalBlueLight.copy(alpha = 0.85f),
-                        Icons.AutoMirrored.Filled.QueueMusic,
-                        stringResource(R.string.add_to_queue),
-                        Alignment.CenterStart
-                    )
-                }
-                SwipeToDismissBoxValue.EndToStart -> {
-                    Quadruple(
-                        AccentGreen.copy(alpha = 0.85f),
-                        Icons.Filled.CheckCircle,
-                        stringResource(R.string.mark_played_short),
-                        Alignment.CenterEnd
-                    )
-                }
-                else -> {
-                    Quadruple(Color.Transparent, Icons.Filled.Add, "", Alignment.Center)
-                }
+                SwipeToDismissBoxValue.StartToEnd -> Quadruple(
+                    RoyalBlueLight,
+                    Icons.AutoMirrored.Filled.QueueMusic,
+                    stringResource(R.string.add_to_queue),
+                    Alignment.CenterStart
+                )
+                SwipeToDismissBoxValue.EndToStart -> Quadruple(
+                    AccentGreen,
+                    Icons.Filled.CheckCircle,
+                    stringResource(R.string.mark_played_short),
+                    Alignment.CenterEnd
+                )
+                else -> Quadruple(Color.Transparent, Icons.Filled.Add, "", Alignment.Center)
             }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(bgColor)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = alignment
+            SwipeActionBackground(
+                color = bgColor,
+                armed = armed,
+                alignment = alignment,
+                verticalPadding = 6.dp
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (direction == SwipeToDismissBoxValue.StartToEnd) {
-                        Icon(icon, contentDescription = null, tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(label, color = Color.White, fontWeight = FontWeight.Bold)
-                    } else if (direction == SwipeToDismissBoxValue.EndToStart) {
-                        Text(label, color = Color.White, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(icon, contentDescription = null, tint = Color.White)
-                    }
+                if (direction == SwipeToDismissBoxValue.StartToEnd) {
+                    Icon(icon, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(label, color = Color.White, fontWeight = FontWeight.Bold)
+                } else if (direction == SwipeToDismissBoxValue.EndToStart) {
+                    Text(label, color = Color.White, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(icon, contentDescription = null, tint = Color.White)
                 }
             }
-        }
+        },
+        content = content
+    )
+}
+
+/**
+ * Fondo común de las acciones de deslizar: tenue mientras no se alcanza el umbral y con el color
+ * pleno (y el icono algo más grande) cuando al soltar se aplicará la acción.
+ */
+@Composable
+fun SwipeActionBackground(
+    color: Color,
+    armed: Boolean,
+    alignment: Alignment,
+    verticalPadding: Dp,
+    content: @Composable () -> Unit
+) {
+    val alpha by animateFloatAsState(if (armed) 1f else 0.45f, label = "swipeBgAlpha")
+    val scale by animateFloatAsState(
+        targetValue = if (armed) 1.12f else 0.92f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "swipeContentScale"
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = verticalPadding)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (color == Color.Transparent) color else color.copy(alpha = alpha))
+            .padding(horizontal = 20.dp),
+        contentAlignment = alignment
     ) {
-        content()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale }
+        ) {
+            content()
+        }
     }
 }
 

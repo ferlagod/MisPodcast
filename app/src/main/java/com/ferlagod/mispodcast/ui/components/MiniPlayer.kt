@@ -105,6 +105,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -161,7 +162,13 @@ fun MiniPlayer(
         val artwork = episode.imageUrl.ifBlank { podcastArtworkUrl }
         val dominantArtworkColor = rememberArtworkDominantColor(artworkUrl = artwork.ifBlank { null })
 
+        // Gestos con resorte: solo actúan al soltar tras recorrer suficiente distancia
+        val density = LocalDensity.current
+        val maxSwipePx = with(density) { 120.dp.toPx() }
+        val skipThresholdPx = with(density) { 96.dp.toPx() }
+        val expandThresholdPx = with(density) { 56.dp.toPx() }
         var offsetX by remember { mutableFloatStateOf(0f) }
+        var dragY by remember { mutableFloatStateOf(0f) }
         val animatedOffsetX by animateFloatAsState(
             targetValue = offsetX,
             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
@@ -176,31 +183,46 @@ fun MiniPlayer(
                 .testTag("mini_player")
                 .pointerInput(Unit) {
                     detectDragGestures(
+                        onDragStart = {
+                            offsetX = 0f
+                            dragY = 0f
+                        },
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            // Deslizar hacia arriba para expandir
-                            if (dragAmount.y < -12f && abs(dragAmount.y) > abs(dragAmount.x) * 1.2f) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                playerViewModel.setExpanded(true)
-                            } else {
-                                // Deslizar horizontal con amortiguación
-                                offsetX = (offsetX + dragAmount.x * 0.7f).coerceIn(-180f, 180f)
+                            val wasArmed = abs(offsetX) >= skipThresholdPx || -dragY >= expandThresholdPx
+                            dragY += dragAmount.y
+                            // Deslizar horizontal con amortiguación (resistencia creciente hacia el tope)
+                            if (-dragY < expandThresholdPx || abs(offsetX) > abs(dragY)) {
+                                offsetX = (offsetX + dragAmount.x * 0.6f).coerceIn(-maxSwipePx, maxSwipePx)
+                            }
+                            val isArmed = abs(offsetX) >= skipThresholdPx || -dragY >= expandThresholdPx
+                            if (isArmed && !wasArmed) {
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                             }
                         },
                         onDragEnd = {
-                            if (offsetX < -75f) {
+                            when {
+                                // Deslizar hacia arriba (predominante) -> Reproductor completo
+                                -dragY >= expandThresholdPx && abs(dragY) > abs(offsetX) -> {
+                                    playerViewModel.setExpanded(true)
+                                }
                                 // Deslizar hacia la izquierda -> Siguiente episodio
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                playerViewModel.skipToNextEpisode()
-                            } else if (offsetX > 75f) {
+                                offsetX <= -skipThresholdPx -> {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    playerViewModel.skipToNextEpisode()
+                                }
                                 // Deslizar hacia la derecha -> Episodio anterior
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                playerViewModel.skipToPreviousEpisode()
+                                offsetX >= skipThresholdPx -> {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    playerViewModel.skipToPreviousEpisode()
+                                }
                             }
                             offsetX = 0f
+                            dragY = 0f
                         },
                         onDragCancel = {
                             offsetX = 0f
+                            dragY = 0f
                         }
                     )
                 }

@@ -76,11 +76,11 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
+import com.ferlagod.mispodcast.ui.components.DeliberateSwipeBox
+import com.ferlagod.mispodcast.ui.components.SwipeActionBackground
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -570,30 +570,18 @@ fun QueueScreen(
                     key = { _, item -> item.episode.id }
                 ) { index, item ->
                     Box(modifier = Modifier.animateItem()) {
-                        // 4. SwipeToDismissBox (Material 3)
-                        @Suppress("DEPRECATION")
-                        val dismissState = rememberSwipeToDismissBoxState(
-                            confirmValueChange = { value ->
-                                when (value) {
-                                    SwipeToDismissBoxValue.EndToStart -> {
-                                        // Deslizar izquierda: Eliminar de la cola
-                                        podcastViewModel.swipeRemoveFromQueue(item.episode.id)
-                                        true
-                                    }
-                                    SwipeToDismissBoxValue.StartToEnd -> {
-                                        // Deslizar derecha: Marcar como reproducido y eliminar de la cola
-                                        podcastViewModel.swipeMarkPlayedAndRemoveFromQueue(item.episode.id)
-                                        true
-                                    }
-                                    SwipeToDismissBoxValue.Settled -> false
-                                }
-                            }
-                        )
-
-                        SwipeToDismissBox(
-                            state = dismissState,
-                            backgroundContent = {
-                                val direction = dismissState.dismissDirection
+                        // 4. Deslizar con resorte: solo actúa si se suelta pasado el umbral
+                        DeliberateSwipeBox(
+                            // Deslizar derecha: Marcar como reproducido y eliminar de la cola
+                            onSwipeStartToEnd = {
+                                podcastViewModel.swipeMarkPlayedAndRemoveFromQueue(item.episode.id)
+                            },
+                            // Deslizar izquierda: Eliminar de la cola
+                            onSwipeEndToStart = {
+                                podcastViewModel.swipeRemoveFromQueue(item.episode.id)
+                            },
+                            dismissOnAction = true,
+                            backgroundContent = { direction, armed ->
                                 val isStartToEnd = direction == SwipeToDismissBoxValue.StartToEnd
                                 val isEndToStart = direction == SwipeToDismissBoxValue.EndToStart
 
@@ -609,47 +597,40 @@ fun QueueScreen(
                                     else -> Alignment.Center
                                 }
 
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 20.dp, vertical = 5.dp)
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(backgroundColor)
-                                        .padding(horizontal = 20.dp),
-                                    contentAlignment = alignment
+                                SwipeActionBackground(
+                                    color = backgroundColor,
+                                    armed = armed,
+                                    alignment = alignment,
+                                    verticalPadding = 5.dp
                                 ) {
                                     if (isStartToEnd) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Filled.CheckCircle,
-                                                contentDescription = stringResource(R.string.mark_as_played),
-                                                tint = Color.White,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = stringResource(R.string.wrapped_stat_completed),
-                                                color = Color.White,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.labelMedium
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Filled.CheckCircle,
+                                            contentDescription = stringResource(R.string.mark_as_played),
+                                            tint = Color.White,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.wrapped_stat_completed),
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
                                     } else if (isEndToStart) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                text = stringResource(R.string.delete_download),
-                                                color = Color.White,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.labelMedium
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Icon(
-                                                imageVector = Icons.Filled.Delete,
-                                                contentDescription = stringResource(R.string.remove_from_queue),
-                                                tint = Color.White,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
+                                        Text(
+                                            text = stringResource(R.string.delete_download),
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Icon(
+                                            imageVector = Icons.Filled.Delete,
+                                            contentDescription = stringResource(R.string.remove_from_queue),
+                                            tint = Color.White,
+                                            modifier = Modifier.size(24.dp)
+                                        )
                                     }
                                 }
                             }
