@@ -155,6 +155,11 @@ class ProgressTracker(
         if (currentPos <= 0L && !isCompleted) {
             return
         }
+        // Al terminar, el guardado con isCompleted = true ya lo marca como escuchado; una escritura
+        // normal posterior podría volver a dejarlo como «no escuchado» y se omite
+        if (!isCompleted && player.playbackState == Player.STATE_ENDED) {
+            return
+        }
 
         val deltaToRecord = if (podcastId != null) takePendingListenedTime() else 0L
         val savedToRecord = if (pendingTimeSavedMs >= 30_000L || !player.isPlaying || isCompleted) {
@@ -165,7 +170,7 @@ class ProgressTracker(
             if (savedToRecord > 0L) {
                 UserPreferencesManager.getInstance(context).addTimeSaved(savedToRecord)
             }
-            database.podcastDao().updatePlaybackPosition(targetEpisodeId, currentPos)
+            database.podcastDao().updatePlaybackPosition(targetEpisodeId, currentPos, duration.coerceAtLeast(0L))
 
             if (isCompleted || (duration > 0 && currentPos >= duration - 2000)) {
                 database.podcastDao().markEpisodeAsPlayed(targetEpisodeId, true)

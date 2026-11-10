@@ -148,7 +148,7 @@ class PodcastPlaybackService : MediaLibraryService() {
             getString = ::getString,
             browserArtworkMapper = { uri -> AutoArtworkProvider.toContentUri(applicationContext, uri) }
         )
-        playbackController = PlaybackController(database, autoBrowseTree)
+        playbackController = PlaybackController(database, autoBrowseTree) { resId, args -> getString(resId, *args) }
         progressTracker = ProgressTracker(applicationContext, database, syncManager, serviceScope)
         sleepTimerManager = container.sleepTimerManager
         chapterRepository = container.chapterRepository
@@ -576,7 +576,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                 .setMediaId(ROOT_ID)
                 .setMediaMetadata(
                     androidx.media3.common.MediaMetadata.Builder()
-                        .setTitle("Mis Podcasts")
+                        .setTitle(getString(R.string.auto_my_podcasts))
                         .setIsBrowsable(true)
                         .setIsPlayable(false)
                         .setMediaType(androidx.media3.common.MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)

@@ -122,7 +122,10 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     }
 
     override val chapterRepository: com.ferlagod.mispodcast.data.repository.ChapterRepository by lazy {
-        com.ferlagod.mispodcast.data.repository.ChapterRepository(okHttpClient = okHttpClient)
+        com.ferlagod.mispodcast.data.repository.ChapterRepository(
+            okHttpClient = okHttpClient,
+            fallbackTitle = { number -> "${context.getString(com.ferlagod.mispodcast.R.string.chapter_fallback)} $number" }
+        )
     }
 
     override val transcriptRepository: com.ferlagod.mispodcast.data.repository.TranscriptRepository by lazy {

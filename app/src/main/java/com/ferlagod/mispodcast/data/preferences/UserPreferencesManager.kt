@@ -165,9 +165,7 @@ class UserPreferencesManager(private val context: Context) {
 
         fun getInstance(context: Context): UserPreferencesManager {
             return INSTANCE ?: synchronized(this) {
-                val instance = UserPreferencesManager(context.applicationContext)
-                INSTANCE = instance
-                instance
+                INSTANCE ?: UserPreferencesManager(context.applicationContext).also { INSTANCE = it }
             }
         }
     }

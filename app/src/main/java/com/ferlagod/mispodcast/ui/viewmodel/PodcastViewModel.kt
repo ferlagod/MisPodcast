@@ -610,6 +610,10 @@ class PodcastViewModel @JvmOverloads constructor(
     fun getEpisodesForPodcastFlow(podcastId: String): kotlinx.coroutines.flow.Flow<List<EpisodeEntity>> =
         repository.getEpisodesForPodcast(podcastId)
 
+    /** Indica si el podcast ya está guardado en Room (consulta directa, sin esperar al Flow). */
+    suspend fun isPodcastStored(podcastId: String, feedUrl: String): Boolean =
+        repository.getPodcastDirect(podcastId, feedUrl) != null
+
     suspend fun loadPodcastFeed(feedUrl: String): Result<PodcastEntity> {
         return repository.fetchAndStorePodcast(feedUrl)
     }

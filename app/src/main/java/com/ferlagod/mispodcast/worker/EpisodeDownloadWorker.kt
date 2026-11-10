@@ -93,7 +93,7 @@ class EpisodeDownloadWorker(
 
         try {
             downloadManager.reportProgress(episodeId, DownloadStatus.DOWNLOADING, 0f)
-            setForeground(createForegroundInfo(episodeTitle, 0))
+            trySetForeground(episodeTitle, 0)
 
             var existingBytes = if (tempFile.exists()) tempFile.length() else 0L
 
@@ -158,7 +158,7 @@ class EpisodeDownloadWorker(
 
                             downloadManager.reportProgress(episodeId, DownloadStatus.DOWNLOADING, progressFloat)
                             setProgress(workDataOf(KEY_PROGRESS to progressInt))
-                            setForeground(createForegroundInfo(episodeTitle, progressInt))
+                            trySetForeground(episodeTitle, progressInt)
 
                             lastUpdateNotificationTime = now
                         }
@@ -240,6 +240,26 @@ class EpisodeDownloadWorker(
             e.rethrowIfCancellation()
             Log.e(TAG, "Fallo irrecuperable al descargar $episodeTitle: ${e.message}", e)
             return Result.failure()
+        }
+    }
+
+    /** `false` cuando Android no permite el servicio en primer plano (app en segundo plano, Android 12+). */
+    private var foregroundAllowed = true
+
+    /**
+     * Pasa la descarga a primer plano si el sistema lo permite. Con la app en segundo plano
+     * (p. ej. al descargar automáticamente desde [PodcastCheckWorker]) Android 12+ lanza
+     * `ForegroundServiceStartNotAllowedException`; la descarga continúa igualmente sin notificación.
+     */
+    private suspend fun trySetForeground(title: String, progress: Int) {
+        if (!foregroundAllowed) return
+        try {
+            setForeground(createForegroundInfo(title, progress))
+        } catch (e: Exception) {
+            // WorkManager puede entregar la excepción tal cual o envuelta: se trata cualquiera
+            e.rethrowIfCancellation()
+            foregroundAllowed = false
+            Log.w(TAG, "Descarga sin primer plano para $title: ${e.message}")
         }
     }
 

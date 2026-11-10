@@ -674,4 +674,5 @@
     <string name="placeholder_nextcloud_url">https://mein-nextcloud.de</string>
     <string name="placeholder_username">mein_benutzer</string>
     <string name="placeholder_feed_url">https://beispiel.de/feed.xml</string>
+    <string name="notif_speed_format">Geschwindigkeit: %1$s</string>
 </resources>

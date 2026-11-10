@@ -434,7 +434,7 @@ fun HomeScreen(
                                                 )
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
-                                                    text = if (isPlaying && currentPlayingEpisode?.id == activeEpisode.id) "EN REPRODUCCIÓN" else stringResource(R.string.continue_listening).uppercase(),
+                                                    text = if (isPlaying && currentPlayingEpisode?.id == activeEpisode.id) stringResource(R.string.state_playing).uppercase() else stringResource(R.string.continue_listening).uppercase(),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = Color.White,
                                                     fontWeight = FontWeight.Bold,

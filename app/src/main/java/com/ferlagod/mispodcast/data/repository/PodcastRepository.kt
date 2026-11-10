@@ -218,6 +218,9 @@ class PodcastRepository(
             val podcastEntity = parsedFeed.toPodcastEntity(isSubscribed = true, subscribedAt = subscribedAt).let { entity ->
                 if (existing != null) {
                     entity.copy(
+                        id = existing.id,
+                        httpEtag = existing.httpEtag,
+                        httpLastModified = existing.httpLastModified,
                         customSpeed = existing.customSpeed,
                         skipIntroSeconds = existing.skipIntroSeconds,
                         skipEndingSeconds = existing.skipEndingSeconds,
@@ -467,10 +470,24 @@ class PodcastRepository(
             } else {
                 kotlin.math.max(now, maxEpisodePubDate)
             }
-            val podcastEntity = parsedFeed.toPodcastEntity(
+            val fresh = parsedFeed.toPodcastEntity(
                 isSubscribed = isSubscribed,
                 subscribedAt = subscribedAt
             )
+            // Si ya existe, solo se refrescan los metadatos del feed: los ajustes por podcast,
+            // la lápida de baja y las cabeceras de caché del usuario se conservan
+            val podcastEntity = existing?.copy(
+                title = fresh.title.ifBlank { existing.title },
+                author = fresh.author.ifBlank { existing.author },
+                description = fresh.description.ifBlank { existing.description },
+                artworkUrl = fresh.artworkUrl.ifBlank { existing.artworkUrl },
+                category = fresh.category.ifBlank { existing.category },
+                link = fresh.link.ifBlank { existing.link },
+                fundingUrl = fresh.fundingUrl ?: existing.fundingUrl,
+                fundingText = fresh.fundingText ?: existing.fundingText,
+                valueForValueInfo = fresh.valueForValueInfo ?: existing.valueForValueInfo,
+                lastUpdated = System.currentTimeMillis()
+            ) ?: fresh
             val episodeEntities = parsedFeed.episodes.map { it.toEpisodeEntity(podcastEntity.id) }
 
             podcastDao.insertPodcast(podcastEntity)
@@ -530,8 +547,8 @@ class PodcastRepository(
         podcastDao.updateFavoriteStatus(episodeId, isFavorite)
     }
 
-    suspend fun updatePlaybackPosition(episodeId: String, positionMs: Long) = withContext(Dispatchers.IO) {
-        podcastDao.updatePlaybackPosition(episodeId, positionMs)
+    suspend fun updatePlaybackPosition(episodeId: String, positionMs: Long, durationMs: Long = 0L) = withContext(Dispatchers.IO) {
+        podcastDao.updatePlaybackPosition(episodeId, positionMs, durationMs.coerceAtLeast(0L))
     }
 
     suspend fun markEpisodePlayed(episodeId: String, isPlayed: Boolean) = withContext(Dispatchers.IO) {

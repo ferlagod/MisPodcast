@@ -27,10 +27,8 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import com.ferlagod.mispodcast.MainActivity
 import com.ferlagod.mispodcast.R
-import com.ferlagod.mispodcast.playback.PodcastPlaybackService
 
 /**
  * Servicio de control de reproducción para el panel de Ajustes Rápidos (Quick Settings Tile).
@@ -71,14 +69,7 @@ class PodcastTileService : TileService() {
         }
 
         // Alternar reproducción / pausa
-        val intent = Intent(this, PodcastPlaybackService::class.java).apply {
-            action = PodcastPlaybackService.ACTION_PLAY_PAUSE
-        }
-        try {
-            ContextCompat.startForegroundService(this, intent)
-        } catch (e: Exception) {
-            startService(intent)
-        }
+        PlaybackRemote.togglePlayPause(this)
 
         // Actualización optimista inmediata del Tile
         val tile = qsTile ?: return

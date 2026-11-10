@@ -304,17 +304,27 @@ interface PodcastDao {
     @Query("SELECT * FROM episodes WHERE podcastId = :podcastId ORDER BY pubDate DESC")
     suspend fun getEpisodesForPodcast(podcastId: String): List<EpisodeEntity>
 
-    // Actualizar progreso de escucha en tiempo real con marca temporal
+    /**
+     * Actualiza el progreso de escucha con marca temporal. [durationMs] es la duración real que
+     * conoce el reproductor (0 si no se sabe): se guarda y se usa para decidir si está escuchado,
+     * porque la del feed puede faltar o no coincidir con el audio.
+     */
     @Query("""
-        UPDATE episodes 
-        SET currentPositionMs = :positionMs, 
-            isPlayed = CASE WHEN duration > 0 AND :positionMs >= duration - 3000 THEN 1 ELSE 0 END,
+        UPDATE episodes
+        SET currentPositionMs = :positionMs,
+            duration = CASE WHEN :durationMs > 0 THEN :durationMs ELSE duration END,
+            isPlayed = CASE
+                WHEN (CASE WHEN :durationMs > 0 THEN :durationMs ELSE duration END) > 0
+                     AND :positionMs >= (CASE WHEN :durationMs > 0 THEN :durationMs ELSE duration END) - 3000 THEN 1
+                ELSE 0
+            END,
             positionUpdatedAt = :now
         WHERE id = :episodeId
     """)
     suspend fun updatePlaybackPosition(
-        episodeId: String, 
-        positionMs: Long, 
+        episodeId: String,
+        positionMs: Long,
+        durationMs: Long = 0L,
         now: Long = System.currentTimeMillis()
     ): Int
 

@@ -48,8 +48,14 @@ import kotlin.math.min
 @OptIn(UnstableApi::class)
 class PlaybackController(
     private val database: PodcastDatabase,
-    private val autoBrowseTree: AutoBrowseTree
+    private val autoBrowseTree: AutoBrowseTree,
+    /** Textos traducidos de los botones (id de recurso + argumentos); null en pruebas sin Android. */
+    private val text: ((Int, Array<out Any>) -> String)? = null
 ) {
+
+    private fun label(resId: Int, fallback: String, vararg args: Any): String =
+        text?.let { runCatching { it(resId, args) }.getOrNull() } ?: fallback
+
 
     @Volatile var skipBackMs: Long = 10_000L
     @Volatile var skipForwardMs: Long = 30_000L
@@ -226,20 +232,20 @@ class PlaybackController(
 
         val replayButton = CommandButton.Builder(skipBackIcon(skipBackSeconds))
             .setSessionCommand(COMMAND_REPLAY_10)
-            .setDisplayName("Retroceder $skipBackSeconds s")
+            .setDisplayName(label(R.string.player_skip_backward_format, "Retroceder $skipBackSeconds s", skipBackSeconds))
             .build()
         buttons.add(replayButton)
 
         val forwardButton = CommandButton.Builder(skipForwardIcon(skipForwardSeconds))
             .setSessionCommand(COMMAND_FORWARD_30)
-            .setDisplayName("Avanzar $skipForwardSeconds s")
+            .setDisplayName(label(R.string.player_skip_forward_format, "Avanzar $skipForwardSeconds s", skipForwardSeconds))
             .build()
         buttons.add(forwardButton)
 
         if (hasChapters) {
             val nextChapterButton = CommandButton.Builder(CommandButton.ICON_NEXT)
                 .setSessionCommand(COMMAND_NEXT_CHAPTER)
-                .setDisplayName("Siguiente capítulo")
+                .setDisplayName(label(R.string.player_next_chapter_description, "Siguiente capítulo"))
                 .setCustomIconResId(R.drawable.ic_skip_next)
                 .build()
             buttons.add(nextChapterButton)
@@ -247,7 +253,7 @@ class PlaybackController(
 
         val speedButton = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setSessionCommand(COMMAND_CYCLE_SPEED)
-            .setDisplayName("Velocidad: ${formatSpeed(currentSpeed)}")
+            .setDisplayName(label(R.string.notif_speed_format, "Velocidad: ${formatSpeed(currentSpeed)}", formatSpeed(currentSpeed)))
             .setCustomIconResId(R.drawable.ic_speed)
             .build()
         buttons.add(speedButton)

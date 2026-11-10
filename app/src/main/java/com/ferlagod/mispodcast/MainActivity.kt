@@ -175,6 +175,9 @@ class MainActivity : AppCompatActivity() {
         if (!podcastId.isNullOrBlank() || !feedUrl.isNullOrBlank()) {
             targetPodcastId = podcastId
             targetFeedUrl = feedUrl
+        } else if (intent?.getStringExtra("navigate_to") == "new_releases") {
+            // Notificación resumen de novedades de varios podcasts
+            postOnboardingRoute = com.ferlagod.mispodcast.ui.navigation.Screen.NewReleases.route
         }
     }
 }

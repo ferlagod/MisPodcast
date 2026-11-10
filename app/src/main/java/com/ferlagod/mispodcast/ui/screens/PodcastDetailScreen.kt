@@ -261,7 +261,11 @@ fun PodcastDetailScreen(
 
     // Si no está en Room y tenemos una URL de feed RSS, cargarlo automáticamente
     LaunchedEffect(targetUrl) {
-        if (roomPodcast == null && targetUrl.isNotBlank() && !isLocal) {
+        // roomPodcast aún es null en la primera composición: se consulta Room directamente
+        // para no volver a descargar (y sobrescribir) un podcast que ya está guardado
+        if (roomPodcast == null && targetUrl.isNotBlank() && !isLocal &&
+            !podcastViewModel.isPodcastStored(podcastId, targetUrl)
+        ) {
             triggerFetchFeed()
         } else if (isLocal) {
             // Re-escaneo silencioso al abrir podcast local

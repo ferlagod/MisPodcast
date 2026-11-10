@@ -18,12 +18,10 @@
 
 package com.ferlagod.mispodcast.widget
 
-import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -57,7 +55,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.ferlagod.mispodcast.MainActivity
 import com.ferlagod.mispodcast.R
-import com.ferlagod.mispodcast.playback.PodcastPlaybackService
 
 /**
  * Widget para la pantalla de inicio de Android implementado con Jetpack Glance.
@@ -225,15 +222,7 @@ class PodcastPlaybackWidget : GlanceAppWidget() {
  */
 class TogglePlayPauseActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: androidx.glance.action.ActionParameters) {
-        val intent = Intent(context, PodcastPlaybackService::class.java).apply {
-            action = PodcastPlaybackService.ACTION_PLAY_PAUSE
-        }
-        try {
-            ContextCompat.startForegroundService(context, intent)
-        } catch (e: Exception) {
-            e.rethrowIfCancellation()
-            context.startService(intent)
-        }
+        PlaybackRemote.togglePlayPause(context)
     }
 }
 
@@ -242,15 +231,7 @@ class TogglePlayPauseActionCallback : ActionCallback {
  */
 class SkipBackActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: androidx.glance.action.ActionParameters) {
-        val intent = Intent(context, PodcastPlaybackService::class.java).apply {
-            action = PodcastPlaybackService.ACTION_SKIP_BACKWARD
-        }
-        try {
-            ContextCompat.startForegroundService(context, intent)
-        } catch (e: Exception) {
-            e.rethrowIfCancellation()
-            context.startService(intent)
-        }
+        PlaybackRemote.seekBack(context)
     }
 }
 
@@ -259,14 +240,6 @@ class SkipBackActionCallback : ActionCallback {
  */
 class SkipForwardActionCallback : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: androidx.glance.action.ActionParameters) {
-        val intent = Intent(context, PodcastPlaybackService::class.java).apply {
-            action = PodcastPlaybackService.ACTION_SKIP_FORWARD
-        }
-        try {
-            ContextCompat.startForegroundService(context, intent)
-        } catch (e: Exception) {
-            e.rethrowIfCancellation()
-            context.startService(intent)
-        }
+        PlaybackRemote.seekForward(context)
     }
 }

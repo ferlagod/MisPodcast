@@ -54,7 +54,9 @@ import java.util.concurrent.ConcurrentHashMap
  *    extraídos a través de [ChapterFrame] de AndroidX Media3 o leídos directamente del encabezado ID3.
  */
 class ChapterRepository(
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    /** Título de reserva para capítulos sin nombre (recibe su número, desde 1). */
+    private val fallbackTitle: (Int) -> String = { "Capítulo $it" }
 ) {
 
     // Caché en memoria hilo-segura por ID de episodio
@@ -174,7 +176,7 @@ class ChapterRepository(
                 val endTimeMs = if (rawEnd != null) parseTimeToMs(rawEnd) else null
 
                 val title = obj["title"]?.jsonPrimitive?.contentOrNull?.trim()?.ifBlank { null }
-                    ?: "Capítulo ${list.size + 1}"
+                    ?: fallbackTitle(list.size + 1)
                 val img = obj["img"]?.jsonPrimitive?.contentOrNull?.trim()?.ifBlank { null }
                 val url = obj["url"]?.jsonPrimitive?.contentOrNull?.trim()?.ifBlank { null }
 
@@ -230,7 +232,7 @@ class ChapterRepository(
 
                 list.add(
                     Chapter(
-                        title = title ?: entry.chapterId.ifBlank { "Capítulo ${list.size + 1}" },
+                        title = title ?: entry.chapterId.ifBlank { fallbackTitle(list.size + 1) },
                         startTimeMs = startMs,
                         endTimeMs = endMs,
                         imageUrl = null,

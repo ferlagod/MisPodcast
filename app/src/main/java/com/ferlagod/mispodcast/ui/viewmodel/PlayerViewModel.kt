@@ -262,11 +262,14 @@ class PlayerViewModel @JvmOverloads constructor(
                 if (!isPlaying) {
                     val activeController = mediaController
                     val ep = _currentEpisode.value
-                    if (activeController != null && ep != null) {
+                    // Al terminar el episodio lo registra el servicio: guardar aquí la posición final
+                    // podía volver a marcarlo como «no escuchado»
+                    if (activeController != null && ep != null && activeController.playbackState != Player.STATE_ENDED) {
                         val currentPos = activeController.currentPosition
+                        val durationMs = activeController.knownDurationMs()
                         if (currentPos > 0L) {
                             viewModelScope.launch {
-                                repository.updatePlaybackPosition(ep.id, currentPos)
+                                repository.updatePlaybackPosition(ep.id, currentPos, durationMs)
                                 syncManager.triggerSyncIfConfigured(debounceMs = 3000L)
                             }
                         }
@@ -458,10 +461,11 @@ class PlayerViewModel @JvmOverloads constructor(
         }
         if (controller.isPlaying) {
             val pos = controller.currentPosition
+            val durationMs = controller.knownDurationMs()
             val ep = _currentEpisode.value
             if (ep != null && pos > 0L) {
                 viewModelScope.launch(Dispatchers.IO) {
-                    repository.updatePlaybackPosition(ep.id, pos)
+                    repository.updatePlaybackPosition(ep.id, pos, durationMs)
                 }
             }
             controller.pause()
@@ -474,10 +478,11 @@ class PlayerViewModel @JvmOverloads constructor(
         val controller = mediaController ?: return
         controller.seekTo(positionMs)
         _currentPositionMs.value = positionMs
+        val durationMs = controller.knownDurationMs()
         val ep = _currentEpisode.value
         if (ep != null && positionMs >= 0L) {
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updatePlaybackPosition(ep.id, positionMs)
+                repository.updatePlaybackPosition(ep.id, positionMs, durationMs)
                 syncManager.triggerSyncIfConfigured(debounceMs = 3000L)
             }
         }
@@ -490,10 +495,11 @@ class PlayerViewModel @JvmOverloads constructor(
         val newPos = min(maxDuration, controller.currentPosition + (sec * 1000L))
         controller.seekTo(newPos)
         _currentPositionMs.value = newPos
+        val durationMs = controller.knownDurationMs()
         val ep = _currentEpisode.value
         if (ep != null && newPos >= 0L) {
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updatePlaybackPosition(ep.id, newPos)
+                repository.updatePlaybackPosition(ep.id, newPos, durationMs)
             }
         }
     }
@@ -504,10 +510,11 @@ class PlayerViewModel @JvmOverloads constructor(
         val newPos = max(0L, controller.currentPosition - (sec * 1000L))
         controller.seekTo(newPos)
         _currentPositionMs.value = newPos
+        val durationMs = controller.knownDurationMs()
         val ep = _currentEpisode.value
         if (ep != null && newPos >= 0L) {
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updatePlaybackPosition(ep.id, newPos)
+                repository.updatePlaybackPosition(ep.id, newPos, durationMs)
             }
         }
     }
@@ -761,6 +768,9 @@ class PlayerViewModel @JvmOverloads constructor(
             String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
         }
     }
+
+    /** Duración real del audio cargado, o 0 si el reproductor aún no la conoce. */
+    private fun MediaController.knownDurationMs(): Long = duration.takeIf { it > 0L } ?: 0L
 
     override fun onCleared() {
         super.onCleared()
