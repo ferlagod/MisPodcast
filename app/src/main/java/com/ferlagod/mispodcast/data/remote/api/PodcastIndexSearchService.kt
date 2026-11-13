@@ -52,7 +52,7 @@ class PodcastIndexSearchService(
         val authDate = (System.currentTimeMillis() / 1000L).toString()
         val request = Request.Builder()
             .url(url)
-            .header("User-Agent", "MisPodcast/1.0 (Android; Open Source Podcast Player)")
+            .header("User-Agent", com.ferlagod.mispodcast.util.AudioTrackingSanitizer.GENERIC_PRIVACY_USER_AGENT)
             .header("X-Auth-Key", apiKey)
             .header("X-Auth-Date", authDate)
             .header("Authorization", sha1Hex(apiKey + apiSecret + authDate))

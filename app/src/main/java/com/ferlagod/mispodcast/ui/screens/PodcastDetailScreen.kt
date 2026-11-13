@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import com.ferlagod.mispodcast.util.asUiText
 import com.ferlagod.mispodcast.util.ShareHelper
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
@@ -208,7 +209,7 @@ fun PodcastDetailScreen(
                 result.onSuccess { count ->
                     Toast.makeText(context, resources.getString(R.string.folder_reconnected, count), Toast.LENGTH_LONG).show()
                 }.onFailure { err ->
-                    Toast.makeText(context, resources.getString(R.string.folder_reconnect_error, err.localizedMessage.orEmpty()), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, resources.getString(R.string.folder_reconnect_error, err.asUiText().asString(context)), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -230,7 +231,7 @@ fun PodcastDetailScreen(
                 } catch (e: Exception) {
                     e.rethrowIfCancellation()
                     isLoadingFeed = false
-                    Toast.makeText(context, resources.getString(R.string.folder_scan_error, e.localizedMessage.orEmpty()), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, resources.getString(R.string.folder_scan_error, e.asUiText().asString(context)), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -250,9 +251,9 @@ fun PodcastDetailScreen(
                 }.onFailure { error ->
                     isLoadingFeed = false
                     if (roomPodcast == null) {
-                        feedError = error.localizedMessage ?: resources.getString(R.string.feed_download_failed)
+                        feedError = error.asUiText(R.string.feed_download_failed).asString(context)
                     } else {
-                        Toast.makeText(context, resources.getString(R.string.feed_update_error, error.localizedMessage.orEmpty()), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, resources.getString(R.string.feed_update_error, error.asUiText().asString(context)), Toast.LENGTH_SHORT).show()
                     }
                 }
             }

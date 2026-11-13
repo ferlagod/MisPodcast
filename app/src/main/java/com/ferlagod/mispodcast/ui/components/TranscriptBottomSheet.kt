@@ -102,6 +102,7 @@ fun TranscriptBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
+    val clipLabel = stringResource(R.string.transcript)
     val resources = LocalResources.current
     val focusManager = LocalFocusManager.current
 
@@ -176,7 +177,7 @@ fun TranscriptBottomSheet(
                                     }
                                 }
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Transcripción de podcast", fullText.trim())
+                                val clip = ClipData.newPlainText(clipLabel, fullText.trim())
                                 clipboard.setPrimaryClip(clip)
                                 Toast.makeText(context, resources.getString(R.string.transcript_copied), Toast.LENGTH_SHORT).show()
                             }

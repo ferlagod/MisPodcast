@@ -190,7 +190,7 @@ object NotificationHelper {
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
-            .setSmallIcon(R.drawable.app_logo)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.app_name))
             .setContentText(context.getString(R.string.notif_summary_text, totalEpisodes, totalPodcasts))
             .setSubText(context.getString(R.string.notif_subtext_new_releases))
@@ -253,7 +253,7 @@ object NotificationHelper {
                 .take(180)
 
             val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
-                .setSmallIcon(R.drawable.app_logo)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(podcast.title)
                 .setContentText(episode.title)
                 .setSubText(context.getString(R.string.notif_subtext_new_episode))
@@ -308,7 +308,7 @@ object NotificationHelper {
             }
 
             val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
-                .setSmallIcon(R.drawable.app_logo)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(podcast.title)
                 .setContentText(context.getString(R.string.notif_new_episodes_total, newEpisodes.size))
                 .setSubText(context.getString(R.string.notif_subtext_new_releases))

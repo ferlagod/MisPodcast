@@ -40,10 +40,14 @@ sealed interface UiText {
     /** Recurso de plurales elegido según [count], con argumentos de formato opcionales. */
     class Plural(@PluralsRes val id: Int, val count: Int, vararg val args: Any) : UiText
 
+    /** Varios textos mostrados uno detrás de otro. */
+    data class Joined(val parts: List<UiText>) : UiText
+
     fun asString(context: Context): String = when (this) {
         is Raw -> value
         is Res -> context.getString(id, *resolveArgs(context, args))
         is Plural -> context.resources.getQuantityString(id, count, *resolveArgs(context, args))
+        is Joined -> parts.joinToString("") { it.asString(context) }
     }
 
     @Composable

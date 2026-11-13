@@ -31,15 +31,11 @@
     <string name="category_title">Category</string>
 
     <!-- Actions and States -->
-    <string name="now_playing">Now Playing</string>
     <string name="continue_listening">CONTINUE LISTENING</string>
-    <string name="listen_now">Listen Now</string>
     <string name="up_next">UP NEXT</string>
     <string name="subscribe">Subscribe</string>
     <string name="subscribed">Subscribed</string>
-    <string name="unsubscribe">Unsubscribe</string>
     <string name="download">Download</string>
-    <string name="downloading">Downloading…</string>
     <string name="downloaded">Downloaded</string>
     <string name="download_waiting">Waiting for Wi-Fi or charging</string>
     <string name="delete_download">Delete download</string>
@@ -64,7 +60,6 @@
     <string name="add_local_folder_subtitle">Convert audio files from your storage into a local podcast</string>
     <string name="search_podcasts">Search podcasts</string>
     <string name="search_or_paste_rss">Search podcasts or paste RSS feed…</string>
-    <string name="paste_rss_url">Paste RSS feed URL</string>
     <string name="tab_search">Search</string>
     <string name="tab_rss_feed">RSS Feed</string>
     <string name="tab_local_folder">Local Folder</string>
@@ -119,11 +114,8 @@
     <string name="close">Close</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
-    <string name="delete">Delete</string>
-    <string name="edit">Edit</string>
     <string name="library">LIBRARY</string>
     <string name="from_your_subscriptions">FROM YOUR SUBSCRIPTIONS</string>
-    <string name="empty_queue">Your queue is empty</string>
     <string name="empty_subscriptions">No subscriptions yet</string>
     <string name="empty_subscriptions_subtitle">Explore trending shows, categories or paste any RSS feed directly.</string>
     <string name="add_first_podcast">Add first podcast</string>
@@ -132,9 +124,6 @@
     <string name="empty_history">Listening history is empty</string>
     <string name="empty_favorites">No favorite episodes</string>
     <string name="podcast_detail_title">Podcast detail</string>
-    <string name="stats_title">Statistics</string>
-    <string name="history_title">History</string>
-    <string name="favorites_title">Favorite Episodes</string>
     <string name="queue_title">Waiting queue</string>
     <string name="episodes">episodes</string>
     <string name="programs_followed">shows following</string>
@@ -161,7 +150,6 @@
     <string name="toast_marked_as_unplayed">Marked as unplayed</string>
     <string name="widget_description">Playback controls for Mis Podcast on the home screen</string>
     <string name="tile_label">Mis Podcast</string>
-    <string name="tile_play">Play</string>
     <string name="tile_pause">Pause</string>
     <string name="tile_no_episode">Tap to play</string>
     <string name="support_podcast_button">Support</string>
@@ -183,10 +171,8 @@
     <string name="btn_close">Close</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_share">Share</string>
-    <string name="action_search">Search</string>
     <string name="action_play">Play</string>
     <string name="action_pause">Pause</string>
-    <string name="action_copy">Copy</string>
     <string name="action_selected">Selected</string>
     <string name="action_remove_favorite">Remove from favorites</string>
     <string name="action_add_favorite">Add to favorites</string>
@@ -220,7 +206,6 @@
     <string name="player_close_description">Close player</string>
     <string name="player_sleep_timer_description">Sleep timer</string>
     <string name="player_speed_description">Adjust playback speed</string>
-    <string name="player_audio_effects_description">Audio effects and vocal boost</string>
     <string name="player_bookmarks_description">Bookmarks and clips</string>
     <string name="player_transcript_description">View transcript</string>
     <string name="player_prev_chapter_description">Previous chapter</string>
@@ -277,14 +262,9 @@
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
     <string name="drag_handle_description">Reorder episode</string>
-    <string name="trending">Trending</string>
     <string name="local_folder">Local folder</string>
 
     <!-- Player slider accessibility -->
-    <string name="player_progress_slider_description">Playback position</string>
-    <string name="player_progress_state_minutes">%1$d minutes of %2$d</string>
-    <string name="player_progress_state_hours">%1$d h %2$d min of %3$d h %4$d min</string>
-    <string name="player_progress_state_hours_start">%1$d min of %2$d h %3$d min</string>
 
     <!-- Sleep Timer Custom -->
     <string name="sleep_timer_custom_duration">Custom duration</string>
@@ -306,14 +286,8 @@
     <string name="bookmark_empty_title">No bookmarks in this episode</string>
     <string name="bookmark_empty_subtitle">Tap \'Save\' to capture a quote or moment with timestamp and personal note.</string>
     <string name="empty_queue_title">Your queue is empty</string>
-    <string name="empty_downloads_title">No downloaded episodes</string>
-    <string name="empty_downloads_subtitle">Download episodes to listen offline on plane, metro or road.</string>
     <string name="empty_subscriptions_title">No subscribed podcasts yet</string>
-    <string name="empty_favorites_title">No favorite episodes yet</string>
-    <string name="empty_favorites_subtitle">Mark episodes with the heart icon to save your gems here.</string>
     <string name="action_explore_podcasts">Explore podcasts</string>
-    <string name="action_add_feed">Add podcast feed</string>
-    <string name="continue_prefix">Continue</string>
     <string name="greeting_morning">Good morning</string>
     <string name="greeting_afternoon">Good afternoon</string>
     <string name="greeting_night">Good evening</string>
@@ -343,7 +317,6 @@
     <string name="msg_db_importing">Analysing and importing database…</string>
     <string name="msg_db_import_error">Error restoring database: %1$s</string>
     <string name="bookmark_default_note">Moment at %1$s</string>
-    <string name="recommended_based_on">Based on your interest in \'%1$s\'</string>
     <string name="category_no_podcasts_now">No podcasts available right now.</string>
     <string name="category_load_error">Error loading %1$s podcasts</string>
     <string name="category_loading">Loading %1$s…</string>
@@ -616,7 +589,7 @@
     <string name="msg_nextcloud_synced">Synced with Nextcloud!</string>
     <string name="msg_nextcloud_sync_running">Sync already in progress</string>
     <string name="msg_nextcloud_not_configured">Sync skipped: Nextcloud is not configured</string>
-    <string name="msg_db_restored">MisPodcast database restored! Restart the app to load the changes.</string>
+    <string name="msg_db_restored">Backup restored. The app will now restart…</string>
     <string name="msg_antennapod_imported">AntennaPod database imported!\n• %1$d subscribed podcasts\n• %2$d episodes (%3$d played)\n• %4$d h of statistics and %5$d history entries</string>
     <string name="msg_antennapod_queue">\n• %1$d episodes added to the queue</string>
 
@@ -708,4 +681,37 @@
     <string name="sync_issue_insecure">Last attempt: HTTPS required</string>
     <string name="sync_issue_network">Last attempt: couldn\'t reach the server</string>
     <string name="sync_issue_server">Last attempt: server error</string>
+
+    <!-- Mensajes de error traducibles (LocalizedException) -->
+    <string name="error_unexpected">Something went wrong.</string>
+    <string name="error_network">Can\'t reach the server. Check your internet connection.</string>
+    <string name="error_timeout">The server took too long to respond.</string>
+    <string name="error_secure_connection">Couldn\'t establish a secure connection with the server.</string>
+    <string name="error_feed_invalid">The feed isn\'t in a valid format.</string>
+    <string name="error_feed_http">The feed server returned an error (HTTP %1$d).</string>
+    <string name="error_feed_empty">The feed is empty.</string>
+    <string name="error_db_not_found">The app database couldn\'t be found.</string>
+    <string name="error_open_destination">Couldn\'t open the destination to save the file.</string>
+    <string name="error_open_file">Couldn\'t open the selected file.</string>
+    <string name="error_backup_invalid_zip">The ZIP doesn\'t contain a valid MisPodcast or AntennaPod backup.</string>
+    <string name="error_backup_invalid_file">This file isn\'t a MisPodcast backup (.zip) or an AntennaPod database (.db).</string>
+    <string name="error_backup_corrupt">The backup is damaged or incomplete.</string>
+    <string name="error_backup_newer_version">This backup was made with a newer version of MisPodcast. Update the app to restore it.</string>
+    <string name="error_backup_restore_failed">The backup couldn\'t be restored. Your current data has been kept.</string>
+    <string name="error_antennapod_no_tables">The file doesn\'t contain any AntennaPod subscriptions.</string>
+    <string name="error_folder_access">Couldn\'t access the selected folder.</string>
+    <string name="error_podcast_not_found">Podcast not found.</string>
+    <string name="error_no_results">No results found.</string>
+    <string name="local_podcast_default_title">Local podcast</string>
+    <string name="nc_error_missing_fields">Enter the server URL, username and app password.</string>
+    <string name="nc_error_https">Nextcloud requires a secure HTTPS connection (except on localhost).</string>
+    <string name="nc_error_auth">Wrong username or app password.</string>
+    <string name="nc_error_forbidden">Your Nextcloud user doesn\'t have enough permissions.</string>
+    <string name="nc_error_not_found">No server was found at that address. Check the URL.</string>
+    <string name="nc_error_http">Nextcloud returned an error (HTTP %1$d).</string>
+    <string name="nc_error_corrupt">The MisPodcast/sync_state.json file on Nextcloud is damaged. Delete it on Nextcloud to sync again.</string>
+    <string name="nc_error_download_state">Couldn\'t download the sync state from Nextcloud (HTTP %1$d).</string>
+    <string name="nc_error_conflict">Another device was syncing at the same time. Please try again.</string>
+    <string name="nc_error_upload">Couldn\'t upload the sync state to Nextcloud (HTTP %1$d).</string>
+    <string name="about_privacy_policy">Privacy policy</string>
 </resources>

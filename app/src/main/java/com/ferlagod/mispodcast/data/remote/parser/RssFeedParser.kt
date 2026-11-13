@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.remote.parser
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.LocalizedException
 import android.util.Xml
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -74,7 +76,7 @@ class RssFeedParser(
     ): FeedFetchResult = withContext(Dispatchers.IO) {
         val requestBuilder = Request.Builder()
             .url(feedUrl)
-            .header("User-Agent", "MisPodcast/1.0 (Android; Podcasting 2.0 Compliant)")
+            .header("User-Agent", com.ferlagod.mispodcast.util.AudioTrackingSanitizer.GENERIC_PRIVACY_USER_AGENT)
 
         if (!etag.isNullOrBlank()) {
             requestBuilder.header("If-None-Match", etag)
@@ -88,12 +90,12 @@ class RssFeedParser(
                 return@withContext FeedFetchResult.NotModified
             }
             if (!response.isSuccessful) {
-                throw Exception("Error HTTP al descargar feed: ${response.code}")
+                throw LocalizedException(R.string.error_feed_http, response.code)
             }
             val newEtag = response.header("ETag")
             val newLastModified = response.header("Last-Modified")
             val bodyStream = response.body?.byteStream()
-                ?: throw Exception("El cuerpo del feed RSS está vacío")
+                ?: throw LocalizedException(R.string.error_feed_empty)
             val parsed = parseFeed(bodyStream, feedUrl)
             FeedFetchResult.Success(
                 feed = parsed,
@@ -109,7 +111,7 @@ class RssFeedParser(
     suspend fun fetchAndParseFeed(feedUrl: String): ParsedPodcastFeed = withContext(Dispatchers.IO) {
         when (val result = fetchAndParseFeedConditional(feedUrl)) {
             is FeedFetchResult.Success -> result.feed
-            is FeedFetchResult.NotModified -> throw Exception("Respuesta 304 Not Modified inesperada en consulta directa")
+            is FeedFetchResult.NotModified -> throw LocalizedException(R.string.error_feed_http, 304)
         }
     }
 

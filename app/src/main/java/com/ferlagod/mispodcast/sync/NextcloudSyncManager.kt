@@ -18,6 +18,10 @@
 
 package com.ferlagod.mispodcast.sync
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.LocalizedException
+import com.ferlagod.mispodcast.util.UiText
+import com.ferlagod.mispodcast.util.asUiText
 import com.ferlagod.mispodcast.alerts.AppAlerts
 import com.ferlagod.mispodcast.alerts.SyncFailureReason
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
@@ -219,15 +223,11 @@ class NextcloudSyncManager(
         val appPassword = appPasswordParam ?: settings?.nextcloudAppPassword.orEmpty()
 
         if (serverUrl.isBlank() || username.isBlank() || appPassword.isBlank()) {
-            return@withContext Result.failure(
-                IllegalArgumentException("Por favor, introduce la URL del servidor, usuario y contraseña de aplicación.")
-            )
+            return@withContext Result.failure(LocalizedException(R.string.nc_error_missing_fields))
         }
 
         if (!isSecureServerUrl(serverUrl)) {
-            return@withContext Result.failure(
-                SecurityException("Se requiere conexión segura HTTPS para sincronizar con Nextcloud (salvo localhost).")
-            )
+            return@withContext Result.failure(SecurityException("Nextcloud requiere HTTPS", LocalizedException(R.string.nc_error_https)))
         }
 
         try {
@@ -251,24 +251,16 @@ class NextcloudSyncManager(
                         ensureAppFolderExists(serverUrl, username, credentials)
                         Result.success(MSG_CONNECTED)
                     }
-                    401 -> Result.failure(
-                        Exception("Error de autenticación (401). Verifica tu usuario y contraseña de aplicación de Nextcloud.")
-                    )
-                    403 -> Result.failure(
-                        Exception("Acceso denegado (403). Tu usuario de Nextcloud no tiene permisos suficientes.")
-                    )
-                    404 -> Result.failure(
-                        Exception("Ruta no encontrada (404). Verifica que la URL del servidor sea correcta.")
-                    )
-                    else -> Result.failure(
-                        Exception("Error al conectar con Nextcloud: HTTP $code (${response.message})")
-                    )
+                    401 -> Result.failure(LocalizedException(R.string.nc_error_auth))
+                    403 -> Result.failure(LocalizedException(R.string.nc_error_forbidden))
+                    404 -> Result.failure(LocalizedException(R.string.nc_error_not_found))
+                    else -> Result.failure(LocalizedException(R.string.nc_error_http, code))
                 }
             }
         } catch (e: Exception) {
             e.rethrowIfCancellation()
             Log.e(TAG, "Error en testConnection", e)
-            Result.failure(Exception("No se pudo conectar: ${e.localizedMessage ?: "Comprueba la conexión de red o el servidor"}"))
+            Result.failure(LocalizedException(e.asUiText(R.string.error_network), e.message, e))
         }
     }
 
@@ -321,9 +313,7 @@ class NextcloudSyncManager(
         if (!isSecureServerUrl(serverUrl)) {
             Log.w(TAG, "Conexión insegura rechazada para Nextcloud: $serverUrl")
             AppAlerts.onSyncFailed(SyncFailureReason.INSECURE, automatic)
-            return@withContext Result.failure(
-                SecurityException("Se requiere conexión segura HTTPS para sincronizar con Nextcloud (salvo localhost).")
-            )
+            return@withContext Result.failure(SecurityException("Nextcloud requiere HTTPS", LocalizedException(R.string.nc_error_https)))
         }
 
         if (!syncMutex.tryLock()) {
@@ -402,7 +392,7 @@ class NextcloudSyncManager(
                                 return Result.failure(
                                     NextcloudSyncException(
                                         SyncFailureReason.CORRUPT,
-                                        "El archivo MisPodcast/$SYNC_FILE_NAME de Nextcloud está dañado. Bórralo en Nextcloud para volver a sincronizar."
+                                        UiText.Res(R.string.nc_error_corrupt)
                                     )
                                 )
                             }
@@ -418,7 +408,7 @@ class NextcloudSyncManager(
                         return Result.failure(
                             NextcloudSyncException(
                                 failureReasonForHttp(getResponse.code),
-                                "No se pudo descargar el estado de Nextcloud (HTTP ${getResponse.code})"
+                                UiText.Res(R.string.nc_error_download_state, getResponse.code)
                             )
                         )
                     }
@@ -469,14 +459,14 @@ class NextcloudSyncManager(
                 Result.failure(
                     NextcloudSyncException(
                         SyncFailureReason.SERVER,
-                        "Conflicto de concurrencia con Nextcloud tras $maxAttempts reintentos (HTTP 412). Vuelve a sincronizar."
+                        UiText.Res(R.string.nc_error_conflict)
                     )
                 )
             } else {
                 Result.failure(
                     NextcloudSyncException(
                         failureReasonForHttp(lastPutCode),
-                        "Error al subir estado a Nextcloud (HTTP $lastPutCode)"
+                        UiText.Res(R.string.nc_error_upload, lastPutCode)
                     )
                 )
             }
@@ -486,7 +476,7 @@ class NextcloudSyncManager(
             Result.failure(
                 NextcloudSyncException(
                     if (e is java.io.IOException) SyncFailureReason.NETWORK else SyncFailureReason.SERVER,
-                    "Fallo en sincronización Nextcloud: ${e.localizedMessage ?: "Error de red"}"
+                    e.asUiText(R.string.msg_nextcloud_sync_error)
                 )
             )
         }
@@ -1323,4 +1313,4 @@ class NextcloudSyncManager(
 }
 
 /** Fallo de sincronización con su causa, para decidir si merece avisar al usuario (ver [AppAlerts]). */
-class NextcloudSyncException(val reason: SyncFailureReason, message: String) : Exception(message)
+class NextcloudSyncException(val reason: SyncFailureReason, text: UiText) : LocalizedException(text)

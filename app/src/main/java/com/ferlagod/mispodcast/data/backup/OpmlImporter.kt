@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.LocalizedException
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.net.Uri
@@ -40,7 +42,7 @@ object OpmlImporter {
     ): Result<List<OpmlPodcastFeed>> = withContext(Dispatchers.IO) {
         try {
             val inputStream = context.contentResolver.openInputStream(sourceUri)
-                ?: return@withContext Result.failure(IllegalStateException("No se pudo abrir el archivo OPML seleccionado"))
+                ?: return@withContext Result.failure(LocalizedException(R.string.error_open_file))
 
             val feedList = mutableListOf<OpmlPodcastFeed>()
 

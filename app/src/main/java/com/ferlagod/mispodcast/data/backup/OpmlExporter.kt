@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.LocalizedException
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.net.Uri
@@ -45,7 +47,7 @@ object OpmlExporter {
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val outputStream = context.contentResolver.openOutputStream(targetUri)
-                ?: return@withContext Result.failure(IllegalStateException("No se pudo abrir el destino para escribir"))
+                ?: return@withContext Result.failure(LocalizedException(R.string.error_open_destination))
 
             val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US)
             val currentDate = dateFormat.format(Date())

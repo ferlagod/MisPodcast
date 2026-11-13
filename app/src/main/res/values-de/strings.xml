@@ -31,15 +31,11 @@
     <string name="category_title">Kategorie</string>
 
     <!-- Actions and States -->
-    <string name="now_playing">Aktuelle Wiedergabe</string>
     <string name="continue_listening">WEITERSPIELEN</string>
-    <string name="listen_now">Jetzt hören</string>
     <string name="up_next">ALS NÄCHSTES</string>
     <string name="subscribe">Abonnieren</string>
     <string name="subscribed">Abonniert</string>
-    <string name="unsubscribe">Abbestellen</string>
     <string name="download">Herunterladen</string>
-    <string name="downloading">Wird heruntergeladen…</string>
     <string name="downloaded">Heruntergeladen</string>
     <string name="download_waiting">Wartet auf WLAN oder Laden</string>
     <string name="delete_download">Download löschen</string>
@@ -64,7 +60,6 @@
     <string name="add_local_folder_subtitle">Audiodateien aus deinem Speicher in einen lokalen Podcast umwandeln</string>
     <string name="search_podcasts">Podcasts suchen</string>
     <string name="search_or_paste_rss">Podcasts suchen oder RSS-Feed einfügen…</string>
-    <string name="paste_rss_url">RSS-Feed-URL einfügen</string>
     <string name="tab_search">Suchen</string>
     <string name="tab_rss_feed">RSS-Feed</string>
     <string name="tab_local_folder">Lokaler Ordner</string>
@@ -119,11 +114,8 @@
     <string name="close">Schließen</string>
     <string name="save">Speichern</string>
     <string name="cancel">Abbrechen</string>
-    <string name="delete">Löschen</string>
-    <string name="edit">Bearbeiten</string>
     <string name="library">BIBLIOTHEK</string>
     <string name="from_your_subscriptions">AUS DEINEN ABONNEMENTS</string>
-    <string name="empty_queue">Deine Warteschlange ist leer</string>
     <string name="empty_subscriptions">Noch keine Abonnements</string>
     <string name="empty_subscriptions_subtitle">Finde deine Lieblingssendungen in der Suche oder füge eine RSS-Feed-URL ein.</string>
     <string name="add_first_podcast">Ersten Podcast hinzufügen</string>
@@ -132,9 +124,6 @@
     <string name="empty_history">Der Hörverlauf ist leer</string>
     <string name="empty_favorites">Keine Lieblingsepisoden</string>
     <string name="podcast_detail_title">Podcast-Details</string>
-    <string name="stats_title">Statistiken</string>
-    <string name="history_title">Verlauf</string>
-    <string name="favorites_title">Lieblingsepisoden</string>
     <string name="queue_title">Warteschlange</string>
     <string name="episodes">Episoden</string>
     <string name="programs_followed">abonnierte Sendungen</string>
@@ -161,7 +150,6 @@
     <string name="toast_marked_as_unplayed">Als ungehört markiert</string>
     <string name="widget_description">Wiedergabesteuerung für Mis Podcast auf dem Startbildschirm</string>
     <string name="tile_label">Mis Podcast</string>
-    <string name="tile_play">Wiedergeben</string>
     <string name="tile_pause">Pause</string>
     <string name="tile_no_episode">Tippen zum Abspielen</string>
     <string name="support_podcast_button">Unterstützen</string>
@@ -183,10 +171,8 @@
     <string name="btn_close">Schließen</string>
     <string name="action_refresh">Aktualisieren</string>
     <string name="action_share">Teilen</string>
-    <string name="action_search">Suchen</string>
     <string name="action_play">Wiedergeben</string>
     <string name="action_pause">Pause</string>
-    <string name="action_copy">Kopieren</string>
     <string name="action_selected">Ausgewählt</string>
     <string name="action_remove_favorite">Aus Favoriten entfernen</string>
     <string name="action_add_favorite">Zu Favoriten hinzufügen</string>
@@ -220,7 +206,6 @@
     <string name="player_close_description">Player schließen</string>
     <string name="player_sleep_timer_description">Schlaf-Timer</string>
     <string name="player_speed_description">Wiedergabegeschwindigkeit anpassen</string>
-    <string name="player_audio_effects_description">Audioeffekte und Stimmverstärkung</string>
     <string name="player_bookmarks_description">Lesezeichen und Notizen</string>
     <string name="player_transcript_description">Transkript anzeigen</string>
     <string name="player_prev_chapter_description">Vorheriges Kapitel</string>
@@ -277,14 +262,9 @@
     <string name="move_up">Nach oben verschieben</string>
     <string name="move_down">Nach unten verschieben</string>
     <string name="drag_handle_description">Episode neu anordnen</string>
-    <string name="trending">Trends</string>
     <string name="local_folder">Lokaler Ordner</string>
 
     <!-- Player slider accessibility -->
-    <string name="player_progress_slider_description">Wiedergabeposition</string>
-    <string name="player_progress_state_minutes">%1$d Minuten von %2$d</string>
-    <string name="player_progress_state_hours">%1$d Std. %2$d Min. von %3$d Std. %4$d Min.</string>
-    <string name="player_progress_state_hours_start">%1$d Min. von %2$d Std. %3$d Min.</string>
 
     <!-- Sleep Timer Custom -->
     <string name="sleep_timer_custom_duration">Benutzerdefinierte Dauer</string>
@@ -293,16 +273,10 @@
     <!-- Material You Dynamic Color -->
     <string name="settings_dynamic_color_title">Dynamische Farben (Material You)</string>
     <string name="settings_dynamic_color_subtitle">App-Farbpalette an das Hintergrundbild deines Geräts anpassen</string>
-    <string name="action_add_feed">RSS-Feed hinzufügen</string>
     <string name="action_explore_podcasts">Podcasts entdecken</string>
     <string name="bookmark_empty_subtitle">Tippe auf „Speichern“, um ein Zitat oder einen Moment mit Zeitstempel und Notiz festzuhalten.</string>
     <string name="bookmark_empty_title">Keine Lesezeichen in dieser Folge</string>
     <string name="bookmark_save_moment">Moment speichern</string>
-    <string name="continue_prefix">Fortsetzen</string>
-    <string name="empty_downloads_subtitle">Lade Folgen herunter, um sie offline im Flugzeug, in der U-Bahn oder unterwegs zu hören.</string>
-    <string name="empty_downloads_title">Keine heruntergeladenen Folgen</string>
-    <string name="empty_favorites_subtitle">Markiere Folgen mit dem Herz, um deine Lieblinge hier zu speichern.</string>
-    <string name="empty_favorites_title">Noch keine Lieblingsfolgen</string>
     <string name="empty_queue_title">Deine Warteschlange ist leer</string>
     <string name="empty_subscriptions_title">Noch keine abonnierten Podcasts</string>
     <string name="greeting_afternoon">Guten Tag</string>
@@ -341,7 +315,6 @@
     <string name="msg_db_importing">Datenbank wird analysiert und importiert…</string>
     <string name="msg_db_import_error">Fehler beim Wiederherstellen der Datenbank: %1$s</string>
     <string name="bookmark_default_note">Moment bei %1$s</string>
-    <string name="recommended_based_on">Basierend auf deinem Interesse an „%1$s“</string>
     <string name="category_no_podcasts_now">Derzeit sind keine Podcasts verfügbar.</string>
     <string name="category_load_error">Fehler beim Laden der Podcasts für %1$s</string>
     <string name="category_loading">%1$s wird geladen…</string>
@@ -614,7 +587,7 @@
     <string name="msg_nextcloud_synced">Mit Nextcloud synchronisiert!</string>
     <string name="msg_nextcloud_sync_running">Synchronisierung läuft bereits</string>
     <string name="msg_nextcloud_not_configured">Synchronisierung übersprungen: Nextcloud ist nicht eingerichtet</string>
-    <string name="msg_db_restored">MisPodcast-Datenbank wiederhergestellt! Starte die App neu, um die Änderungen zu laden.</string>
+    <string name="msg_db_restored">Sicherung wiederhergestellt. Die App wird neu gestartet…</string>
     <string name="msg_antennapod_imported">AntennaPod-Datenbank importiert!\n• %1$d abonnierte Podcasts\n• %2$d Folgen (%3$d gehört)\n• %4$d Std. Statistik und %5$d Verlaufseinträge</string>
     <string name="msg_antennapod_queue">\n• %1$d Folgen zur Warteschlange hinzugefügt</string>
 
@@ -706,4 +679,37 @@
     <string name="sync_issue_insecure">Letzter Versuch: HTTPS erforderlich</string>
     <string name="sync_issue_network">Letzter Versuch: Server nicht erreichbar</string>
     <string name="sync_issue_server">Letzter Versuch: Serverfehler</string>
+
+    <!-- Mensajes de error traducibles (LocalizedException) -->
+    <string name="error_unexpected">Es ist ein unerwarteter Fehler aufgetreten.</string>
+    <string name="error_network">Server nicht erreichbar. Prüfe deine Internetverbindung.</string>
+    <string name="error_timeout">Der Server hat zu lange nicht geantwortet.</string>
+    <string name="error_secure_connection">Es konnte keine sichere Verbindung zum Server hergestellt werden.</string>
+    <string name="error_feed_invalid">Der Feed hat kein gültiges Format.</string>
+    <string name="error_feed_http">Der Feed-Server hat einen Fehler gemeldet (HTTP %1$d).</string>
+    <string name="error_feed_empty">Der Feed ist leer.</string>
+    <string name="error_db_not_found">Die Datenbank der App wurde nicht gefunden.</string>
+    <string name="error_open_destination">Das Ziel zum Speichern der Datei konnte nicht geöffnet werden.</string>
+    <string name="error_open_file">Die ausgewählte Datei konnte nicht geöffnet werden.</string>
+    <string name="error_backup_invalid_zip">Die ZIP-Datei enthält keine gültige Sicherung von MisPodcast oder AntennaPod.</string>
+    <string name="error_backup_invalid_file">Die Datei ist weder eine MisPodcast-Sicherung (.zip) noch eine AntennaPod-Datenbank (.db).</string>
+    <string name="error_backup_corrupt">Die Sicherung ist beschädigt oder unvollständig.</string>
+    <string name="error_backup_newer_version">Diese Sicherung stammt aus einer neueren Version von MisPodcast. Aktualisiere die App, um sie wiederherzustellen.</string>
+    <string name="error_backup_restore_failed">Die Sicherung konnte nicht wiederhergestellt werden. Deine aktuellen Daten bleiben erhalten.</string>
+    <string name="error_antennapod_no_tables">Die Datei enthält keine AntennaPod-Abonnements.</string>
+    <string name="error_folder_access">Auf den ausgewählten Ordner konnte nicht zugegriffen werden.</string>
+    <string name="error_podcast_not_found">Podcast nicht gefunden.</string>
+    <string name="error_no_results">Keine Ergebnisse gefunden.</string>
+    <string name="local_podcast_default_title">Lokaler Podcast</string>
+    <string name="nc_error_missing_fields">Gib Server-URL, Benutzername und App-Passwort ein.</string>
+    <string name="nc_error_https">Nextcloud erfordert eine sichere HTTPS-Verbindung (außer bei localhost).</string>
+    <string name="nc_error_auth">Benutzername oder App-Passwort falsch.</string>
+    <string name="nc_error_forbidden">Dein Nextcloud-Benutzer hat nicht genügend Berechtigungen.</string>
+    <string name="nc_error_not_found">Unter dieser Adresse wurde kein Server gefunden. Prüfe die URL.</string>
+    <string name="nc_error_http">Nextcloud hat einen Fehler gemeldet (HTTP %1$d).</string>
+    <string name="nc_error_corrupt">Die Datei MisPodcast/sync_state.json in Nextcloud ist beschädigt. Lösche sie in Nextcloud, um erneut zu synchronisieren.</string>
+    <string name="nc_error_download_state">Der Synchronisierungsstand konnte nicht von Nextcloud geladen werden (HTTP %1$d).</string>
+    <string name="nc_error_conflict">Ein anderes Gerät hat gleichzeitig synchronisiert. Versuche es erneut.</string>
+    <string name="nc_error_upload">Der Synchronisierungsstand konnte nicht zu Nextcloud hochgeladen werden (HTTP %1$d).</string>
+    <string name="about_privacy_policy">Datenschutzerklärung</string>
 </resources>

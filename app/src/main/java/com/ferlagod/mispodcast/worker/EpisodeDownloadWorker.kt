@@ -72,7 +72,7 @@ class EpisodeDownloadWorker(
     override suspend fun doWork(): Result {
         val episodeId = inputData.getString(KEY_EPISODE_ID) ?: return Result.failure()
         val audioUrl = inputData.getString(KEY_AUDIO_URL) ?: return Result.failure()
-        val episodeTitle = inputData.getString(KEY_EPISODE_TITLE) ?: "Episodio"
+        val episodeTitle = inputData.getString(KEY_EPISODE_TITLE) ?: applicationContext.getString(R.string.episode_fallback)
 
         val container = (applicationContext as com.ferlagod.mispodcast.MisPodcastApplication).container
         val database = container.database

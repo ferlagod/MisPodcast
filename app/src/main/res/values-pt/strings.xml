@@ -31,15 +31,11 @@
     <string name="category_title">Categoria</string>
 
     <!-- Actions and States -->
-    <string name="now_playing">Reproduzindo agora</string>
     <string name="continue_listening">CONTINUAR OUVINDO</string>
-    <string name="listen_now">Ouvir agora</string>
     <string name="up_next">A SEGUIR</string>
     <string name="subscribe">Inscrever-se</string>
     <string name="subscribed">Inscrito</string>
-    <string name="unsubscribe">Cancelar inscrição</string>
     <string name="download">Baixar</string>
-    <string name="downloading">Baixando…</string>
     <string name="downloaded">Baixado</string>
     <string name="download_waiting">Aguardando Wi-Fi ou carregamento</string>
     <string name="delete_download">Excluir download</string>
@@ -64,7 +60,6 @@
     <string name="add_local_folder_subtitle">Converta arquivos de áudio do seu armazenamento em um podcast local</string>
     <string name="search_podcasts">Pesquisar podcasts</string>
     <string name="search_or_paste_rss">Pesquisar podcasts ou colar feed RSS…</string>
-    <string name="paste_rss_url">Colar URL do feed RSS</string>
     <string name="tab_search">Pesquisar</string>
     <string name="tab_rss_feed">Feed RSS</string>
     <string name="tab_local_folder">Pasta local</string>
@@ -119,11 +114,8 @@
     <string name="close">Fechar</string>
     <string name="save">Salvar</string>
     <string name="cancel">Cancelar</string>
-    <string name="delete">Excluir</string>
-    <string name="edit">Editar</string>
     <string name="library">BIBLIOTECA</string>
     <string name="from_your_subscriptions">DAS SUAS INSCRIÇÕES</string>
-    <string name="empty_queue">Sua fila está vazia</string>
     <string name="empty_subscriptions">Nenhuma inscrição ainda</string>
     <string name="empty_subscriptions_subtitle">Encontre seus programas preferidos na pesquisa ou cole a URL de um feed RSS.</string>
     <string name="add_first_podcast">Adicionar primeiro podcast</string>
@@ -132,9 +124,6 @@
     <string name="empty_history">O histórico de reprodução está vazio</string>
     <string name="empty_favorites">Nenhum episódio favorito</string>
     <string name="podcast_detail_title">Detalhes do podcast</string>
-    <string name="stats_title">Estatísticas</string>
-    <string name="history_title">Histórico</string>
-    <string name="favorites_title">Episódios favoritos</string>
     <string name="queue_title">Fila de espera</string>
     <string name="episodes">episódios</string>
     <string name="programs_followed">programas seguidos</string>
@@ -161,7 +150,6 @@
     <string name="toast_marked_as_unplayed">Marcado como não reproduzido</string>
     <string name="widget_description">Controles de reprodução do Mis Podcast na tela inicial</string>
     <string name="tile_label">Mis Podcast</string>
-    <string name="tile_play">Reproduzir</string>
     <string name="tile_pause">Pausar</string>
     <string name="tile_no_episode">Toque para reproduzir</string>
     <string name="support_podcast_button">Apoiar</string>
@@ -183,10 +171,8 @@
     <string name="btn_close">Fechar</string>
     <string name="action_refresh">Atualizar</string>
     <string name="action_share">Compartilhar</string>
-    <string name="action_search">Pesquisar</string>
     <string name="action_play">Reproduzir</string>
     <string name="action_pause">Pausar</string>
-    <string name="action_copy">Copiar</string>
     <string name="action_selected">Selecionado</string>
     <string name="action_remove_favorite">Remover dos favoritos</string>
     <string name="action_add_favorite">Adicionar aos favoritos</string>
@@ -220,7 +206,6 @@
     <string name="player_close_description">Fechar reprodutor</string>
     <string name="player_sleep_timer_description">Temporizador de sono</string>
     <string name="player_speed_description">Ajustar velocidade de reprodução</string>
-    <string name="player_audio_effects_description">Efeitos de áudio e reforço de voz</string>
     <string name="player_bookmarks_description">Marcadores e notas</string>
     <string name="player_transcript_description">Ver transcrição</string>
     <string name="player_prev_chapter_description">Capítulo anterior</string>
@@ -277,14 +262,9 @@
     <string name="move_up">Mover para cima</string>
     <string name="move_down">Mover para baixo</string>
     <string name="drag_handle_description">Reordenar episódio</string>
-    <string name="trending">Tendências</string>
     <string name="local_folder">Pasta local</string>
 
     <!-- Player slider accessibility -->
-    <string name="player_progress_slider_description">Posição de reprodução</string>
-    <string name="player_progress_state_minutes">%1$d minutos de %2$d</string>
-    <string name="player_progress_state_hours">%1$d h %2$d min de %3$d h %4$d min</string>
-    <string name="player_progress_state_hours_start">%1$d min de %2$d h %3$d min</string>
 
     <!-- Sleep Timer Custom -->
     <string name="sleep_timer_custom_duration">Duração personalizada</string>
@@ -293,16 +273,10 @@
     <!-- Material You Dynamic Color -->
     <string name="settings_dynamic_color_title">Cor dinâmica (Material You)</string>
     <string name="settings_dynamic_color_subtitle">Adapta as cores da aplicação ao papel de parede do seu dispositivo</string>
-    <string name="action_add_feed">Adicionar feed RSS</string>
     <string name="action_explore_podcasts">Explorar podcasts</string>
     <string name="bookmark_empty_subtitle">Toque em \'Guardar\' para registar uma frase ou momento com marca temporal e nota pessoal.</string>
     <string name="bookmark_empty_title">Sem marcadores neste episódio</string>
     <string name="bookmark_save_moment">Guardar momento</string>
-    <string name="continue_prefix">Continuar</string>
-    <string name="empty_downloads_subtitle">Transfira episódios para ouvir offline no avião, metro ou estrada.</string>
-    <string name="empty_downloads_title">Sem episódios transferidos</string>
-    <string name="empty_favorites_subtitle">Marque episódios com o coração para guardar aqui as suas pérolas.</string>
-    <string name="empty_favorites_title">Ainda sem episódios favoritos</string>
     <string name="empty_queue_title">A sua fila está vazia</string>
     <string name="empty_subscriptions_title">Ainda não segue nenhum podcast</string>
     <string name="greeting_afternoon">Boa tarde</string>
@@ -341,7 +315,6 @@
     <string name="msg_db_importing">A analisar e importar base de dados…</string>
     <string name="msg_db_import_error">Erro ao restaurar base de dados: %1$s</string>
     <string name="bookmark_default_note">Momento em %1$s</string>
-    <string name="recommended_based_on">Com base no seu interesse por \'%1$s\'</string>
     <string name="category_no_podcasts_now">Não há podcasts disponíveis de momento.</string>
     <string name="category_load_error">Erro ao obter podcasts de %1$s</string>
     <string name="category_loading">A carregar %1$s…</string>
@@ -614,7 +587,7 @@
     <string name="msg_nextcloud_synced">Sincronizado com o Nextcloud!</string>
     <string name="msg_nextcloud_sync_running">Sincronização já em curso</string>
     <string name="msg_nextcloud_not_configured">Sincronização ignorada: Nextcloud não configurado</string>
-    <string name="msg_db_restored">Base de dados do MisPodcast restaurada! Reinicie a app para carregar as alterações.</string>
+    <string name="msg_db_restored">Cópia restaurada. A app vai reiniciar…</string>
     <string name="msg_antennapod_imported">Base de dados do AntennaPod importada!\n• %1$d podcasts subscritos\n• %2$d episódios (%3$d ouvidos)\n• %4$d h de estatísticas e %5$d registos de histórico</string>
     <string name="msg_antennapod_queue">\n• %1$d episódios adicionados à fila</string>
 
@@ -709,4 +682,37 @@
     <string name="sync_issue_insecure">Última tentativa: HTTPS obrigatório</string>
     <string name="sync_issue_network">Última tentativa: não foi possível contactar o servidor</string>
     <string name="sync_issue_server">Última tentativa: erro do servidor</string>
+
+    <!-- Mensajes de error traducibles (LocalizedException) -->
+    <string name="error_unexpected">Ocorreu um erro inesperado.</string>
+    <string name="error_network">Não foi possível contactar o servidor. Verifique a ligação à Internet.</string>
+    <string name="error_timeout">O servidor demorou demasiado a responder.</string>
+    <string name="error_secure_connection">Não foi possível estabelecer uma ligação segura com o servidor.</string>
+    <string name="error_feed_invalid">O feed não tem um formato válido.</string>
+    <string name="error_feed_http">O servidor do feed devolveu um erro (HTTP %1$d).</string>
+    <string name="error_feed_empty">O feed está vazio.</string>
+    <string name="error_db_not_found">Não foi encontrada a base de dados da app.</string>
+    <string name="error_open_destination">Não foi possível abrir o destino para guardar o ficheiro.</string>
+    <string name="error_open_file">Não foi possível abrir o ficheiro selecionado.</string>
+    <string name="error_backup_invalid_zip">O ZIP não contém uma cópia válida do MisPodcast nem do AntennaPod.</string>
+    <string name="error_backup_invalid_file">O ficheiro não é uma cópia de segurança do MisPodcast (.zip) nem uma base de dados do AntennaPod (.db).</string>
+    <string name="error_backup_corrupt">A cópia de segurança está danificada ou incompleta.</string>
+    <string name="error_backup_newer_version">Esta cópia foi criada numa versão mais recente do MisPodcast. Atualize a app para a restaurar.</string>
+    <string name="error_backup_restore_failed">Não foi possível restaurar a cópia. Os seus dados atuais foram mantidos.</string>
+    <string name="error_antennapod_no_tables">O ficheiro não contém subscrições do AntennaPod.</string>
+    <string name="error_folder_access">Não foi possível aceder à pasta selecionada.</string>
+    <string name="error_podcast_not_found">Podcast não encontrado.</string>
+    <string name="error_no_results">Nenhum resultado encontrado.</string>
+    <string name="local_podcast_default_title">Podcast local</string>
+    <string name="nc_error_missing_fields">Introduza o URL do servidor, o utilizador e a palavra-passe da aplicação.</string>
+    <string name="nc_error_https">O Nextcloud exige uma ligação HTTPS segura (exceto em localhost).</string>
+    <string name="nc_error_auth">Utilizador ou palavra-passe da aplicação incorretos.</string>
+    <string name="nc_error_forbidden">O seu utilizador do Nextcloud não tem permissões suficientes.</string>
+    <string name="nc_error_not_found">Não foi encontrado nenhum servidor nesse endereço. Verifique o URL.</string>
+    <string name="nc_error_http">O Nextcloud devolveu um erro (HTTP %1$d).</string>
+    <string name="nc_error_corrupt">O ficheiro MisPodcast/sync_state.json no Nextcloud está danificado. Elimine-o no Nextcloud para voltar a sincronizar.</string>
+    <string name="nc_error_download_state">Não foi possível transferir o estado de sincronização do Nextcloud (HTTP %1$d).</string>
+    <string name="nc_error_conflict">Outro dispositivo estava a sincronizar ao mesmo tempo. Tente novamente.</string>
+    <string name="nc_error_upload">Não foi possível enviar o estado de sincronização para o Nextcloud (HTTP %1$d).</string>
+    <string name="about_privacy_policy">Política de privacidade</string>
 </resources>

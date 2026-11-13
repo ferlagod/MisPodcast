@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import com.ferlagod.mispodcast.util.asUiText
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
@@ -128,7 +129,11 @@ fun CategoryPodcastsScreen(
                 }
             } catch (e: Exception) {
                 e.rethrowIfCancellation()
-                errorMessage = e.localizedMessage ?: resources.getString(R.string.category_load_error, categoryName)
+                errorMessage = if (e is com.ferlagod.mispodcast.util.LocalizedException || e is java.io.IOException) {
+                    e.asUiText().asString(context)
+                } else {
+                    resources.getString(R.string.category_load_error, categoryName)
+                }
             } finally {
                 isLoading = false
             }

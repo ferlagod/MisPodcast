@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.local
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.LocalizedException
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.Intent
@@ -62,9 +64,9 @@ object LocalFolderPodcastImporter {
 
             // 2. Obtener el DocumentFile raíz de la carpeta
             val rootFolder = DocumentFile.fromTreeUri(context, treeUri)
-                ?: return@withContext Result.failure(IllegalArgumentException("No se pudo acceder a la carpeta seleccionada."))
+                ?: return@withContext Result.failure(LocalizedException(R.string.error_folder_access))
 
-            val folderName = rootFolder.name ?: "Podcast Local"
+            val folderName = rootFolder.name ?: context.getString(R.string.local_podcast_default_title)
             val title = customTitle?.trim()?.ifBlank { null } ?: folderName
 
             // 3. Resolver la portada del podcast
@@ -208,11 +210,11 @@ object LocalFolderPodcastImporter {
             }
 
             if (podcast == null) {
-                return@withContext Result.failure(IllegalArgumentException("Podcast no encontrado en la base de datos."))
+                return@withContext Result.failure(LocalizedException(R.string.error_podcast_not_found))
             }
 
             val rootFolder = DocumentFile.fromTreeUri(context, newTreeUri)
-                ?: return@withContext Result.failure(IllegalArgumentException("No se pudo acceder a la carpeta seleccionada."))
+                ?: return@withContext Result.failure(LocalizedException(R.string.error_folder_access))
 
             // Portada de la carpeta si existe
             val folderArtwork = findCoverImageInFolder(rootFolder)

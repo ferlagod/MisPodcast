@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.backup
 
+import com.ferlagod.mispodcast.util.UiText
+import com.ferlagod.mispodcast.util.LocalizedException
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
@@ -107,15 +109,13 @@ object AntennaPodDatabaseImporter {
         context: Context,
         dbFile: File,
         database: PodcastDatabase
-    ): Result<String> = withContext(Dispatchers.IO) {
+    ): Result<UiText> = withContext(Dispatchers.IO) {
         var sqliteDb: SQLiteDatabase? = null
         try {
             sqliteDb = SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READONLY)
 
             if (!hasTable(sqliteDb, "Feeds") || !hasTable(sqliteDb, "FeedItems")) {
-                return@withContext Result.failure(
-                    IllegalArgumentException("El archivo no contiene las tablas de suscripciones de AntennaPod (Feeds, FeedItems)")
-                )
+                return@withContext Result.failure(LocalizedException(R.string.error_antennapod_no_tables))
             }
 
             // 1. Extraer Podcasts (Feeds)
@@ -511,10 +511,15 @@ object AntennaPodDatabaseImporter {
             val playedCount = episodesToInsert.count { it.isPlayed }
             val totalHours = statsToInsert.sumOf { it.totalTimeListenedMs } / (1000 * 60 * 60)
 
-            val summary = context.getString(
-                R.string.msg_antennapod_imported,
-                podcastsToInsert.size, episodesToInsert.size, playedCount, totalHours.toInt(), historyToInsert.size
-            ) + (if (queueToInsert.isNotEmpty()) context.getString(R.string.msg_antennapod_queue, queueToInsert.size) else "")
+            val summary = UiText.Joined(
+                listOfNotNull(
+                    UiText.Res(
+                        R.string.msg_antennapod_imported,
+                        podcastsToInsert.size, episodesToInsert.size, playedCount, totalHours.toInt(), historyToInsert.size
+                    ),
+                    if (queueToInsert.isNotEmpty()) UiText.Res(R.string.msg_antennapod_queue, queueToInsert.size) else null
+                )
+            )
 
             com.ferlagod.mispodcast.sync.NextcloudSyncManager.getInstance(context).triggerSyncIfConfigured(debounceMs = 3000L)
 

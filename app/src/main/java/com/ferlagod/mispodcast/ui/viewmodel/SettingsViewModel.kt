@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.util.asUiText
 import com.ferlagod.mispodcast.R
 import android.app.Application
 import android.net.Uri
@@ -101,7 +102,7 @@ class SettingsViewModel @JvmOverloads constructor(
                 _isConnectionSuccess.value = true
                 preferencesManager.setNextcloudConfig(serverUrl, username, appPassword)
             }.onFailure { err ->
-                _connectionTestResult.value = err.localizedMessage?.let(UiText::Raw) ?: UiText.Res(R.string.msg_nextcloud_connect_error)
+                _connectionTestResult.value = err.asUiText(R.string.msg_nextcloud_connect_error)
                 _isConnectionSuccess.value = false
             }
             _isTestingConnection.value = false
@@ -120,7 +121,7 @@ class SettingsViewModel @JvmOverloads constructor(
                     else -> UiText.Res(R.string.msg_nextcloud_synced)
                 }
             }.onFailure { err ->
-                _nextcloudSyncMessage.value = err.localizedMessage?.let(UiText::Raw) ?: UiText.Res(R.string.msg_nextcloud_sync_error)
+                _nextcloudSyncMessage.value = err.asUiText(R.string.msg_nextcloud_sync_error)
             }
             _isSyncingNextcloud.value = false
         }
@@ -247,7 +248,7 @@ class SettingsViewModel @JvmOverloads constructor(
             result.onSuccess { count ->
                 _backupMessage.value = UiText.Res(R.string.msg_opml_exported, count)
             }.onFailure { err ->
-                _backupMessage.value = UiText.Res(R.string.msg_opml_export_error, err.localizedMessage.orEmpty())
+                _backupMessage.value = UiText.Res(R.string.msg_opml_export_error, err.asUiText())
             }
             _isProcessingBackup.value = false
         }
@@ -281,7 +282,7 @@ class SettingsViewModel @JvmOverloads constructor(
                             .removePrefix("local:")
                         val localEntity = PodcastEntity(
                             id = feed.xmlUrl,
-                            title = feed.title.ifBlank { "Podcast Local" },
+                            title = feed.title.ifBlank { getApplication<Application>().getString(R.string.local_podcast_default_title) },
                             author = "Carpeta Local",
                             description = "Podcast de carpeta local importado desde OPML",
                             feedUrl = feed.xmlUrl,
@@ -308,7 +309,7 @@ class SettingsViewModel @JvmOverloads constructor(
                     nextcloudSyncManager.triggerSyncIfConfigured(debounceMs = 2500L)
                 }
             }.onFailure { err ->
-                _backupMessage.value = UiText.Res(R.string.msg_opml_read_error, err.localizedMessage.orEmpty())
+                _backupMessage.value = UiText.Res(R.string.msg_opml_read_error, err.asUiText())
             }
             _isProcessingBackup.value = false
         }
@@ -326,7 +327,7 @@ class SettingsViewModel @JvmOverloads constructor(
             result.onSuccess {
                 _backupMessage.value = UiText.Res(R.string.msg_db_exported)
             }.onFailure { err ->
-                _backupMessage.value = UiText.Res(R.string.msg_db_export_error, err.localizedMessage.orEmpty())
+                _backupMessage.value = UiText.Res(R.string.msg_db_export_error, err.asUiText())
             }
             _isProcessingBackup.value = false
         }
@@ -337,14 +338,26 @@ class SettingsViewModel @JvmOverloads constructor(
             _isProcessingBackup.value = true
             _backupMessage.value = UiText.Res(R.string.msg_db_importing)
             val result = DatabaseBackupManager.importDatabase(getApplication(), sourceUri, database)
-            result.onSuccess { msg ->
+            result.onSuccess { outcome ->
                 com.ferlagod.mispodcast.notification.NotificationHelper.cancelAllNotifications(getApplication())
-                _backupMessage.value = UiText.Raw(msg)
+                _backupMessage.value = outcome.message
+                if (outcome.requiresRestart) {
+                    // La base de datos abierta se cerró para sustituirla: reiniciar para cargar la restaurada
+                    // (la sincronización se lanzará sola al arrancar de nuevo)
+                    kotlinx.coroutines.delay(RESTART_DELAY_MS)
+                    com.ferlagod.mispodcast.util.AppRestarter.restart(getApplication())
+                    return@launch
+                }
                 nextcloudSyncManager.triggerSyncIfConfigured(debounceMs = 2500L)
             }.onFailure { err ->
-                _backupMessage.value = UiText.Res(R.string.msg_db_import_error, err.localizedMessage.orEmpty())
+                _backupMessage.value = UiText.Res(R.string.msg_db_import_error, err.asUiText())
             }
             _isProcessingBackup.value = false
         }
+    }
+
+    private companion object {
+        /** Tiempo para leer «Copia restaurada» antes de que la app se reinicie. */
+        const val RESTART_DELAY_MS = 1_800L
     }
 }

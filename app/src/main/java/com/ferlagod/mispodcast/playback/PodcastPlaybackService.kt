@@ -265,7 +265,7 @@ class PodcastPlaybackService : MediaLibraryService() {
         }
 
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            .setUserAgent("MisPodcast/1.0 (Android; ExoPlayer)")
+            .setUserAgent(com.ferlagod.mispodcast.util.AudioTrackingSanitizer.GENERIC_PRIVACY_USER_AGENT)
             .setAllowCrossProtocolRedirects(true)
         val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)
 

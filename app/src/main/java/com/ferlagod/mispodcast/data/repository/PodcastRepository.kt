@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.repository
 
+import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.util.LocalizedException
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import com.ferlagod.mispodcast.data.local.dao.PodcastDao
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
@@ -84,7 +86,7 @@ class PodcastRepository(
 
         val apple = appleResult.getOrNull()
         if (apple == null && indexResults.isEmpty()) {
-            return@withContext Result.failure(appleResult.exceptionOrNull() ?: Exception("Sin resultados"))
+            return@withContext Result.failure(appleResult.exceptionOrNull() ?: LocalizedException(R.string.error_no_results))
         }
         val seenFeeds = HashSet<String>()
         val merged = (apple.orEmpty() + indexResults).filter { dto ->
@@ -256,7 +258,7 @@ class PodcastRepository(
     suspend fun refreshPodcastFeed(podcastId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val podcast = podcastDao.getPodcastById(podcastId)
-                ?: return@withContext Result.failure(Exception("Podcast no encontrado en local"))
+                ?: return@withContext Result.failure(LocalizedException(R.string.error_podcast_not_found))
             val parsedFeed = feedParser.fetchAndParseFeed(podcast.feedUrl)
 
             // Partir de la fila actual (no de la leída antes de la descarga del feed) para no

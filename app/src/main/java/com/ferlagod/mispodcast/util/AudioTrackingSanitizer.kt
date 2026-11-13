@@ -163,6 +163,8 @@ object AudioTrackingSanitizer {
     /**
      * Devuelve un User-Agent genérico respetuoso con la privacidad
      * para evitar el fingerprinting de dispositivo por parte de servidores publicitarios.
+     * Es el mismo en feeds, reproducción y descargas: las estadísticas de los podcasts
+     * identifican la app por él, y uno distinto en cada caso las fragmentaría.
      */
     const val GENERIC_PRIVACY_USER_AGENT = "MisPodcast/1.0 (Android; Open Source Podcast Player)"
 }

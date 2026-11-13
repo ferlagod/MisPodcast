@@ -1,0 +1,8 @@
+• Pantalla de bienvenida y consejos de gestos.
+• Deshacer tras deslizar (cola, escuchado, quitar).
+• Contador de episodios nuevos en Novedades y accesos directos desde sus tarjetas.
+• Compartir episodios y momentos concretos, con firma opcional.
+• Avisos discretos si falla una descarga, la sincronización o la actualización de feeds.
+• Restaurar una copia ya no pone en riesgo tus datos.
+• Mensajes de error traducidos y más claros.
+• Mejoras de estabilidad.

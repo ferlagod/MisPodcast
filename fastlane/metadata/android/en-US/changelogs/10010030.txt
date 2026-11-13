@@ -1,0 +1,8 @@
+• Welcome screen and gesture tips.
+• Undo after swiping (queue, played, remove).
+• New episodes badge on New Releases, with shortcuts from its cards.
+• Share episodes and specific moments, with an optional signature.
+• Subtle alerts when a download, sync or feed update fails.
+• Restoring a backup no longer puts your data at risk.
+• Clearer, translated error messages.
+• Stability improvements.

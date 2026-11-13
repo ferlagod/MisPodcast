@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.util.asUiText
 import com.ferlagod.mispodcast.alerts.AppAlerts
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
@@ -158,7 +159,7 @@ class PodcastViewModel @JvmOverloads constructor(
                 _recommendationSubtitle.value = data.subtitle
                 _recommendations.value = data.podcasts
             }.onFailure {
-                _recommendationError.value = it.localizedMessage?.let(UiText::Raw) ?: UiText.Res(R.string.msg_recommendations_error)
+                _recommendationError.value = it.asUiText(R.string.msg_recommendations_error)
             }
             _isLoadingRecommendations.value = false
         }
@@ -271,7 +272,7 @@ class PodcastViewModel @JvmOverloads constructor(
             result.onSuccess {
                 _searchResults.value = it
             }.onFailure {
-                _searchError.value = UiText.Res(R.string.msg_search_error, it.localizedMessage.orEmpty())
+                _searchError.value = UiText.Res(R.string.msg_search_error, it.asUiText())
             }
             _isSearching.value = false
         }
@@ -329,7 +330,7 @@ class PodcastViewModel @JvmOverloads constructor(
                 syncWithNextcloud()
                 onFinished(true)
             }.onFailure {
-                _subscriptionMessage.value = UiText.Res(R.string.msg_subscribe_error, it.localizedMessage.orEmpty())
+                _subscriptionMessage.value = UiText.Res(R.string.msg_subscribe_error, it.asUiText())
                 onFinished(false)
             }
             _subscriptionLoading.value = false
@@ -691,7 +692,7 @@ class PodcastViewModel @JvmOverloads constructor(
         title: String? = null,
         artworkUri: String? = null,
         onSuccess: (PodcastEntity) -> Unit = {},
-        onError: (String) -> Unit = {}
+        onError: (UiText) -> Unit = {}
     ) {
         viewModelScope.launch {
             _subscriptionLoading.value = true
@@ -703,9 +704,9 @@ class PodcastViewModel @JvmOverloads constructor(
                 onSuccess(it)
                 syncWithNextcloud()
             }.onFailure {
-                _subscriptionMessage.value = UiText.Res(R.string.msg_folder_import_error, it.localizedMessage.orEmpty())
+                _subscriptionMessage.value = UiText.Res(R.string.msg_folder_import_error, it.asUiText())
                 _subscriptionLoading.value = false
-                onError(it.localizedMessage.orEmpty())
+                onError(it.asUiText())
             }
         }
     }

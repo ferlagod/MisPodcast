@@ -41,22 +41,13 @@
 -keep class com.ferlagod.mispodcast.worker.** { *; }
 
 # ------------------------------------------------------------------------------
-# 4. Gson & DTOs (Modelos remotos de Apple Search y Gemini AI)
+# 4. DTOs remotos (Apple Search y Podcast Index, deserializados con kotlinx.serialization)
 # ------------------------------------------------------------------------------
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-    @com.google.gson.annotations.Expose <fields>;
-}
--keep class com.google.gson.** { *; }
 -keep class com.ferlagod.mispodcast.data.remote.api.** { *; }
--keep class com.ferlagod.mispodcast.ai.GeminiPodcastRecommendation { *; }
--keep class com.ferlagod.mispodcast.ai.GeminiCategoryRecommendation { *; }
--keepclassmembers class com.ferlagod.mispodcast.ai.** { *; }
 
 # ------------------------------------------------------------------------------
-# 5. Media3, ExoPlayer y Servicios de Reproducción en Foreground
+# 5. Servicio de reproducción (Media3 incluye sus propias reglas para la biblioteca)
 # ------------------------------------------------------------------------------
--keep class androidx.media3.session.** { *; }
 -keep class * extends androidx.media3.session.MediaSessionService { *; }
 -keep class com.ferlagod.mispodcast.playback.** { *; }
 
@@ -71,11 +62,8 @@
 }
 
 # ------------------------------------------------------------------------------
-# 7. Google Generative AI (Gemini Client SDK & Kotlinx Serialization)
+# 7. Kotlinx Serialization (la biblioteca incluye sus reglas; se conservan los campos serializables)
 # ------------------------------------------------------------------------------
--keep class com.google.ai.client.generativeai.** { *; }
--dontwarn com.google.ai.client.generativeai.**
--keepattributes *Annotation*,InnerClasses
 -dontwarn kotlinx.serialization.**
 -keepclassmembers class * {
     @kotlinx.serialization.Serializable <fields>;
@@ -91,8 +79,10 @@
 -keepclassmembers enum * { *; }
 
 # ------------------------------------------------------------------------------
-# 9. Coil (Carga y Decodificación de Portadas)
+# 9. Coil
 # ------------------------------------------------------------------------------
+# Necesaria: Coil descubre su componente de red (coil-network-okhttp) con ServiceLoader y, sin
+# esta regla, R8 lo elimina y ninguna portada remota carga en release (comprobado en dispositivo).
 -dontwarn coil3.**
 -keep class coil3.** { *; }
 
