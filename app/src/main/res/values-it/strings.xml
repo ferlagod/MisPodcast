@@ -739,11 +739,10 @@
     <string name="player_sleep_label">Timer</string>
     <string name="player_bookmarks_label">Segnalibri</string>
     <string name="sort_episodes">Ordina episodi</string>
-    <string name="mark_all_played_short">Segna come ascoltati</string>
-    <string name="mark_all_played_confirm_title">Segnare tutto come ascoltato?</string>
-    <plurals name="mark_all_played_confirm_message">
-        <item quantity="one">%d episodio delle novità verrà segnato come ascoltato e uscirà da questa lista.</item>
-        <item quantity="many">I %d episodi delle novità verranno segnati come ascoltati e usciranno da questa lista.</item>
-        <item quantity="other">I %d episodi delle novità verranno segnati come ascoltati e usciranno da questa lista.</item>
+    <string name="clear_new_releases_confirm_title">Svuotare le novità?</string>
+    <plurals name="clear_new_releases_confirm_message">
+        <item quantity="one">%d episodio uscirà dalle novità. Non verrà segnato come ascoltato e resterà disponibile nel suo podcast.</item>
+        <item quantity="many">%d episodi usciranno dalle novità. Non verranno segnati come ascoltati e resteranno disponibili in ogni podcast.</item>
+        <item quantity="other">%d episodi usciranno dalle novità. Non verranno segnati come ascoltati e resteranno disponibili in ogni podcast.</item>
     </plurals>
 </resources>

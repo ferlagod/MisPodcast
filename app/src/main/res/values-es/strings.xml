@@ -741,11 +741,10 @@
     <string name="player_sleep_label">Dormir</string>
     <string name="player_bookmarks_label">Marcas</string>
     <string name="sort_episodes">Ordenar episodios</string>
-    <string name="mark_all_played_short">Marcar como escuchados</string>
-    <string name="mark_all_played_confirm_title">¿Marcar todo como escuchado?</string>
-    <plurals name="mark_all_played_confirm_message">
-        <item quantity="one">Se marcará %d episodio de Novedades como escuchado y saldrá de esta lista.</item>
-        <item quantity="many">Los %d episodios de Novedades se marcarán como escuchados y saldrán de esta lista.</item>
-        <item quantity="other">Los %d episodios de Novedades se marcarán como escuchados y saldrán de esta lista.</item>
+    <string name="clear_new_releases_confirm_title">¿Limpiar Novedades?</string>
+    <plurals name="clear_new_releases_confirm_message">
+        <item quantity="one">%d episodio saldrá de Novedades. No se marcará como escuchado y seguirá disponible en su podcast.</item>
+        <item quantity="many">%d episodios saldrán de Novedades. No se marcarán como escuchados y seguirán disponibles en cada podcast.</item>
+        <item quantity="other">%d episodios saldrán de Novedades. No se marcarán como escuchados y seguirán disponibles en cada podcast.</item>
     </plurals>
 </resources>

@@ -161,9 +161,10 @@ class IntegrationTests {
         val queueBeforeClear = dao.getQueueFlow().first().map { it.episode.id }
         dao.clearAllNewReleasesDirect()
 
-        // Los que NO estaban en la cola se marcan como reproducidos (isPlayed = 1)
-        assertTrue(dao.getEpisodeById("ep-test-3")!!.isPlayed)
-        assertTrue(dao.getEpisodeById("ep-test-4")!!.isPlayed)
+        // Limpiar Novedades solo los saca de la pestaña: NO se marcan como reproducidos
+        assertFalse(dao.getEpisodeById("ep-test-3")!!.isPlayed)
+        assertFalse(dao.getEpisodeById("ep-test-4")!!.isPlayed)
+        assertTrue(dao.getEpisodeById("ep-test-3")!!.isDismissedFromNewReleases)
 
         // 5. La cola queda exactamente igual y sus episodios NO se marcan como reproducidos
         val queueAfterClear = dao.getQueueFlow().first()

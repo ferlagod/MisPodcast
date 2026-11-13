@@ -734,10 +734,9 @@
     <string name="player_sleep_label">Schlaf</string>
     <string name="player_bookmarks_label">Marken</string>
     <string name="sort_episodes">Folgen sortieren</string>
-    <string name="mark_all_played_short">Als gehört markieren</string>
-    <string name="mark_all_played_confirm_title">Alles als gehört markieren?</string>
-    <plurals name="mark_all_played_confirm_message">
-        <item quantity="one">%d Folge in Neuerscheinungen wird als gehört markiert und aus dieser Liste entfernt.</item>
-        <item quantity="other">Die %d Folgen in Neuerscheinungen werden als gehört markiert und aus dieser Liste entfernt.</item>
+    <string name="clear_new_releases_confirm_title">Neuerscheinungen leeren?</string>
+    <plurals name="clear_new_releases_confirm_message">
+        <item quantity="one">%d Folge verschwindet aus den Neuerscheinungen. Sie wird nicht als gehört markiert und bleibt im Podcast verfügbar.</item>
+        <item quantity="other">%d Folgen verschwinden aus den Neuerscheinungen. Sie werden nicht als gehört markiert und bleiben in jedem Podcast verfügbar.</item>
     </plurals>
 </resources>

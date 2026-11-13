@@ -739,11 +739,10 @@
     <string name="player_sleep_label">Sommeil</string>
     <string name="player_bookmarks_label">Signets</string>
     <string name="sort_episodes">Trier les épisodes</string>
-    <string name="mark_all_played_short">Marquer comme écoutés</string>
-    <string name="mark_all_played_confirm_title">Tout marquer comme écouté ?</string>
-    <plurals name="mark_all_played_confirm_message">
-        <item quantity="one">%d épisode des nouveautés sera marqué comme écouté et quittera cette liste.</item>
-        <item quantity="many">Les %d épisodes des nouveautés seront marqués comme écoutés et quitteront cette liste.</item>
-        <item quantity="other">Les %d épisodes des nouveautés seront marqués comme écoutés et quitteront cette liste.</item>
+    <string name="clear_new_releases_confirm_title">Vider les nouveautés ?</string>
+    <plurals name="clear_new_releases_confirm_message">
+        <item quantity="one">%d épisode quittera les nouveautés. Il ne sera pas marqué comme écouté et restera disponible dans son podcast.</item>
+        <item quantity="many">%d épisodes quitteront les nouveautés. Ils ne seront pas marqués comme écoutés et resteront disponibles dans chaque podcast.</item>
+        <item quantity="other">%d épisodes quitteront les nouveautés. Ils ne seront pas marqués comme écoutés et resteront disponibles dans chaque podcast.</item>
     </plurals>
 </resources>

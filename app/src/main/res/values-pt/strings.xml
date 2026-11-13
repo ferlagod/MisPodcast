@@ -739,11 +739,10 @@
     <string name="player_sleep_label">Dormir</string>
     <string name="player_bookmarks_label">Marcas</string>
     <string name="sort_episodes">Ordenar episódios</string>
-    <string name="mark_all_played_short">Marcar como ouvidos</string>
-    <string name="mark_all_played_confirm_title">Marcar tudo como ouvido?</string>
-    <plurals name="mark_all_played_confirm_message">
-        <item quantity="one">%d episódio das novidades será marcado como ouvido e sairá desta lista.</item>
-        <item quantity="many">Os %d episódios das novidades serão marcados como ouvidos e sairão desta lista.</item>
-        <item quantity="other">Os %d episódios das novidades serão marcados como ouvidos e sairão desta lista.</item>
+    <string name="clear_new_releases_confirm_title">Limpar novidades?</string>
+    <plurals name="clear_new_releases_confirm_message">
+        <item quantity="one">%d episódio sairá das novidades. Não será marcado como ouvido e continuará disponível no seu podcast.</item>
+        <item quantity="many">%d episódios sairão das novidades. Não serão marcados como ouvidos e continuarão disponíveis em cada podcast.</item>
+        <item quantity="other">%d episódios sairão das novidades. Não serão marcados como ouvidos e continuarão disponíveis em cada podcast.</item>
     </plurals>
 </resources>

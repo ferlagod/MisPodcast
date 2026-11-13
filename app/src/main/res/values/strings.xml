@@ -736,10 +736,9 @@
     <string name="player_sleep_label">Sleep</string>
     <string name="player_bookmarks_label">Bookmarks</string>
     <string name="sort_episodes">Sort episodes</string>
-    <string name="mark_all_played_short">Mark as played</string>
-    <string name="mark_all_played_confirm_title">Mark everything as played?</string>
-    <plurals name="mark_all_played_confirm_message">
-        <item quantity="one">The %d episode in New Releases will be marked as played and leave this list.</item>
-        <item quantity="other">The %d episodes in New Releases will be marked as played and leave this list.</item>
+    <string name="clear_new_releases_confirm_title">Clear New Releases?</string>
+    <plurals name="clear_new_releases_confirm_message">
+        <item quantity="one">%d episode will leave New Releases. It won\'t be marked as played and stays available in its podcast.</item>
+        <item quantity="other">%d episodes will leave New Releases. They won\'t be marked as played and stay available in each podcast.</item>
     </plurals>
 </resources>

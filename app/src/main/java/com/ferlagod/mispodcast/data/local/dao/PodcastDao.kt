@@ -433,21 +433,14 @@ interface PodcastDao {
     """)
     suspend fun getDownloadedEpisodesList(): List<EpisodeWithPodcast>
 
+    /**
+     * Limpia la pestaña Novedades: sus episodios dejan de aparecer en ella, sin más.
+     * No se marcan como escuchados ni cambian su posición ni la cola: siguen disponibles,
+     * tal cual, en la ficha de cada podcast.
+     */
     @Query("""
         UPDATE episodes 
-        SET isDismissedFromNewReleases = 1,
-            isPlayed = CASE 
-                WHEN id IN (SELECT episodeId FROM queue_items) THEN isPlayed 
-                ELSE 1 
-            END,
-            currentPositionMs = CASE 
-                WHEN id IN (SELECT episodeId FROM queue_items) THEN currentPositionMs 
-                ELSE duration 
-            END,
-            positionUpdatedAt = CASE 
-                WHEN id IN (SELECT episodeId FROM queue_items) THEN positionUpdatedAt 
-                ELSE :now 
-            END 
+        SET isDismissedFromNewReleases = 1
         WHERE id IN (
             SELECT e.id 
             FROM episodes e 
@@ -462,24 +455,7 @@ interface PodcastDao {
               )
         )
     """)
-    /**
-     * Limpia la pestaña Novedades:
-     * - Todos los episodios en Novedades quedan marcados como descartados de dicha pestaña (isDismissedFromNewReleases = 1).
-     * - Los episodios que el usuario tiene en la cola de reproducción permanecen intactos (no se borran de la cola,
-     *   no se marcan como reproducidos y conservan su posición actual).
-     * - Los episodios que NO están en la cola se marcan como reproducidos con posición igual a su duración.
-     */
-    suspend fun markAllNewReleasesAsPlayedDirect(now: Long = System.currentTimeMillis()): Int
-
-    @Transaction
-    suspend fun clearAllNewReleasesDirect() {
-        markAllNewReleasesAsPlayedDirect()
-    }
-
-    @Transaction
-    suspend fun markAllNewReleasesAsPlayed(episodeIds: List<String>) {
-        clearAllNewReleasesDirect()
-    }
+    suspend fun clearAllNewReleasesDirect(): Int
 
     // ==========================================
     // FAVORITOS

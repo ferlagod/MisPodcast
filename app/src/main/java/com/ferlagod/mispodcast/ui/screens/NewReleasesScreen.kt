@@ -24,6 +24,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.SwipeRight
 import com.ferlagod.mispodcast.ui.components.HintIds
 import com.ferlagod.mispodcast.ui.components.OneTimeHint
@@ -218,9 +219,9 @@ fun NewReleasesScreen(
 
                         AssistChip(
                             onClick = { showMarkAllConfirm = true },
-                            label = { Text(stringResource(R.string.mark_all_played_short)) },
+                            label = { Text(stringResource(R.string.clear)) },
                             leadingIcon = {
-                                Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Filled.ClearAll, contentDescription = null, modifier = Modifier.size(18.dp))
                             }
                         )
                     }
@@ -228,18 +229,18 @@ fun NewReleasesScreen(
             }
 
             if (showMarkAllConfirm) {
-                // Marca como escuchados todos los episodios de la lista y no se puede deshacer: se confirma
+                // Saca de Novedades todos los episodios (sin marcarlos como escuchados); no se puede deshacer
                 AlertDialog(
                     onDismissRequest = { showMarkAllConfirm = false },
-                    title = { Text(stringResource(R.string.mark_all_played_confirm_title)) },
+                    title = { Text(stringResource(R.string.clear_new_releases_confirm_title)) },
                     text = {
-                        Text(pluralStringResource(R.plurals.mark_all_played_confirm_message, newReleases.size, newReleases.size))
+                        Text(pluralStringResource(R.plurals.clear_new_releases_confirm_message, newReleases.size, newReleases.size))
                     },
                     confirmButton = {
                         TextButton(onClick = {
                             showMarkAllConfirm = false
                             podcastViewModel.clearAllNewReleases()
-                        }) { Text(stringResource(R.string.mark_all_played_short)) }
+                        }) { Text(stringResource(R.string.clear)) }
                     },
                     dismissButton = {
                         TextButton(onClick = { showMarkAllConfirm = false }) { Text(stringResource(R.string.cancel)) }
