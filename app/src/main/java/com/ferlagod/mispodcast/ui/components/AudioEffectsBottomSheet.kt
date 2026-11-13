@@ -281,10 +281,7 @@ private fun AudioEffectCard(
                 Switch(
                     checked = isChecked,
                     onCheckedChange = onCheckedChange,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    colors = com.ferlagod.mispodcast.ui.screens.appSwitchColors()
                 )
             }
 

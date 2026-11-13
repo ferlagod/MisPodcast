@@ -18,6 +18,12 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.filled.SwipeRight
 import com.ferlagod.mispodcast.ui.components.HintIds
 import com.ferlagod.mispodcast.ui.components.OneTimeHint
@@ -109,7 +115,7 @@ import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
  * Pantalla de novedades: muestra cronológicamente los nuevos episodios publicados
  * por los podcasts seguidos con posterioridad a la fecha de suscripción del usuario.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewReleasesScreen(
     podcastViewModel: PodcastViewModel,
@@ -143,65 +149,46 @@ fun NewReleasesScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 140.dp)
         ) {
-        // Cabecera superior con título y botones de acción en bloque para la bandeja de entrada
+        // Cabecera: título solo en su fila y acciones debajo, que pasan de línea si no caben
         item {
-            Row(
+            var showMarkAllConfirm by remember { mutableStateOf(false) }
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.from_your_subscriptions),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(R.string.nav_new_releases),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.new_releases_recent_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.from_your_subscriptions),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.nav_new_releases),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.new_releases_recent_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
                 if (newReleases.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 10.dp)
                     ) {
                         var showEnqueueMenu by remember { mutableStateOf(false) }
                         Box {
-                            FilledTonalButton(
+                            AssistChip(
                                 onClick = { showEnqueueMenu = true },
-                                shape = RoundedCornerShape(20.dp),
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.85f),
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.QueueMusic,
-                                    contentDescription = stringResource(R.string.queue_all),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = stringResource(R.string.action_enqueue),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
+                                label = { Text(stringResource(R.string.action_enqueue)) },
+                                leadingIcon = {
+                                    Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, modifier = Modifier.size(18.dp))
+                                }
+                            )
                             DropdownMenu(
                                 expanded = showEnqueueMenu,
                                 onDismissRequest = { showEnqueueMenu = false }
@@ -229,29 +216,35 @@ fun NewReleasesScreen(
                             }
                         }
 
-                        FilledTonalButton(
-                            onClick = { podcastViewModel.clearAllNewReleases() },
-                            shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
-                                contentColor = MaterialTheme.colorScheme.primary
-                            ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.DoneAll,
-                                contentDescription = stringResource(R.string.clear),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = stringResource(R.string.clear),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        AssistChip(
+                            onClick = { showMarkAllConfirm = true },
+                            label = { Text(stringResource(R.string.mark_all_played_short)) },
+                            leadingIcon = {
+                                Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                        )
                     }
                 }
+            }
+
+            if (showMarkAllConfirm) {
+                // Marca como escuchados todos los episodios de la lista y no se puede deshacer: se confirma
+                AlertDialog(
+                    onDismissRequest = { showMarkAllConfirm = false },
+                    title = { Text(stringResource(R.string.mark_all_played_confirm_title)) },
+                    text = {
+                        Text(pluralStringResource(R.plurals.mark_all_played_confirm_message, newReleases.size, newReleases.size))
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showMarkAllConfirm = false
+                            podcastViewModel.clearAllNewReleases()
+                        }) { Text(stringResource(R.string.mark_all_played_short)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showMarkAllConfirm = false }) { Text(stringResource(R.string.cancel)) }
+                    }
+                )
             }
         }
 

@@ -67,7 +67,7 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_theme">Theme</string>
-    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_system">Follow system</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_amoled">Pure AMOLED</string>
@@ -717,4 +717,27 @@
     <string name="delete_download_message">The episode will still be available to stream.</string>
     <string name="delete_download_playing">Can\'t delete the episode loaded in the player.</string>
     <string name="playback_error_server_unreachable">Couldn\'t reach this episode\'s server. If you use a private DNS or an ad blocker, it may be blocking it.</string>
+    <string name="sort_short">Sort</string>
+    <string name="clear_queue_short">Clear</string>
+    <string name="clear_queue_confirm_title">Clear the queue?</string>
+    <plurals name="queue_episode_count">
+        <item quantity="one">%d episode</item>
+        <item quantity="other">%d episodes</item>
+    </plurals>
+    <plurals name="clear_queue_confirm_message">
+        <item quantity="one">%d episode will be removed from the queue.</item>
+        <item quantity="other">%d episodes will be removed from the queue.</item>
+    </plurals>
+    <string name="move_to_top">Move to top</string>
+    <string name="move_to_bottom">Move to bottom</string>
+    <string name="episode_more_options">More options for this episode</string>
+    <string name="player_sleep_label">Sleep</string>
+    <string name="player_bookmarks_label">Bookmarks</string>
+    <string name="sort_episodes">Sort episodes</string>
+    <string name="mark_all_played_short">Mark as played</string>
+    <string name="mark_all_played_confirm_title">Mark everything as played?</string>
+    <plurals name="mark_all_played_confirm_message">
+        <item quantity="one">The %d episode in New Releases will be marked as played and leave this list.</item>
+        <item quantity="other">The %d episodes in New Releases will be marked as played and leave this list.</item>
+    </plurals>
 </resources>

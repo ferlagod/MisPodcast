@@ -67,7 +67,7 @@
     <!-- Settings -->
     <string name="settings_title">Paramètres</string>
     <string name="settings_theme">Thème</string>
-    <string name="settings_theme_system">Par défaut du système</string>
+    <string name="settings_theme_system">Comme le système</string>
     <string name="settings_theme_light">Clair</string>
     <string name="settings_theme_dark">Sombre</string>
     <string name="settings_theme_amoled">AMOLED pur</string>
@@ -81,8 +81,8 @@
     <string name="settings_lang_italian">Italiano</string>
     <string name="settings_lang_portuguese">Português</string>
     <string name="settings_playback_controls">Commandes de lecture</string>
-    <string name="settings_skip_forward">Avancer</string>
-    <string name="settings_skip_backward">Reculer</string>
+    <string name="settings_skip_forward">Saut en avant</string>
+    <string name="settings_skip_backward">Saut en arrière</string>
     <string name="settings_default_speed">Vitesse de lecture par défaut</string>
     <string name="settings_skip_silence">Ignorer les silences</string>
     <string name="settings_downloads">Téléchargements</string>
@@ -720,4 +720,30 @@
     <string name="delete_download_message">L\'épisode restera disponible en streaming.</string>
     <string name="delete_download_playing">Impossible de supprimer l\'épisode chargé dans le lecteur.</string>
     <string name="playback_error_server_unreachable">Impossible de joindre le serveur de cet épisode. Si vous utilisez un DNS privé ou un bloqueur de publicités, il le bloque peut-être.</string>
+    <string name="sort_short">Trier</string>
+    <string name="clear_queue_short">Vider</string>
+    <string name="clear_queue_confirm_title">Vider la file ?</string>
+    <plurals name="queue_episode_count">
+        <item quantity="one">%d épisode</item>
+        <item quantity="many">%d épisodes</item>
+        <item quantity="other">%d épisodes</item>
+    </plurals>
+    <plurals name="clear_queue_confirm_message">
+        <item quantity="one">%d épisode sera retiré de la file.</item>
+        <item quantity="many">%d épisodes seront retirés de la file.</item>
+        <item quantity="other">%d épisodes seront retirés de la file.</item>
+    </plurals>
+    <string name="move_to_top">Placer en premier</string>
+    <string name="move_to_bottom">Placer en dernier</string>
+    <string name="episode_more_options">Plus d\'options pour cet épisode</string>
+    <string name="player_sleep_label">Sommeil</string>
+    <string name="player_bookmarks_label">Signets</string>
+    <string name="sort_episodes">Trier les épisodes</string>
+    <string name="mark_all_played_short">Marquer comme écoutés</string>
+    <string name="mark_all_played_confirm_title">Tout marquer comme écouté ?</string>
+    <plurals name="mark_all_played_confirm_message">
+        <item quantity="one">%d épisode des nouveautés sera marqué comme écouté et quittera cette liste.</item>
+        <item quantity="many">Les %d épisodes des nouveautés seront marqués comme écoutés et quitteront cette liste.</item>
+        <item quantity="other">Les %d épisodes des nouveautés seront marqués comme écoutés et quitteront cette liste.</item>
+    </plurals>
 </resources>

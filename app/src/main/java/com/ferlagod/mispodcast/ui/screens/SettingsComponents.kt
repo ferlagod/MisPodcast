@@ -209,10 +209,7 @@ internal fun SettingsSwitchRow(
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary
-            )
+            colors = appSwitchColors()
         )
     }
 }
@@ -248,6 +245,7 @@ internal fun <T> SettingsDropdownRow(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
+        Spacer(modifier = Modifier.width(12.dp))
         Box {
             Surface(
                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -479,3 +477,16 @@ internal fun SettingsLanguageSelectorRow(
         )
     }
 }
+
+/**
+ * Colores de interruptor de la app. Apagado debe seguir viéndose como un interruptor: con el
+ * contorno del tema oscuro (casi negro) apenas se distinguía sobre las tarjetas.
+ */
+@Composable
+internal fun appSwitchColors() = SwitchDefaults.colors(
+    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+    checkedTrackColor = MaterialTheme.colorScheme.primary,
+    uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+)

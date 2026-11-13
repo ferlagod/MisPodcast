@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.Forward30
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
@@ -338,7 +340,7 @@ fun SettingsScreen(
                     Column {
                         // Salto adelante
                         SettingsDropdownRow(
-                            icon = Icons.Filled.Speed,
+                            icon = Icons.Filled.Forward30,
                             title = stringResource(R.string.settings_skip_forward),
                             currentValue = "${settings.skipForwardSeconds}s",
                             options = listOf(10, 15, 30, 45, 60),
@@ -350,7 +352,7 @@ fun SettingsScreen(
 
                         // Salto atrás
                         SettingsDropdownRow(
-                            icon = Icons.Filled.Speed,
+                            icon = Icons.Filled.Replay10,
                             title = stringResource(R.string.settings_skip_backward),
                             currentValue = "${settings.skipBackwardSeconds}s",
                             options = listOf(5, 10, 15, 30),

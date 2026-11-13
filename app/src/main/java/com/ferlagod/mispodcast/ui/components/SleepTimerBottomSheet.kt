@@ -492,10 +492,7 @@ fun SleepTimerBottomSheet(
                     Switch(
                         checked = sleepTimerState.shakeToExtendEnabled,
                         onCheckedChange = { playerViewModel.setSleepTimerShakeToExtend(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primary
-                        )
+                        colors = com.ferlagod.mispodcast.ui.screens.appSwitchColors()
                     )
                 }
             }

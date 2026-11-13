@@ -129,64 +129,6 @@ fun SubscriptionsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (subscriptions.isNotEmpty()) {
-                            var showSortMenu by remember { mutableStateOf(false) }
-
-                            Box {
-                                IconButton(
-                                    onClick = { showSortMenu = true },
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Sort,
-                                        contentDescription = stringResource(R.string.sort_by),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
-                                DropdownMenu(
-                                    expanded = showSortMenu,
-                                    onDismissRequest = { showSortMenu = false }
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.sort_by),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                                    )
-                                    SubscriptionSortOption.entries.forEach { sortOption ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = stringResource(sortOption.titleRes),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = if (sortOption == currentSortOption) FontWeight.Bold else FontWeight.Normal,
-                                                    color = if (sortOption == currentSortOption) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                                )
-                                            },
-                                            trailingIcon = {
-                                                if (sortOption == currentSortOption) {
-                                                    Icon(
-                                                        imageVector = Icons.Filled.Check,
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(18.dp)
-                                                    )
-                                                }
-                                            },
-                                            onClick = {
-                                                showSortMenu = false
-                                                podcastViewModel.setSubscriptionSortOption(sortOption)
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
                         IconButton(
                             onClick = onNavigateToAddPodcast,
                             modifier = Modifier
@@ -212,13 +154,60 @@ fun SubscriptionsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (subscriptions.isNotEmpty()) {
-                        Text(
-                            text = stringResource(currentSortOption.titleRes),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-                            fontWeight = FontWeight.Medium
+                }
+                // El orden actual es a la vez el botón para cambiarlo (antes eran un icono y un texto sueltos)
+                if (subscriptions.isNotEmpty()) {
+                    var showSortMenu by remember { mutableStateOf(false) }
+                    Box(modifier = Modifier.padding(top = 8.dp)) {
+                        androidx.compose.material3.AssistChip(
+                            onClick = { showSortMenu = true },
+                            label = { Text(stringResource(currentSortOption.titleRes)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Sort,
+                                    contentDescription = stringResource(R.string.sort_by),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         )
+                                DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.sort_by),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                            SubscriptionSortOption.entries.forEach { sortOption ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(sortOption.titleRes),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (sortOption == currentSortOption) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (sortOption == currentSortOption) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (sortOption == currentSortOption) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        showSortMenu = false
+                                        podcastViewModel.setSubscriptionSortOption(sortOption)
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))

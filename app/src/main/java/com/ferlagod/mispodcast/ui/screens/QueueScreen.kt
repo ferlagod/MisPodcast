@@ -18,7 +18,14 @@
 
 package com.ferlagod.mispodcast.ui.screens
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import com.ferlagod.mispodcast.util.ShareHelper
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.filled.SwipeLeft
 import com.ferlagod.mispodcast.ui.components.HintIds
 import com.ferlagod.mispodcast.ui.components.OneTimeHint
@@ -132,6 +139,7 @@ import com.ferlagod.mispodcast.ui.theme.AccentGreen
  * - Ordenar automáticamente la cola según duración, tamaño, fecha o título.
  * - Vaciar la cola completa conservando el episodio en reproducción.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun QueueScreen(
     podcastViewModel: PodcastViewModel,
@@ -155,6 +163,7 @@ fun QueueScreen(
     }
 
     var showSortMenu by remember { mutableStateOf(false) }
+    var showClearConfirm by remember { mutableStateOf(false) }
 
     val totalDurationMs = remember(queueItems) {
         queueItems.sumOf { it.episode.duration }
@@ -191,29 +200,61 @@ fun QueueScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.queue_title),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                Text(
+                    text = stringResource(R.string.queue_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Menú de Ordenación Automática
+                // Resumen en texto: antes eran «chips» que parecían botones pero no hacían nada
+                if (queueItems.isNotEmpty()) {
+                    val durationText = if (totalDurationMs > 0) {
+                        " · " + stringResource(
+                            R.string.queue_total_duration_approx,
+                            "${if (totalHours > 0) "${totalHours}h " else ""}${totalMins}m"
+                        ).replaceFirstChar { it.lowercase() }
+                    } else ""
+                    Text(
+                        text = pluralStringResource(R.plurals.queue_episode_count, queueItems.size, queueItems.size) + durationText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+
+                // Acciones: en píldoras que pasan a otra línea si no caben (antes se partían a media palabra)
+                if (queueItems.isNotEmpty()) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 10.dp)
+                    ) {
+                        if (undownloadedCount > 0) {
+                            AssistChip(
+                                onClick = {
+                                    queueItems.forEach { item ->
+                                        val st = downloadStates[item.episode.id] ?: podcastViewModel.getEpisodeDownloadState(item.episode)
+                                        if (st.status != DownloadStatus.DOWNLOADED && !item.episode.isDownloaded) {
+                                            podcastViewModel.downloadEpisode(item.episode)
+                                        }
+                                    }
+                                    Toast.makeText(context, resources.getString(R.string.toast_downloading_n, undownloadedCount), Toast.LENGTH_SHORT).show()
+                                },
+                                label = { Text(stringResource(R.string.download_all_count, undownloadedCount)) },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                                }
+                            )
+                        }
+
                         if (queueItems.size > 2) {
                             Box {
-                                IconButton(onClick = { showSortMenu = true }) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Sort,
-                                        contentDescription = stringResource(R.string.sort_by),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
+                                AssistChip(
+                                    onClick = { showSortMenu = true },
+                                    label = { Text(stringResource(R.string.sort_short)) },
+                                    leadingIcon = {
+                                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    }
+                                )
                                 DropdownMenu(
                                     expanded = showSortMenu,
                                     onDismissRequest = { showSortMenu = false }
@@ -243,56 +284,35 @@ fun QueueScreen(
                             }
                         }
 
-                        if (queueItems.isNotEmpty()) {
-                            TextButton(onClick = { podcastViewModel.clearQueue() }) {
-                                Icon(
-                                    imageVector = Icons.Filled.ClearAll,
-                                    contentDescription = stringResource(R.string.clear_queue),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.clear), color = MaterialTheme.colorScheme.primary)
+                        AssistChip(
+                            onClick = { showClearConfirm = true },
+                            label = { Text(stringResource(R.string.clear_queue_short)) },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.DeleteSweep, contentDescription = null, modifier = Modifier.size(18.dp))
                             }
-                        }
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SuggestionChip(
-                        onClick = { },
-                        label = { Text("${queueItems.size} ${stringResource(R.string.episodes)}") }
+                if (showClearConfirm) {
+                    // Vaciar la cola no se puede deshacer: se confirma, indicando cuántos episodios se quitan
+                    val removableCount = if (queueItems.any { it.isCurrentlyPlaying }) queueItems.size - 1 else queueItems.size
+                    AlertDialog(
+                        onDismissRequest = { showClearConfirm = false },
+                        title = { Text(stringResource(R.string.clear_queue_confirm_title)) },
+                        text = {
+                            Text(pluralStringResource(R.plurals.clear_queue_confirm_message, removableCount, removableCount))
+                        },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showClearConfirm = false
+                                podcastViewModel.clearQueue()
+                            }) { Text(stringResource(R.string.clear_queue_short)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showClearConfirm = false }) { Text(stringResource(R.string.cancel)) }
+                        }
                     )
-                    if (totalDurationMs > 0) {
-                        SuggestionChip(
-                            onClick = { },
-                            label = { Text(stringResource(R.string.queue_total_duration_approx, "${if (totalHours > 0) "${totalHours}h " else ""}${totalMins}m")) }
-                        )
-                    }
-                    if (undownloadedCount > 0) {
-                        SuggestionChip(
-                            onClick = {
-                                queueItems.forEach { item ->
-                                    val st = downloadStates[item.episode.id] ?: podcastViewModel.getEpisodeDownloadState(item.episode)
-                                    if (st.status != DownloadStatus.DOWNLOADED && !item.episode.isDownloaded) {
-                                        podcastViewModel.downloadEpisode(item.episode)
-                                    }
-                                }
-                                Toast.makeText(context, resources.getString(R.string.toast_downloading_n, undownloadedCount), Toast.LENGTH_SHORT).show()
-                            },
-                            label = { Text(stringResource(R.string.download_all_count, undownloadedCount)) },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Download,
-                                    contentDescription = stringResource(R.string.download_all),
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        )
-                    }
                 }
             }
         }
@@ -739,42 +759,43 @@ fun QueueScreen(
                                         modifier = Modifier.size(36.dp)
                                     )
 
-                                    // Controles de movimiento rápido arriba / abajo
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        IconButton(
-                                            onClick = {
-                                                if (index > 0) {
-                                                    podcastViewModel.moveSubsequentQueueItem(index, index - 1, currentEpisode?.id)
-                                                }
-                                            },
-                                            enabled = index > 0,
-                                            modifier = Modifier.size(20.dp)
-                                        ) {
+                                    // Mover y quitar desde un menú: las flechas de 16 dp que había eran difíciles
+                                    // de acertar con el dedo. El arrastre por el asa sigue funcionando.
+                                    Box {
+                                        var showItemMenu by remember { mutableStateOf(false) }
+                                        IconButton(onClick = { showItemMenu = true }) {
                                             Icon(
-                                                imageVector = Icons.Filled.KeyboardArrowUp,
-                                                contentDescription = stringResource(R.string.move_up),
-                                                tint = if (index > 0) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                                modifier = Modifier.size(16.dp)
+                                                imageVector = Icons.Filled.MoreVert,
+                                                contentDescription = stringResource(R.string.episode_more_options),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
-
-                                        IconButton(
-                                            onClick = {
-                                                if (index < subsequentItems.lastIndex) {
-                                                    podcastViewModel.moveSubsequentQueueItem(index, index + 1, currentEpisode?.id)
-                                                }
-                                            },
-                                            enabled = index < subsequentItems.lastIndex,
-                                            modifier = Modifier.size(20.dp)
+                                        DropdownMenu(
+                                            expanded = showItemMenu,
+                                            onDismissRequest = { showItemMenu = false }
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Filled.KeyboardArrowDown,
-                                                contentDescription = stringResource(R.string.move_down),
-                                                tint = if (index < subsequentItems.lastIndex) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                                modifier = Modifier.size(16.dp)
+                                            val lastIndex = subsequentItems.lastIndex
+                                            val moveOptions = listOf(
+                                                Triple(R.string.move_to_top, index > 0, 0),
+                                                Triple(R.string.move_up, index > 0, index - 1),
+                                                Triple(R.string.move_down, index < lastIndex, index + 1),
+                                                Triple(R.string.move_to_bottom, index < lastIndex, lastIndex)
+                                            )
+                                            moveOptions.filter { it.second }.forEach { (labelRes, _, target) ->
+                                                DropdownMenuItem(
+                                                    text = { Text(stringResource(labelRes)) },
+                                                    onClick = {
+                                                        showItemMenu = false
+                                                        podcastViewModel.moveSubsequentQueueItem(index, target, currentEpisode?.id)
+                                                    }
+                                                )
+                                            }
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(R.string.remove_from_queue)) },
+                                                onClick = {
+                                                    showItemMenu = false
+                                                    podcastViewModel.swipeRemoveFromQueue(item.episode.id)
+                                                }
                                             )
                                         }
                                     }

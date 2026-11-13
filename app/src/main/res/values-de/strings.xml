@@ -67,7 +67,7 @@
     <!-- Settings -->
     <string name="settings_title">Einstellungen</string>
     <string name="settings_theme">Design</string>
-    <string name="settings_theme_system">Systemstandard</string>
+    <string name="settings_theme_system">Wie System</string>
     <string name="settings_theme_light">Hell</string>
     <string name="settings_theme_dark">Dunkel</string>
     <string name="settings_theme_amoled">Reines AMOLED</string>
@@ -717,4 +717,27 @@
     <string name="delete_download_message">Die Folge bleibt weiterhin per Streaming verfügbar.</string>
     <string name="delete_download_playing">Die Folge im Player kann nicht gelöscht werden.</string>
     <string name="playback_error_server_unreachable">Der Server dieser Folge ist nicht erreichbar. Falls du ein privates DNS oder einen Werbeblocker nutzt, blockiert er ihn möglicherweise.</string>
+    <string name="sort_short">Sortieren</string>
+    <string name="clear_queue_short">Leeren</string>
+    <string name="clear_queue_confirm_title">Warteschlange leeren?</string>
+    <plurals name="queue_episode_count">
+        <item quantity="one">%d Folge</item>
+        <item quantity="other">%d Folgen</item>
+    </plurals>
+    <plurals name="clear_queue_confirm_message">
+        <item quantity="one">%d Folge wird aus der Warteschlange entfernt.</item>
+        <item quantity="other">%d Folgen werden aus der Warteschlange entfernt.</item>
+    </plurals>
+    <string name="move_to_top">An den Anfang</string>
+    <string name="move_to_bottom">Ans Ende</string>
+    <string name="episode_more_options">Weitere Optionen für diese Folge</string>
+    <string name="player_sleep_label">Schlaf</string>
+    <string name="player_bookmarks_label">Marken</string>
+    <string name="sort_episodes">Folgen sortieren</string>
+    <string name="mark_all_played_short">Als gehört markieren</string>
+    <string name="mark_all_played_confirm_title">Alles als gehört markieren?</string>
+    <plurals name="mark_all_played_confirm_message">
+        <item quantity="one">%d Folge in Neuerscheinungen wird als gehört markiert und aus dieser Liste entfernt.</item>
+        <item quantity="other">Die %d Folgen in Neuerscheinungen werden als gehört markiert und aus dieser Liste entfernt.</item>
+    </plurals>
 </resources>

@@ -704,7 +704,7 @@ fun FullPlayerSheet(
                             PlayerToolButton(
                                 icon = Icons.Filled.Bedtime,
                                 contentDescription = stringResource(R.string.player_sleep_timer_description),
-                                label = if (sleepTimerState.isActive) (if (sleepTimerState.mode is com.ferlagod.mispodcast.playback.SleepTimerMode.EndOfEpisode) stringResource(R.string.sleep_end_of_episode) else sleepTimerState.formattedRemaining) else stringResource(R.string.sleep_timer_off),
+                                label = if (sleepTimerState.isActive) (if (sleepTimerState.mode is com.ferlagod.mispodcast.playback.SleepTimerMode.EndOfEpisode) stringResource(R.string.sleep_end_of_episode) else sleepTimerState.formattedRemaining) else stringResource(R.string.player_sleep_label),
                                 iconTint = if (sleepTimerState.isActive) accentColor else idleIconTint,
                                 labelColor = if (sleepTimerState.isActive) accentColor else idleLabelColor,
                                 labelBold = sleepTimerState.isActive,
@@ -716,7 +716,8 @@ fun FullPlayerSheet(
                             PlayerToolButton(
                                 icon = Icons.Filled.Bookmark,
                                 contentDescription = stringResource(R.string.player_bookmarks_description),
-                                label = if (bookmarks.isNotEmpty()) "${bookmarks.size}" else "Clips",
+                                label = stringResource(R.string.player_bookmarks_label),
+                                badgeCount = bookmarks.size,
                                 iconTint = if (bookmarks.isNotEmpty()) accentColor else idleIconTint,
                                 labelColor = if (bookmarks.isNotEmpty()) accentColor else idleLabelColor,
                                 labelBold = bookmarks.isNotEmpty(),
@@ -742,7 +743,8 @@ fun FullPlayerSheet(
                             PlayerToolButton(
                                 icon = Icons.AutoMirrored.Filled.QueueMusic,
                                 contentDescription = stringResource(R.string.nav_queue),
-                                label = if (queueEpisodes.isNotEmpty()) "${queueEpisodes.size}" else "Cola",
+                                label = stringResource(R.string.nav_queue),
+                                badgeCount = queueEpisodes.size,
                                 iconTint = if (queueEpisodes.isNotEmpty()) accentColor else idleIconTint,
                                 labelColor = if (queueEpisodes.isNotEmpty()) accentColor else idleLabelColor,
                                 labelBold = queueEpisodes.isNotEmpty(),
@@ -861,7 +863,10 @@ internal fun PlayerToolButton(
     labelBold: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    /** Contador mostrado como insignia sobre el icono (0 = sin insignia); la etiqueta queda siempre legible. */
+    badgeCount: Int = 0,
+    badgeColor: Color = iconTint
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -870,12 +875,25 @@ internal fun PlayerToolButton(
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 6.dp, horizontal = 2.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = iconTint,
-            modifier = Modifier.size(20.dp)
-        )
+        androidx.compose.material3.BadgedBox(
+            badge = {
+                if (badgeCount > 0) {
+                    androidx.compose.material3.Badge(
+                        containerColor = badgeColor,
+                        contentColor = MaterialTheme.colorScheme.surface
+                    ) {
+                        Text(if (badgeCount > 99) "99+" else badgeCount.toString())
+                    }
+                }
+            }
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+        }
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = label,

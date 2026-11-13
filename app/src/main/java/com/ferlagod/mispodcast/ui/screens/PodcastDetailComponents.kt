@@ -61,6 +61,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -212,9 +213,10 @@ internal fun LazyListScope.episodesListContent(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             ) {
+                // Ordenar: el mismo icono que los ajustes confundía, aunque abre la hoja donde está el orden
                 Icon(
-                    imageVector = Icons.Default.Tune,
-                    contentDescription = stringResource(R.string.podcast_settings_title),
+                    imageVector = Icons.AutoMirrored.Filled.Sort,
+                    contentDescription = stringResource(R.string.sort_episodes),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )

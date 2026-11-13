@@ -67,7 +67,7 @@
     <!-- Settings -->
     <string name="settings_title">Configurações</string>
     <string name="settings_theme">Tema</string>
-    <string name="settings_theme_system">Padrão do sistema</string>
+    <string name="settings_theme_system">Como o sistema</string>
     <string name="settings_theme_light">Claro</string>
     <string name="settings_theme_dark">Escuro</string>
     <string name="settings_theme_amoled">AMOLED puro</string>
@@ -81,8 +81,8 @@
     <string name="settings_lang_italian">Italiano</string>
     <string name="settings_lang_portuguese">Português</string>
     <string name="settings_playback_controls">Controles de reprodução</string>
-    <string name="settings_skip_forward">Avançar salto</string>
-    <string name="settings_skip_backward">Retroceder salto</string>
+    <string name="settings_skip_forward">Salto para a frente</string>
+    <string name="settings_skip_backward">Salto para trás</string>
     <string name="settings_default_speed">Velocidade padrão de reprodução</string>
     <string name="settings_skip_silence">Pular silêncio</string>
     <string name="settings_downloads">Downloads</string>
@@ -720,4 +720,30 @@
     <string name="delete_download_message">O episódio continuará disponível em streaming.</string>
     <string name="delete_download_playing">Não é possível eliminar o episódio carregado no leitor.</string>
     <string name="playback_error_server_unreachable">Não foi possível contactar o servidor deste episódio. Se usa um DNS privado ou um bloqueador de anúncios, pode estar a bloqueá-lo.</string>
+    <string name="sort_short">Ordenar</string>
+    <string name="clear_queue_short">Esvaziar</string>
+    <string name="clear_queue_confirm_title">Esvaziar a fila?</string>
+    <plurals name="queue_episode_count">
+        <item quantity="one">%d episódio</item>
+        <item quantity="many">%d episódios</item>
+        <item quantity="other">%d episódios</item>
+    </plurals>
+    <plurals name="clear_queue_confirm_message">
+        <item quantity="one">Será removido %d episódio da fila.</item>
+        <item quantity="many">Serão removidos %d episódios da fila.</item>
+        <item quantity="other">Serão removidos %d episódios da fila.</item>
+    </plurals>
+    <string name="move_to_top">Mover para o início</string>
+    <string name="move_to_bottom">Mover para o fim</string>
+    <string name="episode_more_options">Mais opções deste episódio</string>
+    <string name="player_sleep_label">Dormir</string>
+    <string name="player_bookmarks_label">Marcas</string>
+    <string name="sort_episodes">Ordenar episódios</string>
+    <string name="mark_all_played_short">Marcar como ouvidos</string>
+    <string name="mark_all_played_confirm_title">Marcar tudo como ouvido?</string>
+    <plurals name="mark_all_played_confirm_message">
+        <item quantity="one">%d episódio das novidades será marcado como ouvido e sairá desta lista.</item>
+        <item quantity="many">Os %d episódios das novidades serão marcados como ouvidos e sairão desta lista.</item>
+        <item quantity="other">Os %d episódios das novidades serão marcados como ouvidos e sairão desta lista.</item>
+    </plurals>
 </resources>

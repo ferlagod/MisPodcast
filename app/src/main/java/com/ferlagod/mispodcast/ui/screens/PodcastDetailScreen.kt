@@ -306,6 +306,8 @@ fun PodcastDetailScreen(
         }
     }
 
+    val headerScrolledAway by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -346,7 +348,8 @@ fun PodcastDetailScreen(
                     val iconBg = if (scrollRatio < 0.55f) Modifier.background(Color.Black.copy(alpha = 0.38f), CircleShape) else Modifier
                     val iconTint = if (scrollRatio < 0.55f) Color.White else MaterialTheme.colorScheme.onSurface
 
-                    if (roomPodcast != null) {
+                    // Mientras la cabecera (con su botón «Ajustes») está a la vista, no se duplica aquí
+                    if (roomPodcast != null && headerScrolledAway) {
                         IconButton(onClick = { showPodcastSettingsSheet = true }, modifier = iconBg) {
                             Icon(
                                 imageVector = Icons.Default.Tune,
