@@ -675,4 +675,38 @@
     <string name="placeholder_username">mon_utilisateur</string>
     <string name="placeholder_feed_url">https://exemple.com/feed.xml</string>
     <string name="notif_speed_format">Vitesse : %1$s</string>
+
+    <!-- Avisos dentro de la app (AppAlerts) -->
+    <string name="alert_download_failed_network">Impossible de télécharger « %1$s ».</string>
+    <string name="alert_download_failed_space">Espace insuffisant pour télécharger « %1$s ».</string>
+    <string name="alert_download_failed_unavailable">« %1$s » n\'est plus disponible au téléchargement.</string>
+    <plurals name="alert_downloads_failed">
+        <item quantity="one">Impossible de télécharger %d épisode.</item>
+        <item quantity="many">Impossible de télécharger %d épisodes.</item>
+        <item quantity="other">Impossible de télécharger %d épisodes.</item>
+    </plurals>
+    <plurals name="alert_downloads_failed_space">
+        <item quantity="one">Espace insuffisant pour télécharger %d épisode.</item>
+        <item quantity="many">Espace insuffisant pour télécharger %d épisodes.</item>
+        <item quantity="other">Espace insuffisant pour télécharger %d épisodes.</item>
+    </plurals>
+    <string name="alert_sync_auth">Nextcloud a refusé vos identifiants. Vérifiez-les dans les Paramètres.</string>
+    <string name="alert_sync_corrupt">Le fichier de synchronisation Nextcloud est endommagé.</string>
+    <string name="alert_sync_insecure">Nextcloud nécessite une adresse HTTPS pour synchroniser.</string>
+    <string name="alert_sync_failing">La synchronisation avec Nextcloud échoue à répétition.</string>
+    <string name="alert_feeds_offline">Hors connexion : impossible de mettre à jour les podcasts.</string>
+    <string name="alert_feeds_all_failed">Aucun podcast n\'a pu être mis à jour.</string>
+    <string name="alert_feed_failed">Impossible de mettre à jour « %1$s ».</string>
+    <plurals name="alert_feeds_failed">
+        <item quantity="one">Impossible de mettre à jour %d podcast.</item>
+        <item quantity="many">Impossible de mettre à jour %d podcasts.</item>
+        <item quantity="other">Impossible de mettre à jour %d podcasts.</item>
+    </plurals>
+    <string name="alert_action_settings">Paramètres</string>
+    <string name="cd_dismiss_alert">Ignorer l\'alerte</string>
+    <string name="sync_issue_auth">Dernière tentative : identifiants refusés</string>
+    <string name="sync_issue_corrupt">Dernière tentative : fichier distant endommagé</string>
+    <string name="sync_issue_insecure">Dernière tentative : HTTPS requis</string>
+    <string name="sync_issue_network">Dernière tentative : serveur injoignable</string>
+    <string name="sync_issue_server">Dernière tentative : erreur du serveur</string>
 </resources>

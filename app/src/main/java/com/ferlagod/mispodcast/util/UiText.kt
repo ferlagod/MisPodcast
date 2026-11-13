@@ -19,6 +19,7 @@
 package com.ferlagod.mispodcast.util
 
 import android.content.Context
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -36,11 +37,18 @@ sealed interface UiText {
     /** Recurso de texto con argumentos de formato opcionales (pueden ser a su vez [UiText]). */
     class Res(@StringRes val id: Int, vararg val args: Any) : UiText
 
+    /** Recurso de plurales elegido según [count], con argumentos de formato opcionales. */
+    class Plural(@PluralsRes val id: Int, val count: Int, vararg val args: Any) : UiText
+
     fun asString(context: Context): String = when (this) {
         is Raw -> value
-        is Res -> context.getString(id, *args.map { if (it is UiText) it.asString(context) else it }.toTypedArray())
+        is Res -> context.getString(id, *resolveArgs(context, args))
+        is Plural -> context.resources.getQuantityString(id, count, *resolveArgs(context, args))
     }
 
     @Composable
     fun asString(): String = asString(LocalContext.current)
+
+    private fun resolveArgs(context: Context, args: Array<out Any>): Array<Any> =
+        args.map { if (it is UiText) it.asString(context) else it }.toTypedArray()
 }

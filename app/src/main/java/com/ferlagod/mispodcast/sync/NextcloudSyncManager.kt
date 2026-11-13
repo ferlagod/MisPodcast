@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.sync
 
+import com.ferlagod.mispodcast.alerts.AppAlerts
+import com.ferlagod.mispodcast.alerts.SyncFailureReason
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.util.Log
@@ -115,7 +117,7 @@ class NextcloudSyncManager(
                 }
                 if (isConfiguredCached) {
                     Log.d(TAG, "Ejecutando sincronización automática liviana con Nextcloud...")
-                    syncNow()
+                    syncNow(automatic = true)
                 }
             }
         }
@@ -301,8 +303,11 @@ class NextcloudSyncManager(
     /**
      * Sincronización completa con Nextcloud (Download & Merge + Upload).
      * Emplea un Mutex y coalescencia para prevenir ejecuciones concurrentes y saturación del sistema.
+     *
+     * @param automatic `true` si no la ha pedido el usuario (segundo plano, tras un cambio…): sus fallos
+     *   se avisan con [AppAlerts] cuando merecen atención; los manuales ya se muestran en Ajustes.
      */
-    suspend fun syncNow(): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun syncNow(automatic: Boolean = false): Result<String> = withContext(Dispatchers.IO) {
         val settings = preferencesManager.userSettingsFlow.firstOrNull()
         val serverUrl = settings?.nextcloudServerUrl.orEmpty()
         val username = settings?.nextcloudUsername.orEmpty()
@@ -315,6 +320,7 @@ class NextcloudSyncManager(
 
         if (!isSecureServerUrl(serverUrl)) {
             Log.w(TAG, "Conexión insegura rechazada para Nextcloud: $serverUrl")
+            AppAlerts.onSyncFailed(SyncFailureReason.INSECURE, automatic)
             return@withContext Result.failure(
                 SecurityException("Se requiere conexión segura HTTPS para sincronizar con Nextcloud (salvo localhost).")
             )
@@ -332,6 +338,13 @@ class NextcloudSyncManager(
                 needsSubsequentSync.set(false)
                 lastResult = executeSyncInternal(serverUrl, username, appPassword)
             } while (needsSubsequentSync.compareAndSet(true, false))
+            val failure = lastResult.exceptionOrNull()
+            if (failure == null) {
+                AppAlerts.onSyncSucceeded()
+            } else {
+                val reason = (failure as? NextcloudSyncException)?.reason ?: SyncFailureReason.SERVER
+                AppAlerts.onSyncFailed(reason, automatic)
+            }
             lastResult
         } finally {
             syncMutex.unlock()
@@ -387,7 +400,10 @@ class NextcloudSyncManager(
                                 // Nunca sobrescribir un archivo remoto que no entendemos: se perderían datos
                                 Log.e(TAG, "Error deserializando JSON de Nextcloud", parseEx)
                                 return Result.failure(
-                                    Exception("El archivo MisPodcast/$SYNC_FILE_NAME de Nextcloud está dañado. Bórralo en Nextcloud para volver a sincronizar.")
+                                    NextcloudSyncException(
+                                        SyncFailureReason.CORRUPT,
+                                        "El archivo MisPodcast/$SYNC_FILE_NAME de Nextcloud está dañado. Bórralo en Nextcloud para volver a sincronizar."
+                                    )
                                 )
                             }
                             ensureStatsBaseline(remoteData, deviceId)
@@ -400,7 +416,10 @@ class NextcloudSyncManager(
                         // Sin el estado remoto no se puede fusionar: subir ahora lo borraría
                         Log.w(TAG, "GET sync_state.json devolvió HTTP ${getResponse.code}")
                         return Result.failure(
-                            Exception("No se pudo descargar el estado de Nextcloud (HTTP ${getResponse.code})")
+                            NextcloudSyncException(
+                                failureReasonForHttp(getResponse.code),
+                                "No se pudo descargar el estado de Nextcloud (HTTP ${getResponse.code})"
+                            )
                         )
                     }
                 }
@@ -447,16 +466,34 @@ class NextcloudSyncManager(
                 Log.d(TAG, "Estado de MisPodcast subido exitosamente a Nextcloud tras $attempts intento(s).")
                 Result.success(MSG_SYNCED)
             } else if (lastPutCode == 412) {
-                Result.failure(Exception("Conflicto de concurrencia con Nextcloud tras $maxAttempts reintentos (HTTP 412). Vuelve a sincronizar."))
+                Result.failure(
+                    NextcloudSyncException(
+                        SyncFailureReason.SERVER,
+                        "Conflicto de concurrencia con Nextcloud tras $maxAttempts reintentos (HTTP 412). Vuelve a sincronizar."
+                    )
+                )
             } else {
-                Result.failure(Exception("Error al subir estado a Nextcloud (HTTP $lastPutCode)"))
+                Result.failure(
+                    NextcloudSyncException(
+                        failureReasonForHttp(lastPutCode),
+                        "Error al subir estado a Nextcloud (HTTP $lastPutCode)"
+                    )
+                )
             }
         } catch (e: Exception) {
             e.rethrowIfCancellation()
             Log.e(TAG, "Excepción en executeSyncInternal", e)
-            Result.failure(Exception("Fallo en sincronización Nextcloud: ${e.localizedMessage ?: "Error de red"}"))
+            Result.failure(
+                NextcloudSyncException(
+                    if (e is java.io.IOException) SyncFailureReason.NETWORK else SyncFailureReason.SERVER,
+                    "Fallo en sincronización Nextcloud: ${e.localizedMessage ?: "Error de red"}"
+                )
+            )
         }
     }
+
+    private fun failureReasonForHttp(code: Int): SyncFailureReason =
+        if (code == 401 || code == 403) SyncFailureReason.AUTH else SyncFailureReason.SERVER
 
     // ==========================================
     // ESTADO LOCAL DE SINCRONIZACIÓN
@@ -1284,3 +1321,6 @@ class NextcloudSyncManager(
         }
     }
 }
+
+/** Fallo de sincronización con su causa, para decidir si merece avisar al usuario (ver [AppAlerts]). */
+class NextcloudSyncException(val reason: SyncFailureReason, message: String) : Exception(message)

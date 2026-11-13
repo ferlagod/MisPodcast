@@ -97,7 +97,7 @@ class SyncWorker(
 
             // 2. Ejecutar sincronización Nextcloud mediante WebDAV
             val syncManager = NextcloudSyncManager.getInstance(applicationContext)
-            val result = syncManager.syncNow()
+            val result = syncManager.syncNow(automatic = true)
 
             if (result.isSuccess) {
                 Log.d(TAG, "Sincronización Nextcloud ejecutada: ${result.getOrNull()}")

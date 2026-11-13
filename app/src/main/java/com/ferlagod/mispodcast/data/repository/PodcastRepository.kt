@@ -327,11 +327,26 @@ class PodcastRepository(
         )
     }
 
+    /**
+     * Resultado de [refreshAllSubscribedPodcasts].
+     *
+     * @property newEpisodes episodios nuevos insertados.
+     * @property attemptedFeeds feeds remotos que se intentaron actualizar.
+     * @property failedTitles títulos de los podcasts cuyo feed no se pudo actualizar.
+     */
+    data class FeedRefreshSummary(
+        val newEpisodes: Int,
+        val attemptedFeeds: Int,
+        val failedTitles: List<String>
+    )
+
     suspend fun refreshAllSubscribedPodcasts(
         context: android.content.Context? = null
-    ): Result<Int> = withContext(Dispatchers.IO) {
+    ): Result<FeedRefreshSummary> = withContext(Dispatchers.IO) {
         try {
             var newEpisodesCount = 0
+            var attemptedFeeds = 0
+            val failedTitles = mutableListOf<String>()
             val subscribed = podcastDao.getSubscribedPodcasts()
 
             // 1. Re-escanear carpetas locales si se dispone de contexto
@@ -355,6 +370,7 @@ class PodcastRepository(
                     continue
                 }
 
+                attemptedFeeds++
                 try {
                     val parsedFeed = feedParser.fetchAndParseFeed(feedUrl)
                     val newEpisodes = podcastDao.upsertFeedEpisodes(
@@ -394,10 +410,11 @@ class PodcastRepository(
                 } catch (e: Exception) {
                     e.rethrowIfCancellation()
                     android.util.Log.w("PodcastRepository", "Error al actualizar feed '${podcast.title}': ${e.message}")
+                    failedTitles += podcast.title
                 }
             }
 
-            Result.success(newEpisodesCount)
+            Result.success(FeedRefreshSummary(newEpisodesCount, attemptedFeeds, failedTitles))
         } catch (e: Exception) {
             e.rethrowIfCancellation()
             Result.failure(e)

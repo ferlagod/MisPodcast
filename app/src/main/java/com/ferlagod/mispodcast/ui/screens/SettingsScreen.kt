@@ -549,6 +549,23 @@ fun SettingsScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                // Problema pendiente de la última sincronización (también la automática)
+                                val syncIssue by com.ferlagod.mispodcast.alerts.AppAlerts.syncIssue.collectAsState()
+                                syncIssue?.let { issue ->
+                                    Text(
+                                        text = stringResource(
+                                            when (issue) {
+                                                com.ferlagod.mispodcast.alerts.SyncFailureReason.AUTH -> R.string.sync_issue_auth
+                                                com.ferlagod.mispodcast.alerts.SyncFailureReason.CORRUPT -> R.string.sync_issue_corrupt
+                                                com.ferlagod.mispodcast.alerts.SyncFailureReason.INSECURE -> R.string.sync_issue_insecure
+                                                com.ferlagod.mispodcast.alerts.SyncFailureReason.NETWORK -> R.string.sync_issue_network
+                                                com.ferlagod.mispodcast.alerts.SyncFailureReason.SERVER -> R.string.sync_issue_server
+                                            }
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
 

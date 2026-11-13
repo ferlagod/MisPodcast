@@ -71,6 +71,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.alerts.AlertAction
+import com.ferlagod.mispodcast.alerts.AppAlerts
 import com.ferlagod.mispodcast.ui.navigation.NavGraph
 import com.ferlagod.mispodcast.ui.navigation.Screen
 import com.ferlagod.mispodcast.ui.navigation.moreMenuItems
@@ -156,6 +158,31 @@ fun MainScaffold(
             playerViewModel.retryPlayback()
         } else {
             playerViewModel.dismissPlaybackError(error.id)
+        }
+    }
+
+    // Avisos de fallos lejos de la pantalla actual (descargas, sincronización, feeds); ver AppAlerts
+    val appAlert by AppAlerts.current.collectAsState()
+    val settingsLabel = stringResource(R.string.alert_action_settings)
+    androidx.compose.runtime.LaunchedEffect(appAlert?.id) {
+        val alert = appAlert ?: return@LaunchedEffect
+        val actionLabel = when (alert.action) {
+            null -> null
+            AlertAction.OpenSyncSettings -> settingsLabel
+            else -> retryLabel
+        }
+        val result = snackbarHostState.showSnackbar(
+            AlertSnackbarVisuals(alert.message.asString(context), actionLabel, alert.kind)
+        )
+        AppAlerts.dismiss(alert.id)
+        if (result == SnackbarResult.ActionPerformed) {
+            when (val action = alert.action) {
+                is AlertAction.RetryDownloads -> podcastViewModel.retryDownloads(action.episodeIds)
+                AlertAction.RetrySync -> podcastViewModel.syncWithNextcloud(debounceMs = 0L)
+                AlertAction.RetryFeeds -> podcastViewModel.refreshAllPodcasts()
+                AlertAction.OpenSyncSettings -> navController.navigate(Screen.Settings.route) { launchSingleTop = true }
+                null -> Unit
+            }
         }
     }
 
@@ -316,6 +343,7 @@ fun MainScaffold(
                 )
                 SnackbarHost(
                     hostState = snackbarHostState,
+                    snackbar = { data -> AppSnackbar(data) },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 12.dp, vertical = 8.dp)

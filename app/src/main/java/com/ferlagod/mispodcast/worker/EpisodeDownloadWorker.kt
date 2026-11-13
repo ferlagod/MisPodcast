@@ -31,6 +31,8 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import kotlinx.coroutines.flow.first
 import com.ferlagod.mispodcast.R
+import com.ferlagod.mispodcast.alerts.AppAlerts
+import com.ferlagod.mispodcast.alerts.DownloadFailureReason
 import com.ferlagod.mispodcast.data.download.DownloadCleaner
 import com.ferlagod.mispodcast.data.download.DownloadStatus
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadManager
@@ -114,9 +116,7 @@ class EpisodeDownloadWorker(
                 response.close()
                 // Episodio retirado o inaccesible: reintentar no lo arreglaría
                 if (code in PERMANENT_HTTP_ERRORS) {
-                    throw PermanentDownloadException(
-                        applicationContext.getString(R.string.download_error_unavailable)
-                    )
+                    throw PermanentDownloadException("HTTP $code al descargar $audioUrl")
                 }
                 throw IOException("Error HTTP $code al descargar $audioUrl")
             }
@@ -215,13 +215,10 @@ class EpisodeDownloadWorker(
                     tempFile.delete()
                 }
                 downloadManager.reportProgress(episodeId, DownloadStatus.NOT_DOWNLOADED, 0f)
-                NotificationHelper.notifyDownloadFailed(
-                    applicationContext,
+                notifyFailure(
                     episodeId,
                     episodeTitle,
-                    applicationContext.getString(
-                        if (outOfSpace) R.string.download_error_no_space else R.string.download_error_network
-                    )
+                    if (outOfSpace) DownloadFailureReason.NO_SPACE else DownloadFailureReason.NETWORK
                 )
                 return Result.failure()
             }
@@ -229,7 +226,7 @@ class EpisodeDownloadWorker(
             if (tempFile.exists()) tempFile.delete()
             downloadManager.reportProgress(episodeId, DownloadStatus.NOT_DOWNLOADED, 0f)
             Log.w(TAG, "Descarga descartada para $episodeTitle: ${pe.message}")
-            NotificationHelper.notifyDownloadFailed(applicationContext, episodeId, episodeTitle, pe.message.orEmpty())
+            notifyFailure(episodeId, episodeTitle, DownloadFailureReason.UNAVAILABLE)
             return Result.failure()
         } catch (e: Exception) {
             // La limpieza también se aplica si el usuario cancela la descarga
@@ -241,6 +238,22 @@ class EpisodeDownloadWorker(
             Log.e(TAG, "Fallo irrecuperable al descargar $episodeTitle: ${e.message}", e)
             return Result.failure()
         }
+    }
+
+    /**
+     * Avisa del fallo dentro de la app si está a la vista; si no, con una notificación del sistema.
+     * Así el usuario nunca recibe el mismo aviso dos veces.
+     */
+    private fun notifyFailure(episodeId: String, episodeTitle: String, reason: DownloadFailureReason) {
+        if (AppAlerts.reportDownloadFailure(episodeId, episodeTitle, reason)) return
+        val reasonText = applicationContext.getString(
+            when (reason) {
+                DownloadFailureReason.NETWORK -> R.string.download_error_network
+                DownloadFailureReason.NO_SPACE -> R.string.download_error_no_space
+                DownloadFailureReason.UNAVAILABLE -> R.string.download_error_unavailable
+            }
+        )
+        NotificationHelper.notifyDownloadFailed(applicationContext, episodeId, episodeTitle, reasonText)
     }
 
     /** `false` cuando Android no permite el servicio en primer plano (app en segundo plano, Android 12+). */

@@ -675,4 +675,38 @@
     <string name="placeholder_username">mio_utente</string>
     <string name="placeholder_feed_url">https://esempio.it/feed.xml</string>
     <string name="notif_speed_format">Velocità: %1$s</string>
+
+    <!-- Avisos dentro de la app (AppAlerts) -->
+    <string name="alert_download_failed_network">Impossibile scaricare «%1$s».</string>
+    <string name="alert_download_failed_space">Spazio insufficiente per scaricare «%1$s».</string>
+    <string name="alert_download_failed_unavailable">«%1$s» non è più disponibile per il download.</string>
+    <plurals name="alert_downloads_failed">
+        <item quantity="one">Impossibile scaricare %d episodio.</item>
+        <item quantity="many">Impossibile scaricare %d episodi.</item>
+        <item quantity="other">Impossibile scaricare %d episodi.</item>
+    </plurals>
+    <plurals name="alert_downloads_failed_space">
+        <item quantity="one">Spazio insufficiente per scaricare %d episodio.</item>
+        <item quantity="many">Spazio insufficiente per scaricare %d episodi.</item>
+        <item quantity="other">Spazio insufficiente per scaricare %d episodi.</item>
+    </plurals>
+    <string name="alert_sync_auth">Nextcloud ha rifiutato le credenziali. Controllale nelle Impostazioni.</string>
+    <string name="alert_sync_corrupt">Il file di sincronizzazione di Nextcloud è danneggiato.</string>
+    <string name="alert_sync_insecure">Nextcloud richiede un indirizzo HTTPS per sincronizzare.</string>
+    <string name="alert_sync_failing">La sincronizzazione con Nextcloud continua a non riuscire.</string>
+    <string name="alert_feeds_offline">Nessuna connessione: impossibile aggiornare i podcast.</string>
+    <string name="alert_feeds_all_failed">Non è stato possibile aggiornare nessun podcast.</string>
+    <string name="alert_feed_failed">Impossibile aggiornare «%1$s».</string>
+    <plurals name="alert_feeds_failed">
+        <item quantity="one">Impossibile aggiornare %d podcast.</item>
+        <item quantity="many">Impossibile aggiornare %d podcast.</item>
+        <item quantity="other">Impossibile aggiornare %d podcast.</item>
+    </plurals>
+    <string name="alert_action_settings">Impostazioni</string>
+    <string name="cd_dismiss_alert">Ignora avviso</string>
+    <string name="sync_issue_auth">Ultimo tentativo: credenziali rifiutate</string>
+    <string name="sync_issue_corrupt">Ultimo tentativo: file remoto danneggiato</string>
+    <string name="sync_issue_insecure">Ultimo tentativo: HTTPS richiesto</string>
+    <string name="sync_issue_network">Ultimo tentativo: server non raggiungibile</string>
+    <string name="sync_issue_server">Ultimo tentativo: errore del server</string>
 </resources>

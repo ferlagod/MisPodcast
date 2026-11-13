@@ -675,4 +675,35 @@
     <string name="placeholder_username">mein_benutzer</string>
     <string name="placeholder_feed_url">https://beispiel.de/feed.xml</string>
     <string name="notif_speed_format">Geschwindigkeit: %1$s</string>
+
+    <!-- Avisos dentro de la app (AppAlerts) -->
+    <string name="alert_download_failed_network">„%1$s“ konnte nicht heruntergeladen werden.</string>
+    <string name="alert_download_failed_space">Nicht genug Speicher für „%1$s“.</string>
+    <string name="alert_download_failed_unavailable">„%1$s“ ist nicht mehr zum Download verfügbar.</string>
+    <plurals name="alert_downloads_failed">
+        <item quantity="one">%d Folge konnte nicht heruntergeladen werden.</item>
+        <item quantity="other">%d Folgen konnten nicht heruntergeladen werden.</item>
+    </plurals>
+    <plurals name="alert_downloads_failed_space">
+        <item quantity="one">Nicht genug Speicher für %d Folge.</item>
+        <item quantity="other">Nicht genug Speicher für %d Folgen.</item>
+    </plurals>
+    <string name="alert_sync_auth">Nextcloud hat deine Zugangsdaten abgelehnt. Prüfe sie in den Einstellungen.</string>
+    <string name="alert_sync_corrupt">Die Nextcloud-Synchronisierungsdatei ist beschädigt.</string>
+    <string name="alert_sync_insecure">Nextcloud benötigt zum Synchronisieren eine HTTPS-Adresse.</string>
+    <string name="alert_sync_failing">Die Synchronisierung mit Nextcloud schlägt wiederholt fehl.</string>
+    <string name="alert_feeds_offline">Keine Verbindung: Die Podcasts konnten nicht aktualisiert werden.</string>
+    <string name="alert_feeds_all_failed">Keiner deiner Podcasts konnte aktualisiert werden.</string>
+    <string name="alert_feed_failed">„%1$s“ konnte nicht aktualisiert werden.</string>
+    <plurals name="alert_feeds_failed">
+        <item quantity="one">%d Podcast konnte nicht aktualisiert werden.</item>
+        <item quantity="other">%d Podcasts konnten nicht aktualisiert werden.</item>
+    </plurals>
+    <string name="alert_action_settings">Einstellungen</string>
+    <string name="cd_dismiss_alert">Hinweis schließen</string>
+    <string name="sync_issue_auth">Letzter Versuch: Zugangsdaten abgelehnt</string>
+    <string name="sync_issue_corrupt">Letzter Versuch: Datei auf dem Server beschädigt</string>
+    <string name="sync_issue_insecure">Letzter Versuch: HTTPS erforderlich</string>
+    <string name="sync_issue_network">Letzter Versuch: Server nicht erreichbar</string>
+    <string name="sync_issue_server">Letzter Versuch: Serverfehler</string>
 </resources>

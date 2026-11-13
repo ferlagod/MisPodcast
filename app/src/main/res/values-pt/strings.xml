@@ -675,4 +675,38 @@
     <string name="placeholder_username">meu_utilizador</string>
     <string name="placeholder_feed_url">https://exemplo.com/feed.xml</string>
     <string name="notif_speed_format">Velocidade: %1$s</string>
+
+    <!-- Avisos dentro de la app (AppAlerts) -->
+    <string name="alert_download_failed_network">Não foi possível transferir “%1$s”.</string>
+    <string name="alert_download_failed_space">Sem espaço para transferir “%1$s”.</string>
+    <string name="alert_download_failed_unavailable">“%1$s” já não está disponível para transferir.</string>
+    <plurals name="alert_downloads_failed">
+        <item quantity="one">Não foi possível transferir %d episódio.</item>
+        <item quantity="many">Não foi possível transferir %d episódios.</item>
+        <item quantity="other">Não foi possível transferir %d episódios.</item>
+    </plurals>
+    <plurals name="alert_downloads_failed_space">
+        <item quantity="one">Sem espaço para transferir %d episódio.</item>
+        <item quantity="many">Sem espaço para transferir %d episódios.</item>
+        <item quantity="other">Sem espaço para transferir %d episódios.</item>
+    </plurals>
+    <string name="alert_sync_auth">O Nextcloud rejeitou as credenciais. Verifique-as nas Definições.</string>
+    <string name="alert_sync_corrupt">O ficheiro de sincronização do Nextcloud está danificado.</string>
+    <string name="alert_sync_insecure">O Nextcloud precisa de um endereço HTTPS para sincronizar.</string>
+    <string name="alert_sync_failing">A sincronização com o Nextcloud continua a falhar.</string>
+    <string name="alert_feeds_offline">Sem ligação: não foi possível atualizar os podcasts.</string>
+    <string name="alert_feeds_all_failed">Não foi possível atualizar nenhum podcast.</string>
+    <string name="alert_feed_failed">Não foi possível atualizar “%1$s”.</string>
+    <plurals name="alert_feeds_failed">
+        <item quantity="one">Não foi possível atualizar %d podcast.</item>
+        <item quantity="many">Não foi possível atualizar %d podcasts.</item>
+        <item quantity="other">Não foi possível atualizar %d podcasts.</item>
+    </plurals>
+    <string name="alert_action_settings">Definições</string>
+    <string name="cd_dismiss_alert">Dispensar aviso</string>
+    <string name="sync_issue_auth">Última tentativa: credenciais rejeitadas</string>
+    <string name="sync_issue_corrupt">Última tentativa: ficheiro remoto danificado</string>
+    <string name="sync_issue_insecure">Última tentativa: HTTPS obrigatório</string>
+    <string name="sync_issue_network">Última tentativa: não foi possível contactar o servidor</string>
+    <string name="sync_issue_server">Última tentativa: erro do servidor</string>
 </resources>

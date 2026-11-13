@@ -677,4 +677,35 @@
     <string name="placeholder_username">my_username</string>
     <string name="placeholder_feed_url">https://example.com/feed.xml</string>
     <string name="notif_speed_format">Speed: %1$s</string>
+
+    <!-- Avisos dentro de la app (AppAlerts) -->
+    <string name="alert_download_failed_network">Couldn\'t download “%1$s”.</string>
+    <string name="alert_download_failed_space">Not enough storage to download “%1$s”.</string>
+    <string name="alert_download_failed_unavailable">“%1$s” is no longer available to download.</string>
+    <plurals name="alert_downloads_failed">
+        <item quantity="one">Couldn\'t download %d episode.</item>
+        <item quantity="other">Couldn\'t download %d episodes.</item>
+    </plurals>
+    <plurals name="alert_downloads_failed_space">
+        <item quantity="one">Not enough storage to download %d episode.</item>
+        <item quantity="other">Not enough storage to download %d episodes.</item>
+    </plurals>
+    <string name="alert_sync_auth">Nextcloud rejected your credentials. Check them in Settings.</string>
+    <string name="alert_sync_corrupt">The Nextcloud sync file is damaged.</string>
+    <string name="alert_sync_insecure">Nextcloud needs an HTTPS address to sync.</string>
+    <string name="alert_sync_failing">Syncing with Nextcloud keeps failing.</string>
+    <string name="alert_feeds_offline">You\'re offline: podcasts couldn\'t be updated.</string>
+    <string name="alert_feeds_all_failed">None of your podcasts could be updated.</string>
+    <string name="alert_feed_failed">Couldn\'t update “%1$s”.</string>
+    <plurals name="alert_feeds_failed">
+        <item quantity="one">Couldn\'t update %d podcast.</item>
+        <item quantity="other">Couldn\'t update %d podcasts.</item>
+    </plurals>
+    <string name="alert_action_settings">Settings</string>
+    <string name="cd_dismiss_alert">Dismiss alert</string>
+    <string name="sync_issue_auth">Last attempt: credentials rejected</string>
+    <string name="sync_issue_corrupt">Last attempt: remote file damaged</string>
+    <string name="sync_issue_insecure">Last attempt: HTTPS required</string>
+    <string name="sync_issue_network">Last attempt: couldn\'t reach the server</string>
+    <string name="sync_issue_server">Last attempt: server error</string>
 </resources>

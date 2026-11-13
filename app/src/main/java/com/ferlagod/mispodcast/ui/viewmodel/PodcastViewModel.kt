@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.ui.viewmodel
 
+import com.ferlagod.mispodcast.alerts.AppAlerts
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.app.Application
@@ -80,6 +81,15 @@ class PodcastViewModel @JvmOverloads constructor(
 
     fun downloadEpisode(episode: EpisodeEntity) {
         downloadManager.downloadEpisode(episode)
+    }
+
+    /** Vuelve a encolar las descargas que fallaron (acción «Reintentar» de un aviso). */
+    fun retryDownloads(episodeIds: List<String>) {
+        viewModelScope.launch {
+            episodeIds.forEach { id ->
+                database.podcastDao().getEpisodeById(id)?.let { downloadManager.downloadEpisode(it) }
+            }
+        }
     }
 
     fun getEpisodeDownloadState(episode: EpisodeEntity): EpisodeDownloadState {
@@ -194,9 +204,10 @@ class PodcastViewModel @JvmOverloads constructor(
                 val app = getApplication<Application>()
                 val result = repository.refreshAllSubscribedPodcasts(app)
                 loadRecommendations()
-                result.onSuccess { count ->
+                result.onSuccess { summary ->
+                    AppAlerts.onFeedRefreshFinished(summary.failedTitles, summary.attemptedFeeds)
                     syncWithNextcloud(debounceMs = 1500L)
-                    onFinished?.invoke(count)
+                    onFinished?.invoke(summary.newEpisodes)
                 }.onFailure {
                     onFinished?.invoke(0)
                 }
