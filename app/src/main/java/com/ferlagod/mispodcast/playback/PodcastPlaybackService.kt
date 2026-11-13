@@ -217,7 +217,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                         }
                     }
 
-                    mediaLibrarySession.setCustomLayout(
+                    applyCustomLayout(
                         playbackController.buildCustomCommandButtons(
                             skipBackSeconds = s.skipBackSeconds,
                             skipForwardSeconds = s.skipForwardSeconds,
@@ -297,7 +297,7 @@ class PodcastPlaybackService : MediaLibraryService() {
             }
 
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-                mediaLibrarySession.setCustomLayout(
+                applyCustomLayout(
                     playbackController.buildCustomCommandButtons(
                         currentSpeed = playbackParameters.speed
                     )
@@ -311,7 +311,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                     if (!epId.isNullOrBlank()) {
                         chapterRepository.setChapters(epId, id3Chapters)
                         playbackController.setChapters(id3Chapters)
-                        mediaLibrarySession.setCustomLayout(
+                        applyCustomLayout(
                             playbackController.buildCustomCommandButtons(
                                 currentSpeed = player.playbackParameters.speed
                             )
@@ -404,7 +404,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                                 player.seekTo(introSkipMs)
                             }
 
-                            mediaLibrarySession.setCustomLayout(
+                            applyCustomLayout(
                                 playbackController.buildCustomCommandButtons(
                                     currentSpeed = player.playbackParameters.speed
                                 )
@@ -412,6 +412,10 @@ class PodcastPlaybackService : MediaLibraryService() {
                         }
                     }
                 }
+            }
+
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                retryWithOriginalUrlIfCleaned(error)
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -767,7 +771,7 @@ class PodcastPlaybackService : MediaLibraryService() {
                 }
                 PlaybackController.ACTION_CUSTOM_CYCLE_SPEED -> {
                     val newSpeed = playbackController.cycleSpeed(player)
-                    session.setCustomLayout(playbackController.buildCustomCommandButtons(currentSpeed = newSpeed))
+                    applyCustomLayout(playbackController.buildCustomCommandButtons(currentSpeed = newSpeed))
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
                 PlaybackController.ACTION_CUSTOM_NEXT_CHAPTER -> {
@@ -793,6 +797,64 @@ class PodcastPlaybackService : MediaLibraryService() {
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
+    }
+
+    /** Episodios para los que ya se reintentó con la URL original (un solo intento por episodio). */
+    private val originalUrlRetried = mutableSetOf<String>()
+
+    /**
+     * Red de seguridad del filtro antirrastreo: si un episodio falla al cargar con la URL limpiada,
+     * se reintenta una vez con la URL original del feed, en la misma posición. Así quitar rastreadores
+     * nunca puede dejar sin reproducir un episodio que sí funcionaría sin limpiar.
+     */
+    private fun retryWithOriginalUrlIfCleaned(error: androidx.media3.common.PlaybackException) {
+        val retryableCodes = setOf(
+            androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+            androidx.media3.common.PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
+            androidx.media3.common.PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
+        )
+        if (error.errorCode !in retryableCodes) return
+        val item = player.currentMediaItem ?: return
+        val episodeId = item.mediaId
+        val usedUri = item.localConfiguration?.uri?.toString() ?: return
+        if (!usedUri.startsWith("http", ignoreCase = true) || episodeId in originalUrlRetried) return
+        val index = player.currentMediaItemIndex
+        val positionMs = player.currentPosition
+
+        serviceScope.launch {
+            val originalUrl = withContext(Dispatchers.IO) {
+                database.podcastDao().getEpisodeById(episodeId)?.audioUrl?.trim()
+            }
+            if (originalUrl.isNullOrBlank() || originalUrl == usedUri) return@launch
+            // El reproductor pudo cambiar de episodio mientras se consultaba la base de datos
+            if (player.currentMediaItem?.mediaId != episodeId) return@launch
+            originalUrlRetried += episodeId
+            android.util.Log.w(TAG, "Fallo con la URL limpia de $episodeId; reintentando con la original")
+            player.replaceMediaItem(index, item.buildUpon().setUri(originalUrl).build())
+            player.seekTo(index, positionMs)
+            player.prepare()
+            player.play()
+        }
+    }
+
+    /** Clave de los botones publicados por última vez en la sesión (y, con ellos, en la notificación). */
+    private var lastCustomLayoutKey: List<Any?>? = null
+
+    /**
+     * Publica los botones personalizados solo si han cambiado. Cada `setCustomLayout` repinta la
+     * notificación multimedia, y al empezar un episodio llegaban varias llamadas idénticas seguidas:
+     * Android limita las actualizaciones a 5 por segundo y descartaba las sobrantes, con lo que la
+     * notificación podía quedarse con un estado desfasado.
+     */
+    @Suppress("DEPRECATION")
+    private fun applyCustomLayout(buttons: List<androidx.media3.session.CommandButton>) {
+        val key = buttons.map {
+            listOf(it.displayName.toString(), it.sessionCommand?.customAction, it.playerCommand, it.icon, it.iconResId, it.isEnabled)
+        }
+        if (key == lastCustomLayoutKey) return
+        lastCustomLayoutKey = key
+        mediaLibrarySession.setCustomLayout(buttons)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {

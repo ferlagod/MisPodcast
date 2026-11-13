@@ -107,17 +107,25 @@ object DownloadCleaner {
             }
         }
 
-    private suspend fun deleteDownloadedFile(context: Context, dao: PodcastDao, episode: EpisodeEntity) {
+    /**
+     * Elimina el archivo descargado de [episode] (solo si lo gestiona la app, nunca los de carpetas
+     * locales del usuario) y lo marca como no descargado. Devuelve `true` si se eliminó.
+     */
+    suspend fun deleteDownload(context: Context, dao: PodcastDao, episode: EpisodeEntity): Boolean =
+        deleteDownloadedFile(context, dao, episode)
+
+    private suspend fun deleteDownloadedFile(context: Context, dao: PodcastDao, episode: EpisodeEntity): Boolean {
         val path = episode.localFilePath
-        if (!episode.isDownloaded || !isAppManagedFile(context, path)) return
+        if (!episode.isDownloaded || !isAppManagedFile(context, path)) return false
         val file = File(path!!)
         if (file.exists() && !file.delete()) {
             Log.w(TAG, "No se pudo borrar ${file.absolutePath}")
-            return
+            return false
         }
         dao.updateDownloadStatus(episodeId = episode.id, isDownloaded = false, localPath = null)
         EpisodeDownloadManager.getInstance(context, dao).markAsRemoved(episode.id)
         Log.i(TAG, "Descarga eliminada: ${episode.title}")
+        return true
     }
 
     /**

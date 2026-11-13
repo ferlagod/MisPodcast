@@ -717,4 +717,9 @@
     <string name="nc_error_conflict">Otro dispositivo estaba sincronizando a la vez. Vuelve a intentarlo.</string>
     <string name="nc_error_upload">No se pudo subir el estado a Nextcloud (HTTP %1$d).</string>
     <string name="about_privacy_policy">Política de privacidad</string>
+    <string name="cancel_download">Cancelar descarga</string>
+    <string name="delete_download_title">¿Eliminar la descarga?</string>
+    <string name="delete_download_message">El episodio seguirá disponible para escucharlo en streaming.</string>
+    <string name="delete_download_playing">No se puede eliminar el episodio que está en el reproductor.</string>
+    <string name="playback_error_server_unreachable">No se pudo conectar con el servidor de este episodio. Si usas un DNS privado o un bloqueador de anuncios, puede que lo esté bloqueando.</string>
 </resources>

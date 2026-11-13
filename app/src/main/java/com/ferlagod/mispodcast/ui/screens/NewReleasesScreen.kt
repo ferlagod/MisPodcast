@@ -52,6 +52,10 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.Queue
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -577,7 +581,7 @@ private fun NewReleaseCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 // Limpiar posibles etiquetas HTML del texto
                 val cleanDesc = remember(item.episode.description) {
-                    item.episode.description.replace(Regex("<[^>]*>"), "").trim()
+                    com.ferlagod.mispodcast.util.HtmlText.toPlainText(item.episode.description)
                 }
                 Text(
                     text = cleanDesc,
@@ -612,29 +616,35 @@ private fun NewReleaseCard(
                 }
 
                 if (!inQueue) {
-                    FilledTonalButton(
-                        onClick = onAddToQueueTop,
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = stringResource(R.string.play_next), modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.action_next), maxLines = 1, softWrap = false)
+                    // Solo icono: con texto, los cuatro botones no caben en un móvil y «Reproducir»
+                    // quedaba cortado. La etiqueta se ve al mantener pulsado y la lee TalkBack.
+                    LabeledIconAction(label = stringResource(R.string.play_next)) {
+                        FilledTonalIconButton(
+                            onClick = onAddToQueueTop,
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.QueueMusic,
+                                contentDescription = stringResource(R.string.play_next),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
 
-                    OutlinedButton(
-                        onClick = onAddToQueue,
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Filled.Queue, contentDescription = stringResource(R.string.play_last), modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.action_enqueue_short), maxLines = 1, softWrap = false)
+                    LabeledIconAction(label = stringResource(R.string.play_last)) {
+                        OutlinedIconButton(
+                            onClick = onAddToQueue,
+                            colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(
+                                Icons.Filled.Queue,
+                                contentDescription = stringResource(R.string.play_last),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 } else {
                     OutlinedButton(
@@ -649,9 +659,25 @@ private fun NewReleaseCard(
 
                 EpisodeDownloadButton(
                     downloadState = downloadState,
-                    onDownloadClick = onDownload
+                    onDownloadClick = onDownload,
+                    episodeId = item.episode.id
                 )
             }
         }
+    }
+}
+
+/** Botón de solo icono que muestra su [label] en un tooltip al mantenerlo pulsado. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun LabeledIconAction(label: String, content: @Composable () -> Unit) {
+    androidx.compose.material3.TooltipBox(
+        positionProvider = androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider(
+            androidx.compose.material3.TooltipAnchorPosition.Above
+        ),
+        tooltip = { PlainTooltip { Text(label) } },
+        state = androidx.compose.material3.rememberTooltipState()
+    ) {
+        content()
     }
 }

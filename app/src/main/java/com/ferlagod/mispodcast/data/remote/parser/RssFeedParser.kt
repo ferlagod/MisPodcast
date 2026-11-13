@@ -18,6 +18,7 @@
 
 package com.ferlagod.mispodcast.data.remote.parser
 
+import com.ferlagod.mispodcast.util.HtmlText
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.util.LocalizedException
 import android.util.Xml
@@ -60,7 +61,9 @@ class RssFeedParser(
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
-        .build()
+        .build(),
+    /** Título para los episodios que el feed publica sin él (se guarda en la base de datos). */
+    private val untitledEpisodeTitle: String = "Episodio sin título"
 ) {
 
     /**
@@ -90,7 +93,10 @@ class RssFeedParser(
                 return@withContext FeedFetchResult.NotModified
             }
             if (!response.isSuccessful) {
-                throw LocalizedException(R.string.error_feed_http, response.code)
+                throw LocalizedException(
+                    com.ferlagod.mispodcast.util.UiText.Res(R.string.error_feed_http, response.code),
+                    "HTTP ${response.code} al descargar $feedUrl"
+                )
             }
             val newEtag = response.header("ETag")
             val newLastModified = response.header("Last-Modified")
@@ -200,7 +206,7 @@ class RssFeedParser(
                         inItem -> {
                             // Parseo de elementos del episodio
                             when (tagName) {
-                                "title" -> itemTitle = parser.nextTextSafe()
+                                "title" -> itemTitle = HtmlText.plainLine(parser.nextTextSafe())
                                 "description", "itunes:summary" -> {
                                     if (itemDescription.isBlank()) {
                                         itemDescription = parser.nextTextSafe()
@@ -289,7 +295,7 @@ class RssFeedParser(
                                 "podcast:soundbite" -> {
                                     val start = parser.getAttributeValueSafe("starttime").ifBlank { parser.getAttributeValueSafe("startTime") }
                                     val dur = parser.getAttributeValueSafe("duration")
-                                    val title = parser.nextTextSafe().trim()
+                                    val title = HtmlText.plainLine(parser.nextTextSafe())
                                     val startMs = start.toDoubleOrNull()?.let { (it * 1000).toLong() }
                                     val durMs = dur.toDoubleOrNull()?.let { (it * 1000).toLong() }
                                     if (startMs != null && startMs >= 0L && durMs != null && durMs > 0L) {
@@ -320,7 +326,7 @@ class RssFeedParser(
                                     if (name.isNotBlank()) {
                                         itemPersons.add(
                                             PodcastPerson(
-                                                name = name.trim(),
+                                                name = HtmlText.plainLine(name),
                                                 role = role.ifBlank { null },
                                                 group = group.ifBlank { null },
                                                 img = img.ifBlank { null },
@@ -335,9 +341,9 @@ class RssFeedParser(
                         inChannel -> {
                             // Parseo de elementos del canal (Podcast)
                             when (tagName) {
-                                "title" -> if (channelTitle.isBlank()) channelTitle = parser.nextTextSafe()
+                                "title" -> if (channelTitle.isBlank()) channelTitle = HtmlText.plainLine(parser.nextTextSafe())
                                 "itunes:author", "author", "managingeditor" -> {
-                                    if (channelAuthor.isBlank()) channelAuthor = parser.nextTextSafe()
+                                    if (channelAuthor.isBlank()) channelAuthor = HtmlText.plainLine(parser.nextTextSafe())
                                 }
                                 "description", "itunes:summary" -> {
                                     if (channelDescription.isBlank()) channelDescription = parser.nextTextSafe()
@@ -400,14 +406,14 @@ class RssFeedParser(
                                 // ID estable sobre la URL limpia (compatible con los ya guardados); la URL
                                 // original se conserva y se limpia al reproducir/descargar si el ajuste lo pide
                                 val finalId = itemGuid.ifBlank {
-                                    "${feedUrl}_${com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(itemAudioUrl).hashCode()}"
+                                    "${feedUrl}_${com.ferlagod.mispodcast.util.AudioTrackingSanitizer.stableIdKey(itemAudioUrl).hashCode()}"
                                 }
                                 val finalImage = itemImageUrl.ifBlank { channelArtworkUrl }
 
                                 episodes.add(
                                     ParsedEpisode(
                                         id = finalId,
-                                        title = itemTitle.ifBlank { "Episodio sin título" },
+                                        title = itemTitle.ifBlank { untitledEpisodeTitle },
                                         description = itemDescription,
                                         audioUrl = itemAudioUrl,
                                         audioType = itemAudioType,

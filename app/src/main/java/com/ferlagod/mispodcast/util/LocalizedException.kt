@@ -33,6 +33,17 @@ open class LocalizedException(
     cause: Throwable? = null
 ) : Exception(debugMessage, cause) {
     constructor(@StringRes id: Int, vararg args: Any) : this(UiText.Res(id, *args))
+
+    /** Para los registros: el mensaje técnico o, si no hay, una descripción del texto traducible. */
+    override val message: String
+        get() = super.message ?: describe(text)
+
+    private fun describe(text: UiText): String = when (text) {
+        is UiText.Raw -> text.value
+        is UiText.Res -> "res#${Integer.toHexString(text.id)}" + text.args.joinToString(prefix = "(", postfix = ")")
+        is UiText.Plural -> "plural#${Integer.toHexString(text.id)}(${text.count})"
+        is UiText.Joined -> text.parts.joinToString(" ") { describe(it) }
+    }
 }
 
 /**

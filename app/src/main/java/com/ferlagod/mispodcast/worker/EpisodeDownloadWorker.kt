@@ -91,7 +91,20 @@ class EpisodeDownloadWorker(
         val tempFile = File(targetDir, "${sanitizedTitle}_${episodeId.hashCode()}.tmp")
         val stripTrackers = container.preferencesManager
             .userSettingsFlow.first().stripAudioTrackers
-        val cleanAudioUrl = if (stripTrackers) com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(audioUrl) else audioUrl
+        // Primer intento con la URL sin rastreadores; los reintentos usan la original del feed, por si
+        // la limpieza hubiera producido una URL que el servidor no acepta
+        val cleanAudioUrl = if (stripTrackers && runAttemptCount == 0) {
+            com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(audioUrl)
+        } else {
+            audioUrl
+        }
+        // Al pasar a la URL original, no reanudar lo descargado con la limpia: con inserción dinámica
+        // de anuncios (Megaphone, etc.) cada URL puede servir bytes distintos y el archivo quedaría corrupto
+        if (stripTrackers && runAttemptCount == 1 &&
+            com.ferlagod.mispodcast.util.AudioTrackingSanitizer.cleanAudioUrl(audioUrl) != audioUrl
+        ) {
+            tempFile.delete()
+        }
 
         try {
             downloadManager.reportProgress(episodeId, DownloadStatus.DOWNLOADING, 0f)

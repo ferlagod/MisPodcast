@@ -195,6 +195,22 @@ fun MainScaffold(
         )
     }
 
+    // Cancelar y eliminar descargas desde cualquier botón de descarga (ver EpisodeDownloadButton)
+    val playingWhileDeleteText = stringResource(R.string.delete_download_playing)
+    val downloadActions = remember(podcastViewModel, playerViewModel, playingWhileDeleteText) {
+        DownloadActions(
+            cancel = { id -> podcastViewModel.cancelDownload(id) },
+            delete = { id -> podcastViewModel.deleteDownload(id) },
+            // ExoPlayer lee el archivo del episodio cargado (aunque esté en pausa): borrarlo rompería
+            // la reproducción al reanudar o al saltar
+            canDelete = { id -> playerViewModel.currentEpisode.value?.id != id },
+            onDeleteBlocked = {
+                android.widget.Toast.makeText(context, playingWhileDeleteText, android.widget.Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    androidx.compose.runtime.CompositionLocalProvider(LocalDownloadActions provides downloadActions) {
     NavigationSuiteScaffold(
         modifier = Modifier.fillMaxSize(),
         navigationSuiteItems = {
@@ -380,5 +396,6 @@ fun MainScaffold(
                 }
             }
         }
+    }
     }
 }

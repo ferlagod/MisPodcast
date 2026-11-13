@@ -84,6 +84,20 @@ class PodcastViewModel @JvmOverloads constructor(
         downloadManager.downloadEpisode(episode)
     }
 
+    /** Cancela la descarga en curso o en espera de un episodio. */
+    fun cancelDownload(episodeId: String) {
+        downloadManager.cancelDownload(episodeId)
+    }
+
+    /** Elimina el archivo descargado de un episodio; sigue disponible en streaming. */
+    fun deleteDownload(episodeId: String) {
+        viewModelScope.launch {
+            val dao = database.podcastDao()
+            val episode = dao.getEpisodeById(episodeId) ?: return@launch
+            com.ferlagod.mispodcast.data.download.DownloadCleaner.deleteDownload(getApplication(), dao, episode)
+        }
+    }
+
     /** Vuelve a encolar las descargas que fallaron (acción «Reintentar» de un aviso). */
     fun retryDownloads(episodeIds: List<String>) {
         viewModelScope.launch {

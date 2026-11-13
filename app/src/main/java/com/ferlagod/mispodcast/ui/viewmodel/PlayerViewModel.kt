@@ -121,12 +121,15 @@ class PlayerViewModel @JvmOverloads constructor(
     private val _playbackError = MutableStateFlow<PlaybackErrorEvent?>(null)
     val playbackError: StateFlow<PlaybackErrorEvent?> = _playbackError.asStateFlow()
 
+    private var pendingPlaybackErrorJob: kotlinx.coroutines.Job? = null
+
     fun dismissPlaybackError(id: Long) {
         if (_playbackError.value?.id == id) _playbackError.value = null
     }
 
     /** Reintenta el episodio actual tras un error, conservando la posición. */
     fun retryPlayback() {
+        pendingPlaybackErrorJob?.cancel()
         _playbackError.value = null
         val controller = mediaController ?: return
         controller.prepare()
@@ -136,7 +139,10 @@ class PlayerViewModel @JvmOverloads constructor(
     private fun playbackErrorMessage(error: PlaybackException): UiText = UiText.Res(
         when (error.errorCode) {
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
-            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> R.string.playback_error_network
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
+                // Con Internet funcionando, el fallo es del servidor del episodio (caído o bloqueado
+                // por un DNS privado o un bloqueador de anuncios): «comprueba tu conexión» confundiría
+                if (hasValidatedInternet()) R.string.playback_error_server_unreachable else R.string.playback_error_network
             PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
             PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
             PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE -> R.string.playback_error_unavailable
@@ -148,6 +154,14 @@ class PlayerViewModel @JvmOverloads constructor(
             else -> R.string.playback_error_generic
         }
     )
+
+    /** `true` si Android ha comprobado que la red activa tiene salida real a Internet. */
+    private fun hasValidatedInternet(): Boolean {
+        val cm = getApplication<Application>().getSystemService(android.content.Context.CONNECTIVITY_SERVICE)
+            as? android.net.ConnectivityManager ?: return false
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
 
     private val _currentPositionMs = MutableStateFlow(0L)
     val currentPositionMs: StateFlow<Long> = _currentPositionMs.asStateFlow()
@@ -285,7 +299,16 @@ class PlayerViewModel @JvmOverloads constructor(
                 // Sin esto el reproductor se detenía en silencio ante un 404, falta de red o formato no soportado
                 android.util.Log.w("PlayerViewModel", "Error de reproducción (${error.errorCodeName})", error)
                 _isPlaying.value = false
-                _playbackError.value = PlaybackErrorEvent(System.nanoTime(), playbackErrorMessage(error))
+                val message = playbackErrorMessage(error)
+                pendingPlaybackErrorJob?.cancel()
+                pendingPlaybackErrorJob = viewModelScope.launch {
+                    // El servicio puede estar reintentando con la URL original del episodio (sin filtro
+                    // antirrastreo): solo se avisa si el reproductor sigue en error tras ese margen
+                    kotlinx.coroutines.delay(PLAYBACK_ERROR_GRACE_MS)
+                    if (mediaController?.playerError != null) {
+                        _playbackError.value = PlaybackErrorEvent(System.nanoTime(), message)
+                    }
+                }
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -421,9 +444,8 @@ class PlayerViewModel @JvmOverloads constructor(
                 controller.setMediaItem(mediaItem)
             }
             controller.prepare()
-            if (resumePositionMs > 0L) {
-                controller.seekTo(resumePositionMs)
-            }
+            // La posición ya va en setMediaItem: un seekTo aquí llega antes de que el episodio sea
+            // «buscable» y Media3 lo rechaza («Controller isn't allowed to call command=5»)
             controller.play()
         }
     }
@@ -775,5 +797,10 @@ class PlayerViewModel @JvmOverloads constructor(
     override fun onCleared() {
         super.onCleared()
         controllerFuture?.let { MediaController.releaseFuture(it) }
+    }
+
+    private companion object {
+        /** Margen para que el servicio reintente con la URL original antes de mostrar el error. */
+        const val PLAYBACK_ERROR_GRACE_MS = 1_500L
     }
 }

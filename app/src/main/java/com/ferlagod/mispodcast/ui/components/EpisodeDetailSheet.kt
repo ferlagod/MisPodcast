@@ -391,21 +391,23 @@ fun EpisodeDetailSheet(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Descarga
+                // Descarga (también permite cancelarla o eliminarla)
+                val downloadClick = rememberDownloadClick(episode.id, downloadState.status, onDownloadClick)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = onDownloadClick)
+                        .clickable(onClick = downloadClick)
                         .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {
                     EpisodeDownloadButton(
                         downloadState = downloadState,
-                        onDownloadClick = onDownloadClick
+                        onDownloadClick = onDownloadClick,
+                        episodeId = episode.id
                     )
                     Text(
-                        text = stringResource(R.string.download),
+                        text = downloadActionLabel(downloadState.status),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

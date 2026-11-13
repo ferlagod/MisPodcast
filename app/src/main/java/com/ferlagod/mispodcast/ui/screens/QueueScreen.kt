@@ -450,6 +450,7 @@ fun QueueScreen(
                                 val activeDownloadState = downloadStates[firstItem.episode.id] ?: podcastViewModel.getEpisodeDownloadState(firstItem.episode)
                                 EpisodeDownloadButton(
                                     downloadState = activeDownloadState,
+                                    episodeId = firstItem.episode.id,
                                     onDownloadClick = {
                                         podcastViewModel.downloadEpisode(firstItem.episode)
                                         Toast.makeText(context, resources.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()
@@ -716,6 +717,7 @@ fun QueueScreen(
                                     val itemDownloadState = downloadStates[item.episode.id] ?: podcastViewModel.getEpisodeDownloadState(item.episode)
                                     EpisodeDownloadButton(
                                         downloadState = itemDownloadState,
+                                        episodeId = item.episode.id,
                                         onDownloadClick = {
                                             podcastViewModel.downloadEpisode(item.episode)
                                             Toast.makeText(context, resources.getString(R.string.toast_downloading_episode), Toast.LENGTH_SHORT).show()

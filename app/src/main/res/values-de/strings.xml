@@ -712,4 +712,9 @@
     <string name="nc_error_conflict">Ein anderes Gerät hat gleichzeitig synchronisiert. Versuche es erneut.</string>
     <string name="nc_error_upload">Der Synchronisierungsstand konnte nicht zu Nextcloud hochgeladen werden (HTTP %1$d).</string>
     <string name="about_privacy_policy">Datenschutzerklärung</string>
+    <string name="cancel_download">Download abbrechen</string>
+    <string name="delete_download_title">Download löschen?</string>
+    <string name="delete_download_message">Die Folge bleibt weiterhin per Streaming verfügbar.</string>
+    <string name="delete_download_playing">Die Folge im Player kann nicht gelöscht werden.</string>
+    <string name="playback_error_server_unreachable">Der Server dieser Folge ist nicht erreichbar. Falls du ein privates DNS oder einen Werbeblocker nutzt, blockiert er ihn möglicherweise.</string>
 </resources>

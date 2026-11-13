@@ -247,10 +247,7 @@ object NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val cleanDescription = episode.description
-                .replace(Regex("<.*?>"), "")
-                .trim()
-                .take(180)
+            val cleanDescription = com.ferlagod.mispodcast.util.HtmlText.toPlainText(episode.description).take(180)
 
             val builder = NotificationCompat.Builder(context, CHANNEL_NEW_EPISODES_ID)
                 .setSmallIcon(R.drawable.ic_notification)

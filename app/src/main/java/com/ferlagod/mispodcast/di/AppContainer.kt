@@ -88,7 +88,10 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
         val clientForFeeds = okHttpClient.newBuilder()
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
-        RssFeedParser(okHttpClient = clientForFeeds)
+        RssFeedParser(
+            okHttpClient = clientForFeeds,
+            untitledEpisodeTitle = context.getString(com.ferlagod.mispodcast.R.string.untitled)
+        )
     }
 
     override val preferencesManager: UserPreferencesManager by lazy {

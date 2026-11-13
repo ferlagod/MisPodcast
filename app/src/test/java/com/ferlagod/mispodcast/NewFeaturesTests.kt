@@ -93,8 +93,8 @@ class NewFeaturesTests {
 
         val tracked = feed.episodes[0]
         assertEquals("https://dts.podtrac.com/redirect.mp3/cdn.example.com/a.mp3", tracked.audioUrl)
-        val cleaned = AudioTrackingSanitizer.cleanAudioUrl(tracked.audioUrl)
-        assertEquals("https://example.com/feed_${cleaned.hashCode()}", tracked.id)
+        val idKey = AudioTrackingSanitizer.stableIdKey(tracked.audioUrl)
+        assertEquals("https://example.com/feed_${idKey.hashCode()}", tracked.id)
         assertEquals(listOf(PodcastSoundbite(73_500L, 60_000L, "Lo mejor")), tracked.soundbites)
 
         val alt = feed.episodes[1]

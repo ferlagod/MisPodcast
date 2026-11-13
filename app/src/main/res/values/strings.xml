@@ -714,4 +714,9 @@
     <string name="nc_error_conflict">Another device was syncing at the same time. Please try again.</string>
     <string name="nc_error_upload">Couldn\'t upload the sync state to Nextcloud (HTTP %1$d).</string>
     <string name="about_privacy_policy">Privacy policy</string>
+    <string name="cancel_download">Cancel download</string>
+    <string name="delete_download_title">Delete download?</string>
+    <string name="delete_download_message">The episode will still be available to stream.</string>
+    <string name="delete_download_playing">Can\'t delete the episode loaded in the player.</string>
+    <string name="playback_error_server_unreachable">Couldn\'t reach this episode\'s server. If you use a private DNS or an ad blocker, it may be blocking it.</string>
 </resources>

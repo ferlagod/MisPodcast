@@ -23,42 +23,128 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.download.DownloadStatus
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 
+/** Acciones sobre una descarga existente, proporcionadas una vez en la raíz de la interfaz. */
+class DownloadActions(
+    val cancel: (episodeId: String) -> Unit,
+    val delete: (episodeId: String) -> Unit,
+    /** `false` si la descarga no se puede eliminar ahora (p. ej. el episodio está en el reproductor). */
+    val canDelete: (episodeId: String) -> Boolean = { true },
+    /** Se llama en lugar de pedir confirmación cuando [canDelete] devuelve `false`. */
+    val onDeleteBlocked: () -> Unit = {}
+)
+
+val LocalDownloadActions = staticCompositionLocalOf<DownloadActions?> { null }
+
 /**
- * Botón interactivo de descarga con animación de estado:
- * - NOT_DOWNLOADED: Icono de flecha de descarga.
- * - DOWNLOADING: CircularProgressIndicator con progreso o rotación.
- * - DOWNLOADED: Icono de check relleno con color primario oficial (#297A9D).
+ * Acción al pulsar un control de descarga según su estado:
+ * - Sin descargar: [onDownloadClick].
+ * - En espera o descargando: cancela la descarga.
+ * - Descargado: pide confirmación y elimina el archivo.
+ *
+ * Sin [episodeId] o sin [LocalDownloadActions] solo hace [onDownloadClick], como antes.
+ */
+@Composable
+fun rememberDownloadClick(
+    episodeId: String?,
+    status: DownloadStatus,
+    onDownloadClick: () -> Unit
+): () -> Unit {
+    val actions = LocalDownloadActions.current
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    if (confirmDelete && episodeId != null && actions != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.delete_download_title)) },
+            text = { Text(stringResource(R.string.delete_download_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    actions.delete(episodeId)
+                }) { Text(stringResource(R.string.delete_download)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    return {
+        when {
+            episodeId == null || actions == null -> onDownloadClick()
+            status == DownloadStatus.DOWNLOADED ->
+                if (actions.canDelete(episodeId)) confirmDelete = true else actions.onDeleteBlocked()
+            status == DownloadStatus.DOWNLOADING || status == DownloadStatus.QUEUED -> actions.cancel(episodeId)
+            else -> onDownloadClick()
+        }
+    }
+}
+
+/** Etiqueta del control de descarga para el estado indicado (p. ej. bajo el icono en la ficha). */
+@Composable
+fun downloadActionLabel(status: DownloadStatus, canManage: Boolean = LocalDownloadActions.current != null): String =
+    stringResource(
+        when {
+            !canManage -> if (status == DownloadStatus.DOWNLOADED) R.string.downloaded else R.string.download
+            status == DownloadStatus.DOWNLOADED -> R.string.delete_download
+            status == DownloadStatus.DOWNLOADING || status == DownloadStatus.QUEUED -> R.string.cancel_download
+            else -> R.string.download
+        }
+    )
+
+/**
+ * Botón de descarga con animación de estado:
+ * - Sin descargar: flecha de descarga.
+ * - En espera: reloj de arena; descargando: anillo de progreso. Con un cuadrado de «parar» para cancelar.
+ * - Descargado: check relleno; al pulsarlo se ofrece eliminar la descarga.
+ *
+ * @param episodeId necesario para poder cancelar o eliminar la descarga desde el botón.
  */
 @Composable
 fun EpisodeDownloadButton(
     downloadState: EpisodeDownloadState,
     onDownloadClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    episodeId: String? = null
 ) {
     val blueColor = MaterialTheme.colorScheme.primary
+    val canManage = episodeId != null && LocalDownloadActions.current != null
+    val onClick = rememberDownloadClick(episodeId, downloadState.status, onDownloadClick)
+    val inProgress = downloadState.status == DownloadStatus.DOWNLOADING || downloadState.status == DownloadStatus.QUEUED
 
     IconButton(
-        onClick = onDownloadClick,
+        onClick = onClick,
         modifier = modifier.size(36.dp),
-        enabled = downloadState.status != DownloadStatus.DOWNLOADING && downloadState.status != DownloadStatus.QUEUED
+        // Sin acciones disponibles no hay nada que hacer mientras descarga
+        enabled = canManage || !inProgress
     ) {
         AnimatedContent(
             targetState = downloadState.status,
@@ -69,26 +155,40 @@ fun EpisodeDownloadButton(
         ) { status ->
             when (status) {
                 DownloadStatus.DOWNLOADING -> {
-                    if (downloadState.progress > 0f) {
-                        CircularProgressIndicator(
-                            progress = { downloadState.progress },
-                            color = blueColor,
-                            trackColor = blueColor.copy(alpha = 0.2f),
-                            strokeWidth = 2.5.dp,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    } else {
-                        CircularProgressIndicator(
-                            color = blueColor,
-                            strokeWidth = 2.5.dp,
-                            modifier = Modifier.size(20.dp)
-                        )
+                    Box(contentAlignment = Alignment.Center) {
+                        if (downloadState.progress > 0f) {
+                            CircularProgressIndicator(
+                                progress = { downloadState.progress },
+                                color = blueColor,
+                                trackColor = blueColor.copy(alpha = 0.2f),
+                                strokeWidth = 2.5.dp,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        } else {
+                            CircularProgressIndicator(
+                                color = blueColor,
+                                strokeWidth = 2.5.dp,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        if (canManage) {
+                            Icon(
+                                imageVector = Icons.Filled.Stop,
+                                contentDescription = stringResource(R.string.cancel_download),
+                                tint = blueColor,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
                     }
                 }
                 DownloadStatus.QUEUED -> {
                     Icon(
                         imageVector = Icons.Filled.HourglassTop,
-                        contentDescription = stringResource(R.string.download_waiting),
+                        contentDescription = if (canManage) {
+                            stringResource(R.string.download_waiting) + ". " + stringResource(R.string.cancel_download)
+                        } else {
+                            stringResource(R.string.download_waiting)
+                        },
                         tint = blueColor.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -96,7 +196,11 @@ fun EpisodeDownloadButton(
                 DownloadStatus.DOWNLOADED -> {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
-                        contentDescription = stringResource(R.string.downloaded),
+                        contentDescription = if (canManage) {
+                            stringResource(R.string.downloaded) + ". " + stringResource(R.string.delete_download)
+                        } else {
+                            stringResource(R.string.downloaded)
+                        },
                         tint = blueColor,
                         modifier = Modifier.size(22.dp)
                     )

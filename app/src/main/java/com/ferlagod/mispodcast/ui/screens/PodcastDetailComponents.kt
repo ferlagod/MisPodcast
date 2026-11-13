@@ -1003,7 +1003,8 @@ internal fun EpisodeDetailItem(
                     // Botón de descarga interactivo con animación y progreso
                     EpisodeDownloadButton(
                         downloadState = downloadState,
-                        onDownloadClick = onDownloadClick
+                        onDownloadClick = onDownloadClick,
+                        episodeId = episode.id
                     )
                 }
             }

@@ -715,4 +715,9 @@
     <string name="nc_error_conflict">Un altro dispositivo stava sincronizzando contemporaneamente. Riprova.</string>
     <string name="nc_error_upload">Impossibile caricare lo stato di sincronizzazione su Nextcloud (HTTP %1$d).</string>
     <string name="about_privacy_policy">Informativa sulla privacy</string>
+    <string name="cancel_download">Annulla download</string>
+    <string name="delete_download_title">Eliminare il download?</string>
+    <string name="delete_download_message">L\'episodio resterà disponibile in streaming.</string>
+    <string name="delete_download_playing">Impossibile eliminare l\'episodio caricato nel lettore.</string>
+    <string name="playback_error_server_unreachable">Impossibile raggiungere il server di questo episodio. Se usi un DNS privato o un blocco pubblicità, potrebbe bloccarlo.</string>
 </resources>

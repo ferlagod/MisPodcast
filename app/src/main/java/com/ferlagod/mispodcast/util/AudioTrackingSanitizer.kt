@@ -38,8 +38,95 @@ object AudioTrackingSanitizer {
      */
     fun cleanIfEnabled(rawUrl: String): String = if (isEnabled) cleanAudioUrl(rawUrl) else rawUrl
 
-    /** Lista de hosts o dominios de seguimiento publicitario conocidos en la industria. */
-    private val TRACKER_HOSTS = listOf(
+    /**
+     * Servicios de medición que envuelven la URL real del audio como prefijo:
+     * `https://<servicio>/<ruta propia>/<host real>/<ruta del audio>` (o con la URL completa incrustada).
+     *
+     * Solo deben figurar aquí servicios que redirigen a otro host. Los que SON el servidor del audio
+     * (p. ej. `traffic.omny.fm` o `traffic.megaphone.fm`) no se pueden quitar: la URL dejaría de existir.
+     */
+    private val TRACKER_HOSTS = setOf(
+        "podtrac.com",          // dts., www., play.
+        "chtbl.com",            // Chartable
+        "chrt.fm",
+        "pdst.fm",              // Podsights
+        "pscrb.fm",             // Podscribe
+        "verifi.podscribe.com",
+        "prfx.byspotify.com",   // Spotify Ad Analytics
+        "arttrk.com",           // Artsai
+        "clrtpod.com",          // Claritas
+        "claritaspod.com",
+        "pdrl.fm",              // Podroll
+        "op3.dev",              // OP3
+        "mgln.ai",              // Magellan
+        "2.gum.fm"              // Gumball
+    )
+
+    /** Extensiones de audio/vídeo: un segmento como `redirect.mp3` parece un dominio pero no lo es. */
+    private val MEDIA_EXTENSIONS = setOf("mp3", "m4a", "m4b", "mp4", "aac", "ogg", "oga", "opus", "wav", "flac", "webm", "mov")
+
+    private val HOST_LIKE = Regex(
+        "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(:[0-9]{1,5})?$",
+        RegexOption.IGNORE_CASE
+    )
+    private val EMBEDDED_SCHEME = Regex("(https?):/{1,2}", RegexOption.IGNORE_CASE)
+
+    /**
+     * Quita los prefijos de servicios de medición conocidos y los parámetros de rastreo de la query.
+     *
+     * Ante cualquier duda (no se encuentra un host claro tras el prefijo) deja la URL como está:
+     * es preferible conservar un rastreador a producir una URL que no existe.
+     */
+    fun cleanAudioUrl(rawUrl: String): String {
+        var url = rawUrl.trim()
+        if (url.isBlank()) return rawUrl
+        repeat(MAX_UNWRAP_DEPTH) {
+            url = unwrapOnce(url) ?: return stripTrackingQueryParams(url)
+        }
+        return stripTrackingQueryParams(url)
+    }
+
+    private const val MAX_UNWRAP_DEPTH = 8
+
+    /** Quita un nivel de prefijo de medición, o devuelve `null` si [url] no empieza por uno reconocible. */
+    private fun unwrapOnce(url: String): String? {
+        val schemeEnd = url.indexOf("://")
+        if (schemeEnd <= 0) return null
+        val scheme = url.substring(0, schemeEnd).lowercase()
+        if (scheme != "http" && scheme != "https") return null
+
+        val rest = url.substring(schemeEnd + 3)
+        val host = rest.takeWhile { it != '/' && it != '?' && it != '#' }.lowercase()
+        if (!isTrackerHost(host)) return null
+        if (rest.length <= host.length || rest[host.length] != '/') return null
+        val path = rest.substring(host.length + 1)
+
+        // URL completa incrustada (algunos servidores colapsan «https://» en «https:/»)
+        EMBEDDED_SCHEME.find(path)?.let { match ->
+            val inner = path.substring(match.range.last + 1)
+            return if (inner.isNotBlank()) "${match.groupValues[1].lowercase()}://$inner" else null
+        }
+
+        // Host real como segmento de la ruta: el primero con forma de dominio, nunca el último
+        // (el último es el archivo de audio)
+        val segments = path.split('/')
+        for (i in 0 until segments.size - 1) {
+            if (isHostLike(segments[i])) return "https://" + segments.drop(i).joinToString("/")
+        }
+        return null
+    }
+
+    private fun isTrackerHost(host: String): Boolean =
+        TRACKER_HOSTS.any { host == it || host.endsWith(".$it") }
+
+    private fun isHostLike(segment: String): Boolean {
+        if (!HOST_LIKE.matches(segment)) return false
+        val tld = segment.substringBefore(':').substringAfterLast('.').lowercase()
+        return tld.length >= 2 && tld.all { it in 'a'..'z' } && tld !in MEDIA_EXTENSIONS
+    }
+
+    /** Lista CONGELADA de la versión antigua; solo para [stableIdKey]. */
+    private val LEGACY_TRACKER_HOSTS = listOf(
         "dts.podtrac.com",
         "www.podtrac.com",
         "play.podtrac.com",
@@ -69,10 +156,13 @@ object AudioTrackingSanitizer {
     )
 
     /**
-     * Limpia la URL de audio eliminando prefijos de redirección publicitaria y parámetros de rastreo.
-     * Si la URL no contiene rastreadores conocidos, se devuelve inalterada.
+     * Clave con la que el parser identifica los episodios sin GUID (`feedUrl_hash(clave)`).
+     *
+     * NO MODIFICAR: es la implementación antigua de [cleanAudioUrl], congelada. Si cambiara, los
+     * episodios sin GUID recibirían otro id al refrescar el feed: aparecerían duplicados y perderían
+     * su progreso, favoritos y descargas. Para reproducir o descargar se usa [cleanAudioUrl].
      */
-    fun cleanAudioUrl(rawUrl: String): String {
+    fun stableIdKey(rawUrl: String): String {
         var url = rawUrl.trim()
         if (url.isBlank()) return rawUrl
 
@@ -95,7 +185,7 @@ object AudioTrackingSanitizer {
 
             if (nextHttpIndex > 0) {
                 val prefix = url.substring(0, nextHttpIndex).lowercase()
-                if (TRACKER_HOSTS.any { prefix.contains(it) } || prefix.contains("/track/") || prefix.contains("/redirect")) {
+                if (LEGACY_TRACKER_HOSTS.any { prefix.contains(it) } || prefix.contains("/track/") || prefix.contains("/redirect")) {
                     url = url.substring(nextHttpIndex)
                     changed = true
                     continue
@@ -103,7 +193,7 @@ object AudioTrackingSanitizer {
             }
 
             // Caso B: Redirección sin esquema tras el host de seguimiento (ej: https://dts.podtrac.com/redirect.mp3/cdn.ejemplo.com/audio.mp3)
-            for (tracker in TRACKER_HOSTS) {
+            for (tracker in LEGACY_TRACKER_HOSTS) {
                 val prefixHttps = "https://$tracker/"
                 val prefixHttp = "http://$tracker/"
                 val matchedPrefix = when {
