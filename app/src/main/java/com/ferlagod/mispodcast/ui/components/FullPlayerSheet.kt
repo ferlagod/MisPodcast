@@ -18,26 +18,30 @@
 
 package com.ferlagod.mispodcast.ui.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
 import com.ferlagod.mispodcast.util.ShareHelper
 import android.os.Build
-import android.text.Html
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,9 +56,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -85,7 +87,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -93,11 +94,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -761,13 +760,12 @@ fun FullPlayerSheet(
                     val rawDescription = currentEpisode?.description.orEmpty()
                     if (showEpisodeNotes && rawDescription.isNotBlank()) {
                         Spacer(modifier = Modifier.height(14.dp))
-                        val cleanDescription = remember(rawDescription) {
-                            try {
-                                Html.fromHtml(rawDescription, Html.FROM_HTML_MODE_COMPACT).toString().trim()
-                            } catch (_: Exception) {
-                                rawDescription.trim()
-                            }
-                        }
+                        val notesText = rememberNotesText(
+                            html = rawDescription,
+                            linkColor = accentColor,
+                            durationMs = currentEpisode?.duration ?: 0L,
+                            onSeekToPosition = { playerViewModel.seekTo(it) }
+                        )
                         Surface(
                             shape = RoundedCornerShape(14.dp),
                             color = playerContentColor.copy(alpha = 0.10f),
@@ -782,7 +780,7 @@ fun FullPlayerSheet(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = cleanDescription,
+                                    text = notesText,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = playerContentColor.copy(alpha = 0.85f)
                                 )

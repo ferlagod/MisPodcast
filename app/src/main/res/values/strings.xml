@@ -741,4 +741,5 @@
         <item quantity="one">%d episode will leave New Releases. It won\'t be marked as played and stays available in its podcast.</item>
         <item quantity="other">%d episodes will leave New Releases. They won\'t be marked as played and stay available in each podcast.</item>
     </plurals>
+    <string name="link_no_app">There\'s no app to open this link.</string>
 </resources>

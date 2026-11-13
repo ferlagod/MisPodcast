@@ -739,4 +739,5 @@
         <item quantity="one">%d Folge verschwindet aus den Neuerscheinungen. Sie wird nicht als gehört markiert und bleibt im Podcast verfügbar.</item>
         <item quantity="other">%d Folgen verschwinden aus den Neuerscheinungen. Sie werden nicht als gehört markiert und bleiben in jedem Podcast verfügbar.</item>
     </plurals>
+    <string name="link_no_app">Keine App zum Öffnen dieses Links.</string>
 </resources>

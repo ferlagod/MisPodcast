@@ -18,9 +18,11 @@
 
 package com.ferlagod.mispodcast.ui.components
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import android.content.Intent
 import android.net.Uri
-import android.text.Html
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +30,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -70,10 +71,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,10 +81,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -162,17 +157,6 @@ fun EpisodeDetailSheet(
     }
 
     val noNotesPlaceholder = stringResource(R.string.no_episode_notes)
-    val cleanDescription = remember(episode.description, noNotesPlaceholder) {
-        if (episode.description.isBlank()) {
-            noNotesPlaceholder
-        } else {
-            try {
-                Html.fromHtml(episode.description, Html.FROM_HTML_MODE_COMPACT).toString().trim()
-            } catch (_: Exception) {
-                episode.description.trim()
-            }
-        }
-    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -462,26 +446,14 @@ fun EpisodeDetailSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Marcas de tiempo de las notas ("12:34") pulsables para saltar a ese punto
-            val linkColor = MaterialTheme.colorScheme.primary
-            val annotatedDescription = remember(cleanDescription, episode.duration, onSeekToPosition != null, linkColor) {
-                buildAnnotatedString {
-                    append(cleanDescription)
-                    if (onSeekToPosition != null) {
-                        TimestampParser.findTimestamps(cleanDescription, episode.duration).forEach { ts ->
-                            addLink(
-                                LinkAnnotation.Clickable(
-                                    tag = "ts_${ts.positionMs}",
-                                    styles = TextLinkStyles(SpanStyle(color = linkColor, fontWeight = FontWeight.SemiBold)),
-                                    linkInteractionListener = { onSeekToPosition(ts.positionMs) }
-                                ),
-                                ts.start,
-                                ts.end
-                            )
-                        }
-                    }
-                }
-            }
+            // Enlaces de las notas pulsables, y marcas de tiempo ("12:34") para saltar a ese punto
+            val annotatedDescription = rememberNotesText(
+                html = episode.description,
+                linkColor = MaterialTheme.colorScheme.primary,
+                fallback = noNotesPlaceholder,
+                durationMs = episode.duration,
+                onSeekToPosition = onSeekToPosition
+            )
             SelectionContainer {
                 Text(
                     text = annotatedDescription,

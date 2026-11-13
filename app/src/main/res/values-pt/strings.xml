@@ -745,4 +745,5 @@
         <item quantity="many">%d episódios sairão das novidades. Não serão marcados como ouvidos e continuarão disponíveis em cada podcast.</item>
         <item quantity="other">%d episódios sairão das novidades. Não serão marcados como ouvidos e continuarão disponíveis em cada podcast.</item>
     </plurals>
+    <string name="link_no_app">Nenhuma app consegue abrir esta ligação.</string>
 </resources>
