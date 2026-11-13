@@ -306,8 +306,10 @@ fun HomeScreen(
                             )
                         }
 
-                        Image(
-                            painter = painterResource(id = R.drawable.app_logo),
+                        // Con Coil y no painterResource: este decodificaba el PNG de 512 px en el hilo
+                        // principal cada vez que se mostraba Inicio (≈4 ms en el primer fotograma)
+                        AsyncImage(
+                            model = R.drawable.app_logo,
                             contentDescription = stringResource(R.string.about_logo_description),
                             modifier = Modifier
                                 .size(50.dp)
