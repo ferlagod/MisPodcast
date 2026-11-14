@@ -77,8 +77,7 @@ import coil3.compose.AsyncImage
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.model.SubscriptionSortOption
-import com.ferlagod.mispodcast.ui.navigation.rememberSharedArtworkRequest
-import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
+import com.ferlagod.mispodcast.ui.navigation.rememberArtworkRequest
 import com.ferlagod.mispodcast.ui.viewmodel.PodcastViewModel
 import com.ferlagod.mispodcast.ui.components.PodcastArtworkPlaceholder
 
@@ -297,13 +296,12 @@ private fun SubscriptionGridCard(
         ) {
             Box(
                 modifier = Modifier
-                    .sharedPodcastArtwork(podcast.id, RoundedCornerShape(12.dp))
                     .fillMaxWidth()
                     .aspectRatio(1f)
             ) {
                 if (podcast.artworkUrl.isNotBlank()) {
                     AsyncImage(
-                        model = rememberSharedArtworkRequest(podcast.artworkUrl),
+                        model = rememberArtworkRequest(podcast.artworkUrl),
                         contentDescription = podcast.title,
                         modifier = Modifier
                             .fillMaxSize()

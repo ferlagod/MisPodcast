@@ -99,7 +99,6 @@ import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
 import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
-import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
 import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight

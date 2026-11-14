@@ -124,7 +124,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
 import com.ferlagod.mispodcast.data.download.DownloadStatus
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
@@ -174,8 +173,8 @@ fun PodcastDetailScreen(
     // 1. Observar si el podcast ya existe en la base de datos Room
     // Flujos recordados: crearlos en cada recomposición volvería a suscribir las consultas de Room continuamente
     val podcastFlow = remember(podcastId, feedUrl) { podcastViewModel.getPodcastFlow(podcastId, feedUrl) }
-    // Valor inicial desde las suscripciones ya en memoria: así la cabecera (y la portada compartida)
-    // existe desde el primer frame de la transición en lugar de aparecer de golpe a mitad
+    // Valor inicial desde las suscripciones ya en memoria: así la cabecera existe desde el primer
+    // frame de la transición en lugar de aparecer de golpe a mitad
     val initialPodcast = remember(podcastId, feedUrl) {
         podcastViewModel.subscribedPodcasts.value.firstOrNull { p ->
             (podcastId.isNotBlank() && p.id == podcastId) || (feedUrl.isNotBlank() && p.feedUrl == feedUrl)

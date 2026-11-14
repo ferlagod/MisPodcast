@@ -95,8 +95,7 @@ import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.data.local.entities.PodcastEntity
 import com.ferlagod.mispodcast.data.local.model.EpisodeWithPodcast
 import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
-import com.ferlagod.mispodcast.ui.navigation.rememberSharedArtworkRequest
-import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
+import com.ferlagod.mispodcast.ui.navigation.rememberArtworkRequest
 import com.ferlagod.mispodcast.ui.theme.AccentGreen
 import com.ferlagod.mispodcast.ui.theme.IndigoSecondary
 import com.ferlagod.mispodcast.ui.theme.RoyalBlueLight
@@ -153,14 +152,13 @@ fun SubscribedPodcastCard(
     ) {
         Box(
             modifier = Modifier
-                .sharedPodcastArtwork(podcast.id, RoundedCornerShape(18.dp))
                 .size(140.dp)
                 .clip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             if (podcast.artworkUrl.isNotBlank()) {
                 AsyncImage(
-                    model = rememberSharedArtworkRequest(podcast.artworkUrl),
+                    model = rememberArtworkRequest(podcast.artworkUrl),
                     contentDescription = podcast.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -222,8 +220,7 @@ fun RecommendationCard(
                     model = artwork,
                     contentDescription = podcast.collectionName,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .sharedPodcastArtwork(podcastId, MaterialTheme.shapes.medium),
+                        .fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
