@@ -20,11 +20,12 @@ package com.ferlagod.mispodcast.ui.navigation
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -80,56 +81,35 @@ fun NavGraph(
             NavHost(
                 navController = navController,
                 startDestination = Screen.Home.route,
+                // Entre pestañas: fundido cruzado puro. Hacia/desde la ficha del podcast: fundido
+                // sin desplazamiento, para que el movimiento lo lleve solo la portada compartida.
+                // Resto de subpantallas: eje X compartido con un desplazamiento corto y sutil.
                 enterTransition = {
-                    val fromRoute = initialState.destination.route
-                    val toRoute = targetState.destination.route
-                    val isBetweenTabs = (fromRoute in bottomTabRoutes) && (toRoute in bottomTabRoutes)
-                    if (isBetweenTabs) {
-                        fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.96f, animationSpec = tween(220))
-                    } else {
-                        slideInHorizontally(
-                            initialOffsetX = { it },
-                            animationSpec = tween(300, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(300))
+                    when (motionKind(initialState.destination.route, targetState.destination.route, bottomTabRoutes)) {
+                        NavMotionKind.Tabs -> tabEnter()
+                        NavMotionKind.Detail -> detailEnter()
+                        NavMotionKind.Axis -> axisEnter(forward = true)
                     }
                 },
                 exitTransition = {
-                    val fromRoute = initialState.destination.route
-                    val toRoute = targetState.destination.route
-                    val isBetweenTabs = (fromRoute in bottomTabRoutes) && (toRoute in bottomTabRoutes)
-                    if (isBetweenTabs) {
-                        fadeOut(animationSpec = tween(180))
-                    } else {
-                        slideOutHorizontally(
-                            targetOffsetX = { -it / 3 },
-                            animationSpec = tween(300, easing = FastOutSlowInEasing)
-                        ) + fadeOut(animationSpec = tween(200))
+                    when (motionKind(initialState.destination.route, targetState.destination.route, bottomTabRoutes)) {
+                        NavMotionKind.Tabs -> tabExit()
+                        NavMotionKind.Detail -> detailExit()
+                        NavMotionKind.Axis -> axisExit(forward = true)
                     }
                 },
                 popEnterTransition = {
-                    val fromRoute = initialState.destination.route
-                    val toRoute = targetState.destination.route
-                    val isBetweenTabs = (fromRoute in bottomTabRoutes) && (toRoute in bottomTabRoutes)
-                    if (isBetweenTabs) {
-                        fadeIn(animationSpec = tween(220)) + scaleIn(initialScale = 0.96f, animationSpec = tween(220))
-                    } else {
-                        slideInHorizontally(
-                            initialOffsetX = { -it / 3 },
-                            animationSpec = tween(300, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(200))
+                    when (motionKind(initialState.destination.route, targetState.destination.route, bottomTabRoutes)) {
+                        NavMotionKind.Tabs -> tabEnter()
+                        NavMotionKind.Detail -> detailEnter()
+                        NavMotionKind.Axis -> axisEnter(forward = false)
                     }
                 },
                 popExitTransition = {
-                    val fromRoute = initialState.destination.route
-                    val toRoute = targetState.destination.route
-                    val isBetweenTabs = (fromRoute in bottomTabRoutes) && (toRoute in bottomTabRoutes)
-                    if (isBetweenTabs) {
-                        fadeOut(animationSpec = tween(180))
-                    } else {
-                        slideOutHorizontally(
-                            targetOffsetX = { it },
-                            animationSpec = tween(300, easing = FastOutSlowInEasing)
-                        ) + fadeOut(animationSpec = tween(200))
+                    when (motionKind(initialState.destination.route, targetState.destination.route, bottomTabRoutes)) {
+                        NavMotionKind.Tabs -> tabExit()
+                        NavMotionKind.Detail -> detailExit()
+                        NavMotionKind.Axis -> axisExit(forward = false)
                     }
                 }
             ) {
@@ -319,3 +299,38 @@ fun NavGraph(
         }
     }
 }
+
+private enum class NavMotionKind { Tabs, Detail, Axis }
+
+private fun motionKind(from: String?, to: String?, tabs: Set<String>): NavMotionKind = when {
+    from in tabs && to in tabs -> NavMotionKind.Tabs
+    from == Screen.PodcastDetail.route || to == Screen.PodcastDetail.route -> NavMotionKind.Detail
+    else -> NavMotionKind.Axis
+}
+
+/** Desplazamiento del eje X: una fracción pequeña del ancho, suficiente para dar dirección. */
+private const val AXIS_OFFSET_FRACTION = 0.08f
+
+private fun tabEnter(): EnterTransition =
+    fadeIn(tween(NavMotion.FADE_IN, delayMillis = NavMotion.FADE_IN_DELAY, easing = LinearEasing))
+
+private fun tabExit(): ExitTransition =
+    fadeOut(tween(NavMotion.FADE_OUT, easing = LinearEasing))
+
+private fun detailEnter(): EnterTransition =
+    fadeIn(tween(NavMotion.FADE_IN, delayMillis = NavMotion.FADE_IN_DELAY, easing = LinearEasing))
+
+private fun detailExit(): ExitTransition =
+    fadeOut(tween(NavMotion.FADE_OUT + 60, easing = LinearEasing))
+
+private fun axisEnter(forward: Boolean): EnterTransition =
+    slideInHorizontally(tween(NavMotion.DURATION, easing = NavMotion.EmphasizedDecelerate)) { w ->
+        val d = (w * AXIS_OFFSET_FRACTION).toInt()
+        if (forward) d else -d
+    } + fadeIn(tween(NavMotion.FADE_IN, delayMillis = NavMotion.FADE_IN_DELAY, easing = LinearEasing))
+
+private fun axisExit(forward: Boolean): ExitTransition =
+    slideOutHorizontally(tween(NavMotion.DURATION, easing = NavMotion.EmphasizedDecelerate)) { w ->
+        val d = (w * AXIS_OFFSET_FRACTION).toInt()
+        if (forward) -d else d
+    } + fadeOut(tween(NavMotion.FADE_OUT, easing = LinearEasing))

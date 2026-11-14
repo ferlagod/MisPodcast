@@ -129,6 +129,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.ferlagod.mispodcast.ui.navigation.rememberSharedArtworkRequest
 import com.ferlagod.mispodcast.ui.navigation.sharedPodcastArtwork
 import com.ferlagod.mispodcast.data.download.DownloadStatus
 import com.ferlagod.mispodcast.data.download.EpisodeDownloadState
@@ -457,16 +458,15 @@ internal fun PodcastHeaderSection(
                 border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.32f)),
                 modifier = Modifier
                     .padding(top = 16.dp)
+                    .sharedPodcastArtwork(podcast.id, MaterialTheme.shapes.extraLarge)
                     .size(175.dp)
                     .aspectRatio(1f)
             ) {
                 if (podcast.artworkUrl.isNotBlank()) {
                     AsyncImage(
-                        model = podcast.artworkUrl,
+                        model = rememberSharedArtworkRequest(podcast.artworkUrl),
                         contentDescription = podcast.title,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .sharedPodcastArtwork(podcast.id),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 } else {
