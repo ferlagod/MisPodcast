@@ -98,6 +98,21 @@ fun NavGraph(
                 NavMotionKind.Tabs -> tabExit()
                 NavMotionKind.Axis -> axisExit(forward = false)
             }
+        },
+        // Gesto de atrás predictivo: la transición sigue al dedo, así que todo es lineal y ocupa
+        // la duración completa. Con curvas que adelantan el movimiento, un arrastre pequeño ya
+        // hacía desaparecer la pantalla y al soltar se completaba de golpe (efecto «escalón»).
+        predictivePopEnterTransition = {
+            when (motionKind(initialState.destination.route, targetState.destination.route, bottomTabRoutes)) {
+                NavMotionKind.Tabs -> fadeIn(tween(NavMotion.DURATION_BACK, easing = LinearEasing))
+                NavMotionKind.Axis -> predictiveAxisEnter()
+            }
+        },
+        predictivePopExitTransition = {
+            when (motionKind(initialState.destination.route, targetState.destination.route, bottomTabRoutes)) {
+                NavMotionKind.Tabs -> fadeOut(tween(NavMotion.DURATION_BACK, easing = LinearEasing))
+                NavMotionKind.Axis -> predictiveAxisExit()
+            }
         }
     ) {
         // Pestañas Principales
@@ -292,3 +307,13 @@ private fun axisExit(forward: Boolean): ExitTransition {
         if (forward) -d else d
     } + fadeOut(tween(NavMotion.FADE_OUT, easing = LinearEasing))
 }
+
+private fun predictiveAxisEnter(): EnterTransition =
+    slideInHorizontally(tween(NavMotion.DURATION_BACK, easing = LinearEasing)) { w ->
+        -(w * AXIS_OFFSET_FRACTION).toInt()
+    } + fadeIn(tween(NavMotion.DURATION_BACK, easing = LinearEasing))
+
+private fun predictiveAxisExit(): ExitTransition =
+    slideOutHorizontally(tween(NavMotion.DURATION_BACK, easing = LinearEasing)) { w ->
+        (w * AXIS_OFFSET_FRACTION).toInt()
+    } + fadeOut(tween(NavMotion.DURATION_BACK, easing = LinearEasing))
