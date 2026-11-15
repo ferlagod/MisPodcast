@@ -478,7 +478,6 @@
     <string name="bookmark_save_at">Salva a %1$s</string>
     <string name="bookmark_note_placeholder">Nota o promemoria (facoltativa)</string>
     <string name="audio_effects_menu">Effetti audio (Voce / Silenzio)</string>
-    <string name="hide_episode_notes">Nascondi note dell\'episodio</string>
     <string name="show_episode_notes">Mostra note dell\'episodio</string>
     <string name="episode_fallback">Episodio</string>
     <string name="chapter_fallback">Capitolo</string>
@@ -564,7 +563,7 @@
     <string name="soundbite_fallback">Frammento di %1$d s</string>
     <string name="chapter_index_format">Capitolo %1$d di %2$d</string>
     <string name="chapters_count">%1$d capitoli</string>
-    <string name="player_text_label">Testo</string>
+    <string name="player_notes_label">Note</string>
     <string name="ps_notify">Notifica</string>
     <string name="ps_mute">Silenzia</string>
     <string name="ps_enqueue_default">Predefinito globale</string>

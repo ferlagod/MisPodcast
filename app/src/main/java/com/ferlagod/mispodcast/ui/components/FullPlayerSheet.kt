@@ -60,6 +60,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bookmark
@@ -84,6 +85,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -142,7 +144,7 @@ import kotlin.math.roundToInt
  * - Deslizamiento horizontal de la portada para avanzar o retroceder en la cola.
  * - Barra de progreso ondulada estilo Material 3 Expressive ([ExpressiveWavySlider]) con marcas de capítulos.
  * - Botón play/pause con metamorfosis geométrica (círculo ↔ squircle redondeado) y vibración háptica.
- * - Fila inferior con acceso a Velocidad, Temporizador, Marcadores, Transcripción y Cola.
+ * - Fila inferior con acceso a Velocidad, Temporizador, Marcadores, Notas y Cola; la transcripción, en el menú ⋮.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,6 +174,9 @@ fun FullPlayerSheet(
     val haptic = LocalHapticFeedback.current
 
     var showEpisodeNotes by remember { mutableStateOf(false) }
+    val hasTranscript = !currentEpisode?.transcriptUrl.isNullOrBlank() || transcript.isNotEmpty()
+    val episodeNotesHtml = currentEpisode?.description.orEmpty()
+    val hasEpisodeNotes = episodeNotesHtml.isNotBlank()
     var showSleepTimerSheet by remember { mutableStateOf(false) }
     var showPlaybackSpeedSheet by remember { mutableStateOf(false) }
     var showChaptersSheet by remember { mutableStateOf(false) }
@@ -348,14 +353,20 @@ fun FullPlayerSheet(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(if (showEpisodeNotes) stringResource(R.string.hide_episode_notes) else stringResource(R.string.show_episode_notes)) },
+                                    text = { Text(stringResource(R.string.player_transcript_description)) },
                                     leadingIcon = {
-                                        Icon(Icons.Filled.Subtitles, contentDescription = null)
+                                        Icon(
+                                            Icons.Filled.Subtitles,
+                                            contentDescription = null,
+                                            tint = if (hasTranscript) accentColor else LocalContentColor.current
+                                        )
                                     },
+                                    enabled = hasTranscript,
                                     onClick = {
                                         showMoreMenu = false
-                                        showEpisodeNotes = !showEpisodeNotes
-                                    }
+                                        showTranscriptSheet = true
+                                    },
+                                    modifier = Modifier.testTag("player_transcript")
                                 )
                                 HorizontalDivider()
                                 DropdownMenuItem(
@@ -670,7 +681,7 @@ fun FullPlayerSheet(
 
                     Spacer(modifier = Modifier.height(if (isCompact) 12.dp else 20.dp))
 
-                    // 6. FILA INFERIOR DE 5 ICONOS ESENCIALES (Velocidad, Temporizador, Clips, Transcripción, Cola)
+                    // 6. FILA INFERIOR DE 5 ICONOS ESENCIALES (Velocidad, Temporizador, Clips, Notas, Cola)
                     // Cada acción ocupa 1/5 del ancho para que las etiquetas no se recorten en pantallas estrechas
                     Surface(
                         shape = RoundedCornerShape(22.dp),
@@ -724,18 +735,18 @@ fun FullPlayerSheet(
                                 modifier = Modifier.weight(1f)
                             )
 
-                            // 4. Transcripción / Subtítulos
-                            val hasTranscript = !currentEpisode?.transcriptUrl.isNullOrBlank() || transcript.isNotEmpty()
+                            // 4. Notas del episodio (la transcripción está en el menú ⋮)
                             PlayerToolButton(
-                                icon = Icons.Filled.Subtitles,
-                                contentDescription = stringResource(R.string.player_transcript_description),
-                                label = stringResource(R.string.player_text_label),
-                                iconTint = if (hasTranscript) accentColor else playerContentColor.copy(alpha = 0.35f),
-                                labelColor = if (hasTranscript) idleIconTint else playerContentColor.copy(alpha = 0.35f),
-                                labelBold = hasTranscript,
-                                enabled = hasTranscript,
-                                onClick = { showTranscriptSheet = true },
-                                modifier = Modifier.weight(1f)
+                                icon = Icons.AutoMirrored.Filled.Notes,
+                                contentDescription = stringResource(R.string.show_episode_notes),
+                                label = stringResource(R.string.player_notes_label),
+                                iconTint = if (hasEpisodeNotes) accentColor else idleIconTint,
+                                labelColor = if (hasEpisodeNotes) idleIconTint else idleLabelColor,
+                                labelBold = hasEpisodeNotes,
+                                onClick = { showEpisodeNotes = true },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("player_episode_notes")
                             )
 
                             // 5. Cola de reproducción
@@ -753,38 +764,6 @@ fun FullPlayerSheet(
                                 },
                                 modifier = Modifier.weight(1f)
                             )
-                        }
-                    }
-
-                    // Ficha descriptiva opcional desplegable
-                    val rawDescription = currentEpisode?.description.orEmpty()
-                    if (showEpisodeNotes && rawDescription.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(14.dp))
-                        val notesText = rememberNotesText(
-                            html = rawDescription,
-                            linkColor = accentColor,
-                            durationMs = currentEpisode?.duration ?: 0L,
-                            onSeekToPosition = { playerViewModel.seekTo(it) }
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = playerContentColor.copy(alpha = 0.10f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = stringResource(R.string.episode_notes),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = accentColor
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = notesText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = playerContentColor.copy(alpha = 0.85f)
-                                )
-                            }
                         }
                     }
 
@@ -829,6 +808,17 @@ fun FullPlayerSheet(
             isLoading = isTranscriptLoading,
             onSeekTo = { playerViewModel.seekTo(it) },
             onDismissRequest = { showTranscriptSheet = false }
+        )
+    }
+
+    if (showEpisodeNotes) {
+        EpisodeNotesBottomSheet(
+            episodeTitle = currentEpisode?.title.orEmpty(),
+            notesHtml = episodeNotesHtml,
+            durationMs = currentEpisode?.duration ?: 0L,
+            linkColor = MaterialTheme.colorScheme.primary,
+            onSeekTo = { playerViewModel.seekTo(it) },
+            onDismissRequest = { showEpisodeNotes = false }
         )
     }
 
