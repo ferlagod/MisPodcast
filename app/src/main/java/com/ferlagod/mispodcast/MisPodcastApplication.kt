@@ -62,6 +62,16 @@ class MisPodcastApplication : Application() {
                 .distinctUntilChanged()
                 .collect { com.ferlagod.mispodcast.util.ShareHelper.includeSignature = it }
         }
+        // Programa o cancela la copia de seguridad automática diaria según la preferencia
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default).launch {
+            container.preferencesManager.userSettingsFlow
+                .map { it.autoBackupEnabled && it.autoBackupFolderUri.isNotBlank() }
+                .distinctUntilChanged()
+                .collect { enabled ->
+                    if (enabled) com.ferlagod.mispodcast.worker.AutoBackupWorker.schedule(this@MisPodcastApplication)
+                    else com.ferlagod.mispodcast.worker.AutoBackupWorker.cancel(this@MisPodcastApplication)
+                }
+        }
     }
 
     companion object {

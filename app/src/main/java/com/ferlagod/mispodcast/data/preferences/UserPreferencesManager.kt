@@ -119,7 +119,10 @@ data class UserSettings(
     val defaultAutoEnqueueRule: String = "DISABLED",
     val useDynamicColor: Boolean = false,
     val subscriptionSortOption: SubscriptionSortOption = SubscriptionSortOption.RECENTLY_SUBSCRIBED,
-    val lastSyncTimestamp: Long = 0L
+    val lastSyncTimestamp: Long = 0L,
+    val autoBackupEnabled: Boolean = false,
+    val autoBackupFolderUri: String = "",
+    val lastAutoBackupTimestamp: Long = 0L
 )
 
 /**
@@ -157,6 +160,9 @@ class UserPreferencesManager(private val context: Context) {
         private val KEY_SUBSCRIPTION_SORT_OPTION = stringPreferencesKey("subscription_sort_option")
         private val KEY_LAST_SYNC = longPreferencesKey("last_sync_timestamp")
         private val KEY_TIME_SAVED = longPreferencesKey("time_saved_ms")
+        private val KEY_AUTO_BACKUP_ENABLED = booleanPreferencesKey("auto_backup_enabled")
+        private val KEY_AUTO_BACKUP_FOLDER_URI = stringPreferencesKey("auto_backup_folder_uri")
+        private val KEY_LAST_AUTO_BACKUP = longPreferencesKey("last_auto_backup_timestamp")
         private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         private val KEY_DISMISSED_HINTS = stringSetPreferencesKey("dismissed_hints")
 
@@ -213,7 +219,10 @@ class UserPreferencesManager(private val context: Context) {
             defaultAutoEnqueueRule = preferences[KEY_DEFAULT_AUTO_ENQUEUE_RULE] ?: "DISABLED",
             useDynamicColor = preferences[KEY_USE_DYNAMIC_COLOR] ?: false,
             subscriptionSortOption = SubscriptionSortOption.fromName(preferences[KEY_SUBSCRIPTION_SORT_OPTION]),
-            lastSyncTimestamp = preferences[KEY_LAST_SYNC] ?: 0L
+            lastSyncTimestamp = preferences[KEY_LAST_SYNC] ?: 0L,
+            autoBackupEnabled = preferences[KEY_AUTO_BACKUP_ENABLED] ?: false,
+            autoBackupFolderUri = preferences[KEY_AUTO_BACKUP_FOLDER_URI] ?: "",
+            lastAutoBackupTimestamp = preferences[KEY_LAST_AUTO_BACKUP] ?: 0L
         )
     }
 
@@ -338,6 +347,23 @@ class UserPreferencesManager(private val context: Context) {
 
     suspend fun setLastSyncTimestamp(timestamp: Long) {
         context.dataStore.edit { it[KEY_LAST_SYNC] = timestamp }
+    }
+
+    /** Activa la copia automática en [folderUri] (árbol SAF) o la desactiva si es `null`. */
+    suspend fun setAutoBackup(folderUri: String?) {
+        context.dataStore.edit {
+            if (folderUri.isNullOrBlank()) {
+                it[KEY_AUTO_BACKUP_ENABLED] = false
+                it.remove(KEY_AUTO_BACKUP_FOLDER_URI)
+            } else {
+                it[KEY_AUTO_BACKUP_ENABLED] = true
+                it[KEY_AUTO_BACKUP_FOLDER_URI] = folderUri
+            }
+        }
+    }
+
+    suspend fun setLastAutoBackupTimestamp(timestamp: Long) {
+        context.dataStore.edit { it[KEY_LAST_AUTO_BACKUP] = timestamp }
     }
 
     suspend fun setSubscriptionSortOption(option: SubscriptionSortOption) {

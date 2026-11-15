@@ -68,6 +68,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Storage
@@ -190,6 +192,20 @@ fun SettingsScreen(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         uri?.let { settingsViewModel.exportDatabaseZip(it) }
+    }
+
+    val autoBackupFolderLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        uri?.let { settingsViewModel.enableAutoBackup(it) }
+    }
+    val autoBackupFolderName = remember(settings.autoBackupFolderUri) {
+        settings.autoBackupFolderUri.takeIf { it.isNotBlank() }?.let { raw ->
+            val uri = Uri.parse(raw)
+            runCatching { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, uri)?.name }.getOrNull()
+                ?: uri.lastPathSegment?.substringAfterLast(':')
+                ?: raw
+        }
     }
 
     val importDbLauncher = rememberLauncherForActivityResult(
@@ -948,6 +964,86 @@ fun SettingsScreen(
                                 Icon(Icons.Filled.Storage, null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(stringResource(R.string.settings_import_db), style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        // Copia automática diaria (máximo 3 copias en la carpeta elegida)
+                        val autoBackupOn = settings.autoBackupEnabled && settings.autoBackupFolderUri.isNotBlank()
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Schedule,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.auto_backup_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stringResource(R.string.auto_backup_sub),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Switch(
+                                checked = autoBackupOn,
+                                onCheckedChange = { checked ->
+                                    if (checked) autoBackupFolderLauncher.launch(null)
+                                    else settingsViewModel.disableAutoBackup()
+                                },
+                                colors = appSwitchColors()
+                            )
+                        }
+
+                        AnimatedVisibility(visible = autoBackupOn) {
+                            Column(modifier = Modifier.padding(top = 10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Folder,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.auto_backup_folder, autoBackupFolderName.orEmpty()),
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        Text(
+                                            text = if (settings.lastAutoBackupTimestamp > 0L) {
+                                                stringResource(
+                                                    R.string.auto_backup_last,
+                                                    java.text.DateFormat.getDateTimeInstance(
+                                                        java.text.DateFormat.MEDIUM,
+                                                        java.text.DateFormat.SHORT
+                                                    ).format(Date(settings.lastAutoBackupTimestamp))
+                                                )
+                                            } else {
+                                                stringResource(R.string.auto_backup_never)
+                                            },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    TextButton(onClick = {
+                                        autoBackupFolderLauncher.launch(
+                                            settings.autoBackupFolderUri.takeIf { it.isNotBlank() }?.let(Uri::parse)
+                                        )
+                                    }) {
+                                        Text(stringResource(R.string.auto_backup_change_folder))
+                                    }
+                                }
                             }
                         }
                     }

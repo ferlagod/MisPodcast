@@ -405,6 +405,13 @@
     <string name="opml_subscriptions_title">Subscriptions (OPML)</string>
     <string name="full_backup_title">Full backup (.zip / AntennaPod .db)</string>
     <string name="full_backup_description">Export your full database or import MisPodcast backups (.zip) or AntennaPod databases (.db or .zip with subscriptions, played episodes, favourites, queue and statistics).</string>
+    <string name="auto_backup_title">Daily automatic backup</string>
+    <string name="auto_backup_sub">Saves a copy of the database every 24 h in the folder you choose and keeps the 3 most recent ones</string>
+    <string name="auto_backup_folder">Folder: %1$s</string>
+    <string name="auto_backup_change_folder">Change folder</string>
+    <string name="auto_backup_last">Last backup: %1$s</string>
+    <string name="auto_backup_never">No backup has been made yet</string>
+    <string name="auto_backup_folder_error">Could not get access to the selected folder</string>
     <string name="check_now_title">Check now</string>
     <string name="check_now_sub">Look for new episodes now</string>
     <string name="action_check">Check</string>

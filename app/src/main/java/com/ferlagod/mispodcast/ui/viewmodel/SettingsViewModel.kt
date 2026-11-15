@@ -356,6 +356,47 @@ class SettingsViewModel @JvmOverloads constructor(
         }
     }
 
+    // ==========================================
+    // COPIA DE SEGURIDAD AUTOMÁTICA DIARIA
+    // ==========================================
+
+    /** Activa la copia automática en la carpeta [treeUri] elegida con el selector del sistema. */
+    fun enableAutoBackup(treeUri: Uri) {
+        viewModelScope.launch {
+            val resolver = getApplication<Application>().contentResolver
+            val flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            try {
+                resolver.takePersistableUriPermission(treeUri, flags)
+            } catch (e: SecurityException) {
+                _backupMessage.value = UiText.Res(R.string.auto_backup_folder_error)
+                return@launch
+            }
+            val previous = preferencesManager.userSettingsFlow.firstOrNull()?.autoBackupFolderUri.orEmpty()
+            if (previous.isNotBlank() && previous != treeUri.toString()) releaseFolderPermission(previous)
+            preferencesManager.setAutoBackup(treeUri.toString())
+        }
+    }
+
+    fun disableAutoBackup() {
+        viewModelScope.launch {
+            val previous = preferencesManager.userSettingsFlow.firstOrNull()?.autoBackupFolderUri.orEmpty()
+            preferencesManager.setAutoBackup(null)
+            if (previous.isNotBlank()) releaseFolderPermission(previous)
+        }
+    }
+
+    private fun releaseFolderPermission(uri: String) {
+        try {
+            getApplication<Application>().contentResolver.releasePersistableUriPermission(
+                Uri.parse(uri),
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+            // El permiso ya no existía
+        }
+    }
+
     private companion object {
         /** Tiempo para leer «Copia restaurada» antes de que la app se reinicie. */
         const val RESTART_DELAY_MS = 1_800L
