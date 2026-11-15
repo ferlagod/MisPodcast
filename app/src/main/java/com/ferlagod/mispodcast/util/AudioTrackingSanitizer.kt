@@ -31,7 +31,7 @@ object AudioTrackingSanitizer {
 
     /** Refleja el ajuste "Protección de privacidad (antirrastreo)"; lo actualiza [com.ferlagod.mispodcast.MisPodcastApplication]. */
     @Volatile
-    var isEnabled: Boolean = true
+    var isEnabled: Boolean = false
 
     /**
      * Aplica [cleanAudioUrl] solo si el usuario tiene activada la protección antirrastreo.
