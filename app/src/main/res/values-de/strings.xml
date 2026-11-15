@@ -739,4 +739,6 @@
         <item quantity="other">%d Folgen verschwinden aus den Neuerscheinungen. Sie werden nicht als gehört markiert und bleiben in jedem Podcast verfügbar.</item>
     </plurals>
     <string name="link_no_app">Keine App zum Öffnen dieses Links.</string>
+    <string name="nextcloud_edit_account">Bearbeiten</string>
+    <string name="nextcloud_hide_account">Ausblenden</string>
 </resources>

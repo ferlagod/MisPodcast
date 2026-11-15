@@ -745,4 +745,6 @@
         <item quantity="other">%d épisodes quitteront les nouveautés. Ils ne seront pas marqués comme écoutés et resteront disponibles dans chaque podcast.</item>
     </plurals>
     <string name="link_no_app">Aucune app ne peut ouvrir ce lien.</string>
+    <string name="nextcloud_edit_account">Modifier</string>
+    <string name="nextcloud_hide_account">Masquer</string>
 </resources>

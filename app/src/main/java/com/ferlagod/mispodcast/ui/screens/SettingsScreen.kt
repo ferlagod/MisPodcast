@@ -99,6 +99,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -147,10 +151,25 @@ fun SettingsScreen(
     var usernameInput by remember(settings.nextcloudUsername) { mutableStateOf(settings.nextcloudUsername) }
     var appPasswordInput by remember(settings.nextcloudAppPassword) { mutableStateOf(settings.nextcloudAppPassword) }
     var passwordVisible by remember { mutableStateOf(false) }
+    // Con una cuenta ya configurada, los campos de credenciales se muestran plegados.
+    // Mientras el usuario edita (pulsó «Editar» o está escribiendo) no se pliegan,
+    // porque cada pulsación se guarda y completaría la cuenta a mitad de escritura.
+    var isEditingNextcloud by rememberSaveable { mutableStateOf(false) }
+    val nextcloudConfigured = settings.nextcloudServerUrl.isNotBlank() &&
+        settings.nextcloudUsername.isNotBlank() &&
+        settings.nextcloudAppPassword.isNotBlank()
+    val nextcloudFieldsExpanded = !nextcloudConfigured || isEditingNextcloud
 
     val isTestingConnection by settingsViewModel.isTestingConnection.collectAsState()
     val connectionTestResult by settingsViewModel.connectionTestResult.collectAsState()
     val isConnectionSuccess by settingsViewModel.isConnectionSuccess.collectAsState()
+    // Una prueba de conexión correcta da la cuenta por buena y pliega los campos.
+    LaunchedEffect(isConnectionSuccess) {
+        if (isConnectionSuccess == true) {
+            isEditingNextcloud = false
+            passwordVisible = false
+        }
+    }
     val isSyncingNextcloud by settingsViewModel.isSyncingNextcloud.collectAsState()
     val nextcloudSyncMessage by settingsViewModel.nextcloudSyncMessage.collectAsState()
 
@@ -580,10 +599,67 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Resumen de la cuenta y botón para desplegar/plegar las credenciales
+                        if (nextcloudConfigured) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Person,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = settings.nextcloudUsername,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = settings.nextcloudServerUrl
+                                                .removePrefix("https://")
+                                                .removePrefix("http://")
+                                                .trimEnd('/'),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    TextButton(onClick = {
+                                        isEditingNextcloud = !isEditingNextcloud
+                                        if (!isEditingNextcloud) passwordVisible = false
+                                    }) {
+                                        Text(
+                                            stringResource(
+                                                if (isEditingNextcloud) R.string.nextcloud_hide_account
+                                                else R.string.nextcloud_edit_account
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        AnimatedVisibility(visible = nextcloudFieldsExpanded) {
+                        Column {
+                        if (nextcloudConfigured) Spacer(modifier = Modifier.height(10.dp))
+
                         // URL del servidor
                         OutlinedTextField(
                             value = serverUrlInput,
                             onValueChange = {
+                                isEditingNextcloud = true
                                 serverUrlInput = it
                                 settingsViewModel.setNextcloudConfig(it, usernameInput, appPasswordInput)
                             },
@@ -603,6 +679,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = usernameInput,
                             onValueChange = {
+                                isEditingNextcloud = true
                                 usernameInput = it
                                 settingsViewModel.setNextcloudConfig(serverUrlInput, it, appPasswordInput)
                             },
@@ -622,6 +699,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = appPasswordInput,
                             onValueChange = {
+                                isEditingNextcloud = true
                                 appPasswordInput = it
                                 settingsViewModel.setNextcloudConfig(serverUrlInput, usernameInput, it)
                             },
@@ -643,6 +721,8 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         )
+                        }
+                        }
 
                         // Mensaje de resultado de prueba de conexión o sincronización
                         if (connectionTestResult != null) {
