@@ -126,7 +126,18 @@ class PodcastRepository(
         }
     }
 
-    suspend fun getHomeRecommendations(languageCode: String = "auto"): Result<HomeRecommendationData> = withContext(Dispatchers.IO) {
+    /**
+     * Recomendaciones de la pantalla de inicio.
+     *
+     * La selección es determinista por día: con el mismo [rotation] se obtiene el mismo
+     * carrusel durante toda la jornada y cambia automáticamente al día siguiente.
+     * Cada incremento de [rotation] (botón "volver a buscar") pasa a la siguiente
+     * suscripción de la rotación diaria y vuelve a barajar los resultados.
+     */
+    suspend fun getHomeRecommendations(
+        languageCode: String = "auto",
+        rotation: Int = 0
+    ): Result<HomeRecommendationData> = withContext(Dispatchers.IO) {
         try {
             val country = PodcastLanguageMapper.getCountryCode(languageCode)
             val langParam = PodcastLanguageMapper.getLanguageParam(languageCode)
@@ -134,39 +145,48 @@ class PodcastRepository(
             val followedFeedUrls = subscribed.mapNotNull { it.feedUrl.lowercase().trim().takeIf { s -> s.isNotEmpty() } }.toSet()
             val followedTitles = subscribed.map { it.title.lowercase().trim() }.toSet()
 
+            val epochDay = java.time.LocalDate.now().toEpochDay()
+            val daySeed = epochDay * 31L
+            val shuffleRandom = kotlin.random.Random(daySeed + rotation * 7919L)
+
+            fun isNew(dto: ApplePodcastDto): Boolean {
+                val feed = dto.feedUrl?.lowercase()?.trim().orEmpty()
+                val title = dto.collectionName?.lowercase()?.trim().orEmpty()
+                return feed.isNotBlank() && feed !in followedFeedUrls && title !in followedTitles
+            }
+
             if (subscribed.isNotEmpty()) {
-                val candidate = subscribed.firstOrNull { it.category.isNotBlank() && it.category != "General" }
-                    ?: subscribed.firstOrNull { it.author.isNotBlank() }
-                    ?: subscribed.first()
+                // Orden de rotación estable durante el día; el botón avanza por él sin repetir
+                val dailyOrder = subscribed.sortedBy { it.feedUrl }.shuffled(kotlin.random.Random(daySeed))
+                val startIndex = Math.floorMod(rotation, dailyOrder.size)
 
-                val searchTerm = when {
-                    candidate.category.isNotBlank() && candidate.category != "General" -> candidate.category
-                    candidate.author.isNotBlank() -> candidate.author
-                    else -> candidate.title
-                }
+                // Si la suscripción elegida no da resultados nuevos, probamos con las siguientes
+                for (offset in 0 until minOf(3, dailyOrder.size)) {
+                    val candidate = dailyOrder[(startIndex + offset) % dailyOrder.size]
+                    val searchTerm = when {
+                        candidate.category.isNotBlank() && candidate.category != "General" -> candidate.category
+                        candidate.author.isNotBlank() -> candidate.author
+                        else -> candidate.title
+                    }
 
-                val response = searchService.searchPodcasts(
-                    term = searchTerm,
-                    media = "podcast",
-                    limit = 15,
-                    country = country,
-                    lang = langParam
-                )
-
-                val filtered = response.results.filter { dto ->
-                    val feed = dto.feedUrl?.lowercase()?.trim().orEmpty()
-                    val title = dto.collectionName?.lowercase()?.trim().orEmpty()
-                    feed.isNotBlank() && feed !in followedFeedUrls && title !in followedTitles
-                }
-
-                if (filtered.isNotEmpty()) {
-                    return@withContext Result.success(
-                        HomeRecommendationData(
-                            title = PodcastLanguageMapper.getRecommendedTitle(languageCode),
-                            subtitle = PodcastLanguageMapper.getRecommendedSubtitle(languageCode, candidate.title),
-                            podcasts = filtered.take(15)
-                        )
+                    val response = searchService.searchPodcasts(
+                        term = searchTerm,
+                        media = "podcast",
+                        limit = 50,
+                        country = country,
+                        lang = langParam
                     )
+
+                    val filtered = response.results.filter(::isNew)
+                    if (filtered.isNotEmpty()) {
+                        return@withContext Result.success(
+                            HomeRecommendationData(
+                                title = PodcastLanguageMapper.getRecommendedTitle(languageCode),
+                                subtitle = PodcastLanguageMapper.getRecommendedSubtitle(languageCode, candidate.title),
+                                podcasts = filtered.shuffled(shuffleRandom).take(15)
+                            )
+                        )
+                    }
                 }
             }
 
@@ -175,24 +195,19 @@ class PodcastRepository(
             val popularResponse = searchService.searchPodcasts(
                 term = trendingTerm,
                 media = "podcast",
-                limit = 15,
+                limit = 50,
                 country = country,
                 lang = langParam
             )
 
-            val filteredPopular = popularResponse.results.filter { dto ->
-                val feed = dto.feedUrl?.lowercase()?.trim().orEmpty()
-                val title = dto.collectionName?.lowercase()?.trim().orEmpty()
-                feed.isNotBlank() && feed !in followedFeedUrls && title !in followedTitles
-            }
-
+            val filteredPopular = popularResponse.results.filter(::isNew)
             val finalResults = if (filteredPopular.isNotEmpty()) filteredPopular else popularResponse.results.filter { !it.feedUrl.isNullOrBlank() }
 
             Result.success(
                 HomeRecommendationData(
                     title = PodcastLanguageMapper.getTrendingTitle(languageCode),
                     subtitle = PodcastLanguageMapper.getTrendingSubtitle(languageCode),
-                    podcasts = finalResults.take(15)
+                    podcasts = finalResults.shuffled(shuffleRandom).take(15)
                 )
             )
         } catch (e: Exception) {

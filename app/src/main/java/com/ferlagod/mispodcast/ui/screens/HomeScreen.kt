@@ -626,7 +626,7 @@ fun HomeScreen(
                         }
                     }
 
-                    IconButton(onClick = { podcastViewModel.loadRecommendations() }) {
+                    IconButton(onClick = { podcastViewModel.shuffleRecommendations() }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
                             contentDescription = stringResource(R.string.action_refresh),

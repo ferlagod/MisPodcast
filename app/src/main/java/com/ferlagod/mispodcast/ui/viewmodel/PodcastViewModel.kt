@@ -162,12 +162,24 @@ class PodcastViewModel @JvmOverloads constructor(
     private val _recommendationError = MutableStateFlow<UiText?>(null)
     val recommendationError: StateFlow<UiText?> = _recommendationError.asStateFlow()
 
+    // Desplazamiento sobre la selección diaria; solo lo avanza el botón "volver a buscar"
+    private var recommendationRotation = 0
+    private var recommendationsJob: kotlinx.coroutines.Job? = null
+
+    /** Muestra otra tanda de recomendaciones distinta a la actual. */
+    fun shuffleRecommendations() {
+        recommendationRotation++
+        loadRecommendations()
+    }
+
     fun loadRecommendations(languageCode: String? = null) {
         val targetLang = languageCode ?: currentLanguageCode.value
-        viewModelScope.launch {
+        val rotation = recommendationRotation
+        recommendationsJob?.cancel()
+        recommendationsJob = viewModelScope.launch {
             _isLoadingRecommendations.value = true
             _recommendationError.value = null
-            val result = repository.getHomeRecommendations(targetLang)
+            val result = repository.getHomeRecommendations(targetLang, rotation)
             result.onSuccess { data ->
                 _recommendationTitle.value = data.title
                 _recommendationSubtitle.value = data.subtitle
