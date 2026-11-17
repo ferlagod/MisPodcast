@@ -425,6 +425,7 @@ private fun NewReleaseCard(
     }
 
     Card(
+        onClick = onEpisodeClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
@@ -565,10 +566,7 @@ private fun NewReleaseCard(
             Text(
                 text = item.episode.title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .clickable(onClick = onEpisodeClick)
+                fontWeight = FontWeight.Bold
             )
 
             if (item.episode.description.isNotBlank()) {
