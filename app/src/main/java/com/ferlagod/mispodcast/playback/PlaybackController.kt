@@ -125,17 +125,30 @@ class PlaybackController(
             seekTo(target)
         }
 
-        override fun seekToNext() {
-            if (!seekToNextChapter(player)) {
-                super.seekToNext()
-            }
-        }
+        // Los botones "siguiente/anterior" de auriculares, mandos Bluetooth y Android Auto
+        // llegan como seekToNext/seekToPrevious. En un podcast lo esperado es avanzar/retroceder
+        // dentro del episodio, no cambiar de episodio (eso se hace desde la app).
+        override fun seekToNext() = seekForward()
+        override fun seekToNextMediaItem() = seekForward()
+        override fun seekToPrevious() = seekBack()
+        override fun seekToPreviousMediaItem() = seekBack()
 
-        override fun seekToPrevious() {
-            if (!seekToPreviousChapter(player)) {
-                super.seekToPrevious()
-            }
-        }
+        // Asegura que siguiente/anterior estén siempre disponibles aunque no haya otro
+        // episodio en la cola; si no, la sesión ignoraría esas pulsaciones.
+        override fun getAvailableCommands(): Player.Commands =
+            super.getAvailableCommands().buildUpon()
+                .addAll(
+                    Player.COMMAND_SEEK_TO_NEXT,
+                    Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                    Player.COMMAND_SEEK_TO_PREVIOUS,
+                    Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+                    Player.COMMAND_SEEK_FORWARD,
+                    Player.COMMAND_SEEK_BACK
+                )
+                .build()
+
+        override fun isCommandAvailable(command: Int): Boolean =
+            availableCommands.contains(command)
 
         override fun getSeekBackIncrement(): Long = skipBackMs
         override fun getSeekForwardIncrement(): Long = skipForwardMs
