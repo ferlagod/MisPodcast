@@ -107,8 +107,7 @@ class ProgressTracker(
 
                     // Comprobación de salto de créditos / patrocinadores al final del episodio
                     if (podcastId != null && episodeId != null && duration > 0L) {
-                        val podcast = database.podcastDao().getPodcastById(podcastId)
-                        val skipEndingMs = (podcast?.skipEndingSeconds ?: 0) * 1000L
+                        val skipEndingMs = skipEndingMsFor(podcastId)
                         if (skipEndingMs > 0 && currentPos >= (duration - skipEndingMs)) {
                             kotlinx.coroutines.withContext(Dispatchers.Main) {
                                 player.seekTo(duration)
@@ -208,6 +207,21 @@ class ProgressTracker(
             DownloadCleaner.onEpisodeCompleted(context, database.podcastDao(), episodeId)
             syncManager.triggerSyncIfConfigured(debounceMs = 1500L)
         }
+    }
+
+    // Ajuste «saltar final» del podcast en curso: se consulta como mucho cada 30 s (antes, cada segundo)
+    private var skipEndingPodcastId: String? = null
+    private var skipEndingMs: Long = 0L
+    private var skipEndingReadAtMs: Long = 0L
+
+    private suspend fun skipEndingMsFor(podcastId: String): Long {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (podcastId != skipEndingPodcastId || now - skipEndingReadAtMs > 30_000L) {
+            skipEndingMs = (database.podcastDao().getPodcastById(podcastId)?.skipEndingSeconds ?: 0) * 1000L
+            skipEndingPodcastId = podcastId
+            skipEndingReadAtMs = now
+        }
+        return skipEndingMs
     }
 
     private fun takePendingListenedTime(): Long {
