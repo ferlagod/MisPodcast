@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.sync
 
+import com.ferlagod.mispodcast.util.BoundedRead
+import com.ferlagod.mispodcast.util.stringWithLimit
 import com.ferlagod.mispodcast.R
 import com.ferlagod.mispodcast.util.LocalizedException
 import com.ferlagod.mispodcast.util.UiText
@@ -381,7 +383,7 @@ class NextcloudSyncManager(
                     if (getResponse.isSuccessful) {
                         remoteFileExists = true
                         remoteEtag = getResponse.header("ETag")
-                        val jsonBody = getResponse.body?.string()
+                        val jsonBody = getResponse.body?.stringWithLimit(BoundedRead.MAX_SYNC_BYTES)
                         if (!jsonBody.isNullOrBlank()) {
                             val remoteData = try {
                                 json.decodeFromString<NextcloudSyncData>(jsonBody)

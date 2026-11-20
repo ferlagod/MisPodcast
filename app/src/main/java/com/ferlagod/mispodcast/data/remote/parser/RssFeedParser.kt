@@ -106,7 +106,10 @@ class RssFeedParser(
             val newLastModified = response.header("Last-Modified")
             val bodyStream = response.body?.byteStream()
                 ?: throw LocalizedException(R.string.error_feed_empty)
-            val parsed = parseFeed(bodyStream, feedUrl)
+            val parsed = parseFeed(
+                com.ferlagod.mispodcast.util.LimitedInputStream(bodyStream, com.ferlagod.mispodcast.util.BoundedRead.MAX_FEED_BYTES),
+                feedUrl
+            )
             FeedFetchResult.Success(
                 feed = parsed,
                 etag = newEtag,

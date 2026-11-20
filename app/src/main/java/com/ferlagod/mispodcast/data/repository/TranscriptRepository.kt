@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.repository
 
+import com.ferlagod.mispodcast.util.BoundedRead
+import com.ferlagod.mispodcast.util.stringWithLimit
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import com.ferlagod.mispodcast.data.local.entities.EpisodeEntity
 import com.ferlagod.mispodcast.data.model.TranscriptSegment
@@ -93,7 +95,7 @@ class TranscriptRepository(
 
             okHttpClient.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val body = response.body?.string()
+                    val body = response.body?.stringWithLimit(BoundedRead.MAX_TEXT_BYTES)
                     if (!body.isNullOrBlank()) {
                         val parsed = parseTranscript(body)
                         if (parsed.isNotEmpty()) {

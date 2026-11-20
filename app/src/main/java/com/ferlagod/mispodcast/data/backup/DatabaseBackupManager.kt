@@ -129,7 +129,9 @@ object DatabaseBackupManager {
         }
 
         try {
-            val tempFile = File(tempDir, "incoming_backup.tmp")
+            // El archivo recibido queda fuera de la carpeta de extracción: una entrada del ZIP con su
+            // mismo nombre no puede sobrescribirlo mientras se lee
+            val tempFile = File(context.cacheDir, "incoming_backup.tmp").apply { delete() }
             context.contentResolver.openInputStream(sourceUri)?.use { input ->
                 FileOutputStream(tempFile).use { output ->
                     input.copyTo(output)
@@ -148,6 +150,7 @@ object DatabaseBackupManager {
                 // Descomprimir el contenido en tempDir
                 val buffer = ByteArray(8192)
                 var hasMainMisPodcastDb = false
+                var totalExtracted = 0L
 
                 ZipInputStream(BufferedInputStream(FileInputStream(tempFile))).use { zipIn ->
                     var entry = zipIn.nextEntry
@@ -161,6 +164,11 @@ object DatabaseBackupManager {
                             FileOutputStream(destFile).use { fos ->
                                 var bytesRead: Int
                                 while (zipIn.read(buffer).also { bytesRead = it } != -1) {
+                                    totalExtracted += bytesRead
+                                    // Protección frente a ZIP «bomba» que llenaría el almacenamiento
+                                    if (totalExtracted > MAX_EXTRACTED_BYTES) {
+                                        throw LocalizedException(R.string.error_backup_invalid_zip)
+                                    }
                                     fos.write(buffer, 0, bytesRead)
                                 }
                             }
@@ -190,7 +198,7 @@ object DatabaseBackupManager {
 
                 // Caso B: El ZIP contiene una base de datos de AntennaPod (.db o similar)
                 val candidateAntennaPodDb = tempDir.listFiles()?.firstOrNull { file ->
-                    file.isFile && file.name != "incoming_backup.tmp" && AntennaPodDatabaseImporter.isAntennaPodDatabase(file)
+                    file.isFile && AntennaPodDatabaseImporter.isAntennaPodDatabase(file)
                 }
 
                 if (candidateAntennaPodDb != null) {
@@ -213,6 +221,7 @@ object DatabaseBackupManager {
             Result.failure(e)
         } finally {
             tempDir.deleteRecursively()
+            File(context.cacheDir, "incoming_backup.tmp").delete()
         }
     }
 
@@ -268,6 +277,9 @@ object DatabaseBackupManager {
     }
 
     private val DB_SUFFIXES = listOf("", "-wal", "-shm", "-journal")
+
+    /** Tamaño máximo descomprimido de una copia (la base de datos real ocupa unos pocos MB). */
+    private const val MAX_EXTRACTED_BYTES = 1024L * 1024 * 1024
 
     /**
      * Mantiene compatibilidad hacia atrás delegando a importDatabase.

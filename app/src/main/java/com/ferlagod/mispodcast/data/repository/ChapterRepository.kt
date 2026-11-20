@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.repository
 
+import com.ferlagod.mispodcast.util.BoundedRead
+import com.ferlagod.mispodcast.util.stringWithLimit
 import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import androidx.annotation.OptIn
 import androidx.media3.common.Metadata
@@ -116,7 +118,7 @@ class ChapterRepository(
 
                 okHttpClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
-                        val body = response.body?.string()
+                        val body = response.body?.stringWithLimit(BoundedRead.MAX_TEXT_BYTES)
                         if (!body.isNullOrBlank()) {
                             val parsed = parsePodcasting20Json(body)
                             if (parsed.isNotEmpty()) {

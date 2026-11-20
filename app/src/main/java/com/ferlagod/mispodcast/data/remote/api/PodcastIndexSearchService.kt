@@ -18,6 +18,8 @@
 
 package com.ferlagod.mispodcast.data.remote.api
 
+import com.ferlagod.mispodcast.util.BoundedRead
+import com.ferlagod.mispodcast.util.stringWithLimit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -60,7 +62,7 @@ class PodcastIndexSearchService(
 
         okHttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) return@withContext emptyList()
-            val body = response.body?.string().orEmpty()
+            val body = response.body?.stringWithLimit(BoundedRead.MAX_TEXT_BYTES).orEmpty()
             json.decodeFromString<PodcastIndexSearchResponse>(body).feeds
                 .filter { it.url.isNotBlank() && !it.dead }
                 .map { it.toApplePodcastDto() }
