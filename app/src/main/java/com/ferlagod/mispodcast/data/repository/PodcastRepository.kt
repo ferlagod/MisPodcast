@@ -38,6 +38,9 @@ import com.ferlagod.mispodcast.data.remote.api.ApplePodcastDto
 import com.ferlagod.mispodcast.data.remote.api.ApplePodcastSearchService
 import com.ferlagod.mispodcast.data.remote.parser.RssFeedParser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -345,6 +348,68 @@ class PodcastRepository(
     }
 
     /**
+     * Actualiza un feed suscrito: inserta sus episodios nuevos y, para las novedades genuinas
+     * ([NewEpisodePolicy]), aplica la descarga automática y el encolado igual que la comprobación
+     * en segundo plano. Sin esto, un episodio descubierto al refrescar a mano no se descargaba nunca.
+     */
+    private suspend fun refreshSinglePodcast(
+        podcast: PodcastEntity,
+        settings: com.ferlagod.mispodcast.data.preferences.UserSettings?,
+        downloadManager: com.ferlagod.mispodcast.data.download.EpisodeDownloadManager?,
+        newCounter: java.util.concurrent.atomic.AtomicInteger
+    ) {
+        val result = feedParser.fetchAndParseFeedConditional(
+            feedUrl = podcast.feedUrl.trim(),
+            etag = podcast.httpEtag,
+            lastModified = podcast.httpLastModified
+        )
+        if (result !is com.ferlagod.mispodcast.data.remote.parser.FeedFetchResult.Success) {
+            podcastDao.updatePodcastCacheHeaders(
+                podcastId = podcast.id,
+                etag = podcast.httpEtag,
+                lastModified = podcast.httpLastModified,
+                lastUpdated = System.currentTimeMillis()
+            )
+            return
+        }
+        val parsedFeed = result.feed
+        val inserted = podcastDao.upsertFeedEpisodes(
+            podcast.id,
+            parsedFeed.episodes.map { it.toEpisodeEntity(podcast.id) }
+        )
+        newCounter.addAndGet(inserted.size)
+
+        val genuinelyNew = NewEpisodePolicy.selectGenuinelyNew(podcast, inserted)
+        if (genuinelyNew.isNotEmpty()) {
+            val autoDownload = podcast.autoDownloadEnabled ?: (settings?.autoDownloadNewEpisodes ?: false)
+            if (autoDownload && downloadManager != null) {
+                genuinelyNew.take(NewEpisodePolicy.MAX_AUTO_DOWNLOADS_PER_PODCAST).forEach {
+                    downloadManager.downloadEpisode(it, ignoreNetworkConstraints = false)
+                }
+            }
+            NewEpisodePolicy.enqueue(
+                podcastDao,
+                genuinelyNew,
+                NewEpisodePolicy.effectiveEnqueueRule(podcast, settings?.defaultAutoEnqueueRule ?: "DISABLED")
+            )
+        }
+
+        // Sobre la fila actual: el usuario pudo darse de baja o cambiar ajustes mientras tanto
+        val currentPodcast = podcastDao.getPodcastById(podcast.id) ?: return
+        podcastDao.insertPodcast(
+            currentPodcast.copy(
+                title = parsedFeed.title.ifBlank { podcast.title },
+                author = parsedFeed.author.ifBlank { podcast.author },
+                description = parsedFeed.description.ifBlank { podcast.description },
+                artworkUrl = parsedFeed.artworkUrl.ifBlank { podcast.artworkUrl },
+                httpEtag = result.etag ?: podcast.httpEtag,
+                httpLastModified = result.lastModified ?: podcast.httpLastModified,
+                lastUpdated = System.currentTimeMillis()
+            )
+        )
+    }
+
+    /**
      * Resultado de [refreshAllSubscribedPodcasts].
      *
      * @property newEpisodes episodios nuevos insertados.
@@ -379,57 +444,38 @@ class PodcastRepository(
                 }
             }
 
-            // 2. Comprobar y actualizar cada feed RSS remoto
-            for (podcast in subscribed) {
-                if (podcast.isLocalFolder) continue
+            // 2. Comprobar los feeds RSS remotos en paralelo (máx. 6 a la vez) con descarga condicional
+            val settings = preferencesManager?.userSettingsFlow?.firstOrNull()
+            val downloadManager = context?.let {
+                com.ferlagod.mispodcast.data.download.EpisodeDownloadManager.getInstance(it, podcastDao)
+            }
+            val remote = subscribed.filter { podcast ->
                 val feedUrl = podcast.feedUrl.trim()
-                if (feedUrl.isBlank() || (!feedUrl.startsWith("http://", ignoreCase = true) && !feedUrl.startsWith("https://", ignoreCase = true))) {
-                    continue
-                }
+                !podcast.isLocalFolder &&
+                    (feedUrl.startsWith("http://", ignoreCase = true) || feedUrl.startsWith("https://", ignoreCase = true))
+            }
+            attemptedFeeds = remote.size
+            val newCounter = java.util.concurrent.atomic.AtomicInteger(0)
+            val failed = java.util.concurrent.ConcurrentLinkedQueue<String>()
+            val semaphore = kotlinx.coroutines.sync.Semaphore(6)
 
-                attemptedFeeds++
-                try {
-                    val parsedFeed = feedParser.fetchAndParseFeed(feedUrl)
-                    val newEpisodes = podcastDao.upsertFeedEpisodes(
-                        podcast.id,
-                        parsedFeed.episodes.map { it.toEpisodeEntity(podcast.id) }
-                    )
-
-                    if (newEpisodes.isNotEmpty()) {
-                        newEpisodesCount += newEpisodes.size
-
-                        val defaultGlobal = preferencesManager?.userSettingsFlow?.firstOrNull()?.defaultAutoEnqueueRule ?: "DISABLED"
-                        val effectiveRule = if (podcast.autoEnqueueRule == "DEFAULT" || podcast.autoEnqueueRule.isBlank()) {
-                            defaultGlobal
-                        } else {
-                            podcast.autoEnqueueRule
-                        }
-                        if (effectiveRule != "DISABLED") {
-                            for (ep in newEpisodes.sortedBy { it.pubDate }) {
-                                if (effectiveRule == "TOP") {
-                                    podcastDao.addEpisodeToQueueTop(ep.id)
-                                } else if (effectiveRule == "BOTTOM") {
-                                    podcastDao.addEpisodeToQueueEnd(ep.id)
-                                }
+            kotlinx.coroutines.coroutineScope {
+                remote.map { podcast ->
+                    async {
+                        semaphore.withPermit {
+                            try {
+                                refreshSinglePodcast(podcast, settings, downloadManager, newCounter)
+                            } catch (e: Exception) {
+                                e.rethrowIfCancellation()
+                                android.util.Log.w("PodcastRepository", "Error al actualizar feed '${podcast.title}': ${e.message}")
+                                failed += podcast.title
                             }
                         }
                     }
-
-                    val currentPodcast = podcastDao.getPodcastById(podcast.id) ?: continue
-                    val updatedPodcast = currentPodcast.copy(
-                        title = parsedFeed.title.ifBlank { podcast.title },
-                        author = parsedFeed.author.ifBlank { podcast.author },
-                        description = parsedFeed.description.ifBlank { podcast.description },
-                        artworkUrl = parsedFeed.artworkUrl.ifBlank { podcast.artworkUrl },
-                        lastUpdated = System.currentTimeMillis()
-                    )
-                    podcastDao.insertPodcast(updatedPodcast)
-                } catch (e: Exception) {
-                    e.rethrowIfCancellation()
-                    android.util.Log.w("PodcastRepository", "Error al actualizar feed '${podcast.title}': ${e.message}")
-                    failedTitles += podcast.title
-                }
+                }.awaitAll()
             }
+            newEpisodesCount = newCounter.get()
+            failedTitles += remote.map { it.title }.filter { it in failed }
 
             Result.success(FeedRefreshSummary(newEpisodesCount, attemptedFeeds, failedTitles))
         } catch (e: Exception) {
