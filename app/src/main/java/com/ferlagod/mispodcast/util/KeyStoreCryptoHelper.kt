@@ -74,22 +74,37 @@ object KeyStoreCryptoHelper {
     /**
      * Cifra un texto plano utilizando AES-GCM con el KeyStore de Android.
      * Si el KeyStore no está disponible (p. ej. en pruebas locales de JVM), se devuelve el texto.
+     * Si la clave existe pero no funciona (dañada tras una restauración del sistema, etc.), se
+     * regenera y se reintenta una vez antes de recurrir al texto plano, para no perder la credencial.
      */
     fun encrypt(plainText: String): String {
         if (plainText.isBlank()) return ""
-        val secretKey = getOrCreateSecretKey() ?: return plainText
-        return try {
-            val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-            val iv = cipher.iv
-            val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
-            val combined = ByteArray(iv.size + encryptedBytes.size)
-            System.arraycopy(iv, 0, combined, 0, iv.size)
-            System.arraycopy(encryptedBytes, 0, combined, iv.size, encryptedBytes.size)
-            PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
+        repeat(2) { attempt ->
+            val secretKey = getOrCreateSecretKey() ?: return plainText
+            try {
+                val cipher = Cipher.getInstance(TRANSFORMATION)
+                cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+                val iv = cipher.iv
+                val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+                val combined = ByteArray(iv.size + encryptedBytes.size)
+                System.arraycopy(iv, 0, combined, 0, iv.size)
+                System.arraycopy(encryptedBytes, 0, combined, iv.size, encryptedBytes.size)
+                return PREFIX + Base64.encodeToString(combined, Base64.NO_WRAP)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error cifrando credencial con KeyStore (intento ${attempt + 1})", e)
+                if (attempt == 0) deleteKey()
+            }
+        }
+        Log.w(TAG, "No se pudo cifrar la credencial: se guarda sin cifrar")
+        return plainText
+    }
+
+    @Synchronized
+    private fun deleteKey() {
+        try {
+            KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(KEY_ALIAS)
         } catch (e: Exception) {
-            Log.e(TAG, "Error cifrando credencial con KeyStore", e)
-            plainText
+            Log.w(TAG, "No se pudo borrar la clave del KeyStore: ${e.message}")
         }
     }
 
