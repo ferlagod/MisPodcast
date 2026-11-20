@@ -393,7 +393,10 @@ class PlaybackController(
                         }
                     }
                     targetIndex = 0
-                } else if (effectiveItem?.requestMetadata?.mediaUri != null || effectiveItem?.localConfiguration?.uri != null) {
+                } else if (effectiveItem?.localConfiguration?.uri != null) {
+                    // Solo elementos con localConfiguration (resueltos por la app o la búsqueda por voz).
+                    // Media3 se la quita a los que envían otras apps, y una requestMetadata.mediaUri
+                    // externa no se reproduce: aceptarla abriría URIs locales con los permisos de la app
                     resolvedItems.add(effectiveItem)
                     for (qItem in queueList) {
                         resolvedItems.add(
@@ -406,13 +409,14 @@ class PlaybackController(
                     }
                     targetIndex = 0
                 } else {
-                    resolvedItems.addAll(mediaItems)
-                    targetIndex = startIndex.coerceIn(0, max(0, resolvedItems.size - 1))
+                    resolvedItems.addAll(playableItems(mediaItems))
+                    targetIndex = playableIndex(mediaItems, startIndex)
                 }
             }
         } else {
-            resolvedItems.addAll(mediaItems)
-            targetIndex = startIndex.coerceIn(0, max(0, resolvedItems.size - 1))
+            // Sin localConfiguration ExoPlayer no puede preparar el elemento y fallaría la reproducción
+            resolvedItems.addAll(playableItems(mediaItems))
+            targetIndex = playableIndex(mediaItems, startIndex)
         }
 
         MediaSession.MediaItemsWithStartPosition(
@@ -420,6 +424,14 @@ class PlaybackController(
             targetIndex,
             if (initialSeekPos == C.TIME_UNSET) 0L else initialSeekPos
         )
+    }
+
+    private fun playableItems(items: List<MediaItem>): List<MediaItem> = items.filter { it.localConfiguration != null }
+
+    /** Índice de `items[startIndex]` dentro de [playableItems] (0 si no es reproducible). */
+    private fun playableIndex(items: List<MediaItem>, startIndex: Int): Int {
+        val target = items.getOrNull(startIndex) ?: return 0
+        return playableItems(items).indexOfFirst { it === target }.coerceAtLeast(0)
     }
 
     /**
