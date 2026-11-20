@@ -268,6 +268,7 @@ class SettingsViewModel @JvmOverloads constructor(
 
                 _backupMessage.value = UiText.Res(R.string.msg_opml_importing, feeds.size)
                 var importedCount = 0
+                val remoteFeeds = mutableListOf<com.ferlagod.mispodcast.data.backup.OpmlPodcastFeed>()
                 for (feed in feeds) {
                     val isLocalFeed = feed.xmlUrl.startsWith("antennapod_local:") ||
                             feed.xmlUrl.startsWith("local:") ||
@@ -298,12 +299,26 @@ class SettingsViewModel @JvmOverloads constructor(
                         database.podcastDao().insertPodcast(localEntity)
                         importedCount++
                     } else {
-                        val subResult = repository.subscribeToFeed(feed.xmlUrl)
-                        if (subResult.isSuccess) {
-                            importedCount++
+                        remoteFeeds += feed
+                    }
+                }
+                // Los feeds remotos se descargan en paralelo (máx. 6 a la vez): con cientos de
+                // suscripciones, hacerlo de uno en uno tardaba minutos
+                val remoteImported = java.util.concurrent.atomic.AtomicInteger(0)
+                val semaphore = kotlinx.coroutines.sync.Semaphore(6)
+                kotlinx.coroutines.coroutineScope {
+                    remoteFeeds.distinctBy { it.xmlUrl.trim() }.forEach { feed ->
+                        launch {
+                            semaphore.acquire()
+                            try {
+                                if (repository.subscribeToFeed(feed.xmlUrl).isSuccess) remoteImported.incrementAndGet()
+                            } finally {
+                                semaphore.release()
+                            }
                         }
                     }
                 }
+                importedCount += remoteImported.get()
                 _backupMessage.value = UiText.Res(R.string.msg_opml_imported, importedCount, feeds.size)
                 if (importedCount > 0) {
                     nextcloudSyncManager.triggerSyncIfConfigured(debounceMs = 2500L)
