@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ferlagod.mispodcast.R
@@ -123,7 +124,8 @@ fun downloadActionLabel(status: DownloadStatus, canManage: Boolean = LocalDownlo
 /**
  * Botón de descarga con animación de estado:
  * - Sin descargar: flecha de descarga.
- * - En espera: reloj de arena; descargando: anillo de progreso. Con un cuadrado de «parar» para cancelar.
+ * - En espera o descargando: anillo que marca lo descargado (vacío mientras espera), con un cuadrado
+ *   de «parar» para cancelar.
  * - Descargado: check relleno; al pulsarlo se ofrece eliminar la descarga.
  *
  * @param episodeId necesario para poder cancelar o eliminar la descarga desde el botón.
@@ -146,52 +148,41 @@ fun EpisodeDownloadButton(
         // Sin acciones disponibles no hay nada que hacer mientras descarga
         enabled = canManage || !inProgress
     ) {
+        // En espera y descargando comparten el mismo anillo: así no hay fundido ni cambio de icono
+        // al empezar a llegar datos, solo el arco que avanza
+        val visualState = if (inProgress) DownloadStatus.DOWNLOADING else downloadState.status
         AnimatedContent(
-            targetState = downloadState.status,
+            targetState = visualState,
             transitionSpec = {
                 fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
             },
             label = "download_animation"
         ) { status ->
             when (status) {
-                DownloadStatus.DOWNLOADING -> {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (downloadState.progress > 0f) {
-                            CircularProgressIndicator(
-                                progress = { downloadState.progress },
-                                color = blueColor,
-                                trackColor = blueColor.copy(alpha = 0.2f),
-                                strokeWidth = 2.5.dp,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        } else {
-                            CircularProgressIndicator(
-                                color = blueColor,
-                                strokeWidth = 2.5.dp,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
+                DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED -> {
+                    val waiting = downloadState.status == DownloadStatus.QUEUED
+                    val description = stringResource(if (waiting) R.string.download_waiting else R.string.notif_downloading_episode) +
+                        if (canManage) ". " + stringResource(R.string.cancel_download) else ""
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.semantics { contentDescription = description }
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { if (waiting) 0f else downloadState.progress.coerceIn(0f, 1f) },
+                            color = blueColor,
+                            trackColor = blueColor.copy(alpha = 0.2f),
+                            strokeWidth = 2.5.dp,
+                            modifier = Modifier.size(22.dp)
+                        )
                         if (canManage) {
                             Icon(
                                 imageVector = Icons.Filled.Stop,
-                                contentDescription = stringResource(R.string.cancel_download),
+                                contentDescription = null,
                                 tint = blueColor,
                                 modifier = Modifier.size(12.dp)
                             )
                         }
                     }
-                }
-                DownloadStatus.QUEUED -> {
-                    Icon(
-                        imageVector = Icons.Filled.HourglassTop,
-                        contentDescription = if (canManage) {
-                            stringResource(R.string.download_waiting) + ". " + stringResource(R.string.cancel_download)
-                        } else {
-                            stringResource(R.string.download_waiting)
-                        },
-                        tint = blueColor.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp)
-                    )
                 }
                 DownloadStatus.DOWNLOADED -> {
                     Icon(
