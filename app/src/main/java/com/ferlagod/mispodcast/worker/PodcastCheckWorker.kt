@@ -37,6 +37,7 @@ import com.ferlagod.mispodcast.data.preferences.EpisodeCheckFrequency
 import com.ferlagod.mispodcast.data.preferences.UserPreferencesManager
 import com.ferlagod.mispodcast.data.remote.parser.FeedFetchResult
 import com.ferlagod.mispodcast.data.remote.parser.RssFeedParser
+import com.ferlagod.mispodcast.data.repository.NewEpisodePolicy
 import com.ferlagod.mispodcast.notification.NotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -180,28 +181,9 @@ class PodcastCheckWorker(
                                         // Inserta los nuevos y actualiza metadatos de los existentes (URL de audio, título...)
                                         val newlyInserted = podcastDao.upsertFeedEpisodes(podcast.id, episodeEntities)
 
-                                        // Baseline y corte temporal de seguridad:
-                                        // 1. Si podcast.lastUpdated <= 0L, es la sincronización inicial tras suscripción o importación.
-                                        //    NUNCA se debe notificar ni auto-encolar el archivo histórico descargado.
-                                        // 2. Para podcasts ya sincronizados previamente, solo los episodios con pubDate
-                                        //    estrictamente posterior a lastUpdated y emitidos en las últimas 48 horas son considerados novedades.
-                                        val isFirstSync = podcast.lastUpdated <= 0L
-                                        val now = System.currentTimeMillis()
-                                        // Ventana mínima de 48 h, ampliada hasta 14 días si el dispositivo
-                                        // llevaba más tiempo sin comprobar (apagado, sin red, Doze...)
-                                        val sinceLastCheckMs = now - podcast.lastUpdated
-                                        val maxEpisodeAgeMs = sinceLastCheckMs.coerceIn(48L * 3600L * 1000L, 14L * 24L * 3600L * 1000L)
-                                        val oldestAllowedDate = now - maxEpisodeAgeMs
-
-                                        val genuinelyNewEpisodes = if (isFirstSync) {
-                                            emptyList()
-                                        } else {
-                                            newlyInserted.filter { episode ->
-                                                episode.pubDate > podcast.lastUpdated &&
-                                                episode.pubDate > (podcast.subscribedAt - 3600_000L) &&
-                                                episode.pubDate >= oldestAllowedDate
-                                            }
-                                        }
+                                        // Novedades según la regla común (ni el archivo histórico de la primera
+                                        // sincronización ni episodios antiguos que se vuelven a subir)
+                                        val genuinelyNewEpisodes = NewEpisodePolicy.selectGenuinelyNew(podcast, newlyInserted)
 
                                         if (genuinelyNewEpisodes.isNotEmpty()) {
                                             totalNewEpisodesFound.addAndGet(genuinelyNewEpisodes.size)
@@ -213,26 +195,17 @@ class PodcastCheckWorker(
                                             // Auto-descargar según preferencia específica del podcast o ajuste global (respetando restricciones de Wi-Fi y batería)
                                             val shouldAutoDownload = podcast.autoDownloadEnabled ?: settings.autoDownloadNewEpisodes
                                             if (shouldAutoDownload) {
-                                                genuinelyNewEpisodes.take(2).forEach { episode ->
+                                                genuinelyNewEpisodes.take(NewEpisodePolicy.MAX_AUTO_DOWNLOADS_PER_PODCAST).forEach { episode ->
                                                     downloadManager.downloadEpisode(episode, ignoreNetworkConstraints = false)
                                                 }
                                             }
 
                                             // Auto-encolar automáticamente en la lista de reproducción ("Up Next")
-                                            val effectiveRule = if (podcast.autoEnqueueRule == "DEFAULT" || podcast.autoEnqueueRule.isBlank()) {
-                                                settings.defaultAutoEnqueueRule
-                                            } else {
-                                                podcast.autoEnqueueRule
-                                            }
-                                            if (effectiveRule != "DISABLED") {
-                                                genuinelyNewEpisodes.sortedBy { it.pubDate }.forEach { ep ->
-                                                    if (effectiveRule == "TOP") {
-                                                        podcastDao.addEpisodeToQueueTop(ep.id)
-                                                    } else if (effectiveRule == "BOTTOM") {
-                                                        podcastDao.addEpisodeToQueueEnd(ep.id)
-                                                    }
-                                                }
-                                            }
+                                            NewEpisodePolicy.enqueue(
+                                                podcastDao,
+                                                genuinelyNewEpisodes,
+                                                NewEpisodePolicy.effectiveEnqueueRule(podcast, settings.defaultAutoEnqueueRule)
+                                            )
                                         }
 
                                         // Actualizar metadatos, timestamp y cabeceras ETag / Last-Modified sobre
