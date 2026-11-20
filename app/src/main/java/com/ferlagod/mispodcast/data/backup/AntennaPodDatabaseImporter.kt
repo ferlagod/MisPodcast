@@ -353,12 +353,15 @@ object AntennaPodDatabaseImporter {
                             effectiveAudioUrl.startsWith("/") ||
                             rawFileUrl.isNotBlank()
 
-                    val localFilePath = when {
+                    val candidatePath = when {
                         rawFileUrl.isNotBlank() -> rawFileUrl
                         isLocalAudio && effectiveAudioUrl.isNotBlank() -> effectiveAudioUrl
                         else -> null
                     }
-                    val isDownloaded = isLocalAudio || !localFilePath.isNullOrBlank()
+                    // Desde Android 11 la carpeta privada de AntennaPod no es accesible: solo se marca
+                    // como descargado si esta app puede leer el archivo; si no, se reproducirá en streaming
+                    val localFilePath = candidatePath?.takeIf { isReadableLocalMedia(context, it) }
+                    val isDownloaded = localFilePath != null
 
                     // ID coherente con el parser RSS de MisPodcast
                     val episodeId = when {
@@ -530,5 +533,17 @@ object AntennaPodDatabaseImporter {
         } finally {
             try { sqliteDb?.close() } catch (e: Exception) { e.rethrowIfCancellation() }
         }
+    }
+
+    /** `true` si esta app puede leer el audio local indicado (ruta, `file://` o `content://`). */
+    private fun isReadableLocalMedia(context: Context, path: String): Boolean = try {
+        if (path.startsWith("content:", ignoreCase = true)) {
+            context.contentResolver.openAssetFileDescriptor(android.net.Uri.parse(path), "r")?.use { true } ?: false
+        } else {
+            val file = java.io.File(path.removePrefix("file://").removePrefix("file:"))
+            file.isFile && file.canRead()
+        }
+    } catch (_: Exception) {
+        false
     }
 }
