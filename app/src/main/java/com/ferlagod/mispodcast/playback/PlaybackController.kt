@@ -111,7 +111,8 @@ class PlaybackController(
 
     /**
      * Envuelve a [ExoPlayer] en un [ForwardingPlayer] para que los botones de salto del sistema
-     * y de Android Auto utilicen los intervalos configurados por el usuario y los saltos de capítulo.
+     * y de Android Auto utilicen los intervalos configurados por el usuario, y para que
+     * siguiente/anterior avancen o retrocedan dentro del episodio.
      */
     fun createForwardingPlayer(player: ExoPlayer): Player = object : ForwardingPlayer(player) {
         override fun seekBack() {
@@ -135,20 +136,27 @@ class PlaybackController(
 
         // Asegura que siguiente/anterior estén siempre disponibles aunque no haya otro
         // episodio en la cola; si no, la sesión ignoraría esas pulsaciones.
-        override fun getAvailableCommands(): Player.Commands =
-            super.getAvailableCommands().buildUpon()
-                .addAll(
-                    Player.COMMAND_SEEK_TO_NEXT,
-                    Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
-                    Player.COMMAND_SEEK_TO_PREVIOUS,
-                    Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
-                    Player.COMMAND_SEEK_FORWARD,
-                    Player.COMMAND_SEEK_BACK
-                )
-                .build()
+        override fun getAvailableCommands(): Player.Commands = withSkipCommands(super.getAvailableCommands())
 
         override fun isCommandAvailable(command: Int): Boolean =
             availableCommands.contains(command)
+
+        // ForwardingPlayer reenvía onAvailableCommandsChanged con los comandos del ExoPlayer, sin
+        // los añadidos arriba: tras cualquier cambio de cola los controladores dejarían de ver
+        // siguiente/anterior. Cada listener recibe los comandos ampliados.
+        private val wrappedListeners = java.util.IdentityHashMap<Player.Listener, Player.Listener>()
+
+        override fun addListener(listener: Player.Listener) {
+            val wrapper = synchronized(wrappedListeners) {
+                wrappedListeners.getOrPut(listener) { skipCommandsListener(listener) }
+            }
+            super.addListener(wrapper)
+        }
+
+        override fun removeListener(listener: Player.Listener) {
+            val wrapper = synchronized(wrappedListeners) { wrappedListeners.remove(listener) } ?: listener
+            super.removeListener(wrapper)
+        }
 
         override fun getSeekBackIncrement(): Long = skipBackMs
         override fun getSeekForwardIncrement(): Long = skipForwardMs
@@ -478,4 +486,52 @@ class PlaybackController(
             }
         }
     }
+}
+
+/** Comandos que el reproductor de la sesión anuncia siempre (ver [PlaybackController.createForwardingPlayer]). */
+internal fun withSkipCommands(base: Player.Commands): Player.Commands =
+    base.buildUpon()
+        .addAll(
+            Player.COMMAND_SEEK_TO_NEXT,
+            Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+            Player.COMMAND_SEEK_TO_PREVIOUS,
+            Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+            Player.COMMAND_SEEK_FORWARD,
+            Player.COMMAND_SEEK_BACK
+        )
+        .build()
+
+/**
+ * Listener que delega todo en [listener] salvo `onAvailableCommandsChanged`, cuyos comandos se
+ * pasan por [transform]. Se usa un [java.lang.reflect.Proxy] porque la delegación `by` de Kotlin no
+ * reenvía los métodos `default` de las interfaces Java y se perderían el resto de eventos.
+ * El método se reconoce por su único parámetro [Player.Commands] (no por su nombre, que R8 puede ofuscar).
+ */
+internal fun skipCommandsListener(
+    listener: Player.Listener,
+    transform: (Player.Commands) -> Player.Commands = ::withSkipCommands
+): Player.Listener {
+    val handler = java.lang.reflect.InvocationHandler { proxy, method, args ->
+        when {
+            method.declaringClass == Any::class.java -> when (method.name) {
+                "equals" -> proxy === args?.getOrNull(0)
+                "hashCode" -> System.identityHashCode(proxy)
+                else -> "SkipCommandsListener($listener)"
+            }
+            method.parameterTypes.size == 1 && method.parameterTypes[0] == Player.Commands::class.java -> {
+                listener.onAvailableCommandsChanged(transform(args!![0] as Player.Commands))
+                null
+            }
+            else -> try {
+                method.invoke(listener, *(args ?: emptyArray()))
+            } catch (e: java.lang.reflect.InvocationTargetException) {
+                throw e.targetException
+            }
+        }
+    }
+    return java.lang.reflect.Proxy.newProxyInstance(
+        Player.Listener::class.java.classLoader,
+        arrayOf(Player.Listener::class.java),
+        handler
+    ) as Player.Listener
 }
