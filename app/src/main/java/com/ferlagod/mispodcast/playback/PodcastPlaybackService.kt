@@ -549,8 +549,24 @@ class PodcastPlaybackService : MediaLibraryService() {
             // Desde Media3 1.6+, super.onConnect() devuelve un resultado "no implementado" con
             // comandos VACÍOS. Si partimos de él, Android Auto no recibe los comandos de biblioteca
             // (GET_LIBRARY_ROOT, GET_CHILDREN...) y su onGetRoot() devuelve null: la interfaz no carga.
-            // Se conceden explícitamente todos los comandos de sesión, biblioteca y reproductor.
-            val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
+            // Por eso se conceden explícitamente los comandos de sesión, biblioteca y reproductor.
+            // Solo los controladores de confianza (la app, el sistema, Android Auto/Automotive, la
+            // notificación y apps verificadas de la lista) exploran la biblioteca: cualquier otra app
+            // instalada podría leer así suscripciones, cola e historial. El resto solo controla la reproducción.
+            val canBrowse = LibraryAccessPolicy.canBrowseLibrary(
+                isTrusted = controller.isTrusted,
+                isCarOrNotification = session.isAutoCompanionController(controller) ||
+                    session.isAutomotiveController(controller) ||
+                    session.isMediaNotificationController(controller),
+                packageName = controller.packageName,
+                isPackageNameVerified = controller.isPackageNameVerified
+            )
+            val baseCommands = if (canBrowse) {
+                MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS
+            } else {
+                MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS
+            }
+            val sessionCommands = baseCommands.buildUpon()
                 .add(COMMAND_REPLAY_10)
                 .add(COMMAND_FORWARD_30)
                 .add(COMMAND_CYCLE_SPEED)
