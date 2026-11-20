@@ -27,6 +27,7 @@ import android.service.quicksettings.TileService
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,7 +66,8 @@ object PodcastWidgetManager {
     private val _currentState = MutableStateFlow(PodcastWidgetState())
     val currentState: StateFlow<PodcastWidgetState> = _currentState.asStateFlow()
 
-    private val widgetScope = CoroutineScope(Dispatchers.IO)
+    // SupervisorJob: un fallo al refrescar no debe cancelar el ámbito y dejar el widget congelado
+    private val widgetScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
