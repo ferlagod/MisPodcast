@@ -234,4 +234,39 @@ class UnitTests {
         assertEquals("https://podcast2.com/feed?id=42&sort=desc", importedFeeds[1].xmlUrl)
         assertEquals("Ciencia & Más <Especial>", importedFeeds[1].title)
     }
+
+    @Test
+    fun testRssFeedParserRejectsNonHttpResourceUrls() {
+        val xmlContent = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+                xmlns:podcast="https://podcastindex.org/namespace/1.0">
+                <channel>
+                    <title>Feed malicioso</title>
+                    <itunes:image href="file:///data/data/com.ferlagod.mispodcast/databases/x.db" />
+                    <item>
+                        <title>Local</title>
+                        <guid>ep-content</guid>
+                        <enclosure url="content://com.otra.app/privado.mp3" type="audio/mpeg" length="1" />
+                    </item>
+                    <item>
+                        <title>Legítimo</title>
+                        <guid>ep-http</guid>
+                        <enclosure url="https://ejemplo.com/ep.mp3" type="audio/mpeg" length="1" />
+                        <podcast:chapters url="intent://evil#Intent;end" type="application/json+chapters" />
+                        <podcast:transcript url="file:///sdcard/t.vtt" type="text/vtt" />
+                    </item>
+                </channel>
+            </rss>
+        """.trimIndent()
+
+        val parsed = RssFeedParser().parseFeed(xmlContent.byteInputStream(Charsets.UTF_8), "https://ejemplo.com/feed.xml")
+
+        assertEquals("", parsed.artworkUrl)
+        assertEquals(listOf("ep-http"), parsed.episodes.map { it.id })
+        val episode = parsed.episodes.single()
+        assertEquals("https://ejemplo.com/ep.mp3", episode.audioUrl)
+        assertEquals(null, episode.chaptersUrl)
+        assertEquals(null, episode.transcriptUrl)
+    }
 }

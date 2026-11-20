@@ -57,6 +57,10 @@ sealed class FeedFetchResult {
     data object NotModified : FeedFetchResult()
 }
 
+/** `true` si [url] es una URL `http://` o `https://` (los únicos esquemas aceptados de un feed). */
+fun isRemoteUrl(url: String): Boolean =
+    url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)
+
 class RssFeedParser(
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
@@ -398,6 +402,14 @@ class RssFeedParser(
                         tagName == "podcast:alternateenclosure" -> inAlternateEnclosure = false
                         tagName == "item" || tagName == "entry" -> {
                             inItem = false
+                            // Solo recursos remotos http(s): un feed malicioso no debe poder apuntar a
+                            // content://, file:// u otros esquemas que la app abriría con sus permisos
+                            itemAudioUrl = remoteUrlOrEmpty(itemAudioUrl)
+                            itemAltAudioUrl = remoteUrlOrEmpty(itemAltAudioUrl)
+                            itemImageUrl = remoteUrlOrEmpty(itemImageUrl)
+                            itemChaptersUrl = remoteUrlOrNull(itemChaptersUrl)
+                            itemTranscriptUrl = remoteUrlOrNull(itemTranscriptUrl)
+                            itemFundingUrl = remoteUrlOrNull(itemFundingUrl)
                             if (itemAudioUrl.isBlank() && itemAltAudioUrl.isNotBlank()) {
                                 itemAudioUrl = itemAltAudioUrl
                                 if (itemAltAudioType.isNotBlank()) itemAudioType = itemAltAudioType
@@ -408,7 +420,7 @@ class RssFeedParser(
                                 val finalId = itemGuid.ifBlank {
                                     "${feedUrl}_${com.ferlagod.mispodcast.util.AudioTrackingSanitizer.stableIdKey(itemAudioUrl).hashCode()}"
                                 }
-                                val finalImage = itemImageUrl.ifBlank { channelArtworkUrl }
+                                val finalImage = itemImageUrl.ifBlank { remoteUrlOrEmpty(channelArtworkUrl) }
 
                                 episodes.add(
                                     ParsedEpisode(
@@ -444,15 +456,19 @@ class RssFeedParser(
             author = channelAuthor.ifBlank { "Desconocido" },
             description = channelDescription,
             feedUrl = feedUrl,
-            artworkUrl = channelArtworkUrl,
+            artworkUrl = remoteUrlOrEmpty(channelArtworkUrl),
             link = channelLink,
             category = channelCategory,
-            fundingUrl = channelFundingUrl,
+            fundingUrl = remoteUrlOrNull(channelFundingUrl),
             fundingText = channelFundingText,
             valueForValueInfo = channelValueForValue,
             episodes = episodes
         )
     }
+
+    private fun remoteUrlOrNull(url: String?): String? = url?.trim()?.takeIf { isRemoteUrl(it) }
+
+    private fun remoteUrlOrEmpty(url: String): String = remoteUrlOrNull(url).orEmpty()
 
     private fun XmlPullParser.nextTextSafe(): String {
         return try {
