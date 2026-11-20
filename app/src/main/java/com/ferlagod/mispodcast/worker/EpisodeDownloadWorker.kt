@@ -22,7 +22,6 @@ import com.ferlagod.mispodcast.util.rethrowIfCancellation
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
-import android.os.Environment
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -81,8 +80,7 @@ class EpisodeDownloadWorker(
 
         NotificationHelper.createNotificationChannels(applicationContext)
 
-        val targetDir = applicationContext.getExternalFilesDir(Environment.DIRECTORY_PODCASTS)
-            ?: applicationContext.filesDir
+        val targetDir = DownloadCleaner.downloadDir(applicationContext)
         if (!targetDir.exists()) {
             targetDir.mkdirs()
         }

@@ -134,7 +134,7 @@ object DownloadCleaner {
     suspend fun cleanupOrphanTempFiles(context: Context, maxAgeMs: Long = 24 * 60 * 60 * 1000L) =
         withContext(Dispatchers.IO) {
             try {
-                val podcastsDir = context.getExternalFilesDir(Environment.DIRECTORY_PODCASTS)
+                val podcastsDir = downloadDir(context)
                 if (podcastsDir != null && podcastsDir.exists()) {
                     val now = System.currentTimeMillis()
                     val tmpFiles = podcastsDir.listFiles { file -> file.isFile && file.name.endsWith(".tmp") } ?: emptyArray()
@@ -156,14 +156,34 @@ object DownloadCleaner {
             }
         }
 
+    /**
+     * Carpeta donde se guardan las descargas: la de podcasts del almacenamiento externo privado o,
+     * si no está disponible, una subcarpeta propia del interno (nunca la raíz de `filesDir`, donde
+     * viven los ajustes y otros datos de la app).
+     */
+    fun downloadDir(context: Context): File =
+        context.getExternalFilesDir(Environment.DIRECTORY_PODCASTS)
+            ?: File(context.filesDir, INTERNAL_DOWNLOADS_DIR)
+
+    private const val INTERNAL_DOWNLOADS_DIR = "podcasts"
+
     /** Devuelve `true` solo si la ruta pertenece a la carpeta privada de descargas de la app. */
     private fun isAppManagedFile(context: Context, path: String?): Boolean {
         if (path.isNullOrBlank() || path.startsWith("content://")) return false
+        val canonical = try { File(path).canonicalPath } catch (_: Exception) { return false }
         val roots = listOfNotNull(
             context.getExternalFilesDir(Environment.DIRECTORY_PODCASTS),
-            context.filesDir
+            File(context.filesDir, INTERNAL_DOWNLOADS_DIR)
         ).map { it.canonicalPath }
-        val canonical = try { File(path).canonicalPath } catch (_: Exception) { return false }
-        return roots.any { canonical.startsWith(it + File.separator) }
+        return isManagedPath(canonical, roots, context.filesDir.canonicalPath)
     }
+
+    /**
+     * Regla de [isAppManagedFile] sobre rutas canónicas: dentro de una de [roots], o un archivo
+     * directamente en [legacyRoot] (versiones anteriores descargaban ahí sin subcarpeta), pero nunca
+     * en sus subcarpetas (`datastore/`, etc.), para que una ruta manipulada no borre datos de la app.
+     */
+    internal fun isManagedPath(canonical: String, roots: List<String>, legacyRoot: String): Boolean =
+        roots.any { canonical.startsWith(it + File.separator) } ||
+            File(canonical).parent == legacyRoot
 }
