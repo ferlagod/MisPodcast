@@ -49,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -178,6 +179,17 @@ class NextcloudSyncManager(
         const val MSG_ALREADY_RUNNING = "already_running"
         const val MSG_NOT_CONFIGURED = "not_configured"
 
+        /**
+         * URL WebDAV de los archivos del usuario. El nombre se codifica como un único segmento:
+         * en Nextcloud puede llevar espacios, «@» u otros caracteres, y un «/» no debe cambiar la ruta.
+         */
+        fun webDavBaseUrl(serverUrl: String, username: String): String =
+            serverUrl.toHttpUrl().newBuilder()
+                .addPathSegments("remote.php/dav/files")
+                .addPathSegment(username.trim())
+                .build()
+                .toString()
+
         fun isSecureServerUrl(rawUrl: String): Boolean {
             val trimmed = rawUrl.trim().lowercase()
             if (trimmed.startsWith("http://")) {
@@ -197,11 +209,8 @@ class NextcloudSyncManager(
         return url.trimEnd('/')
     }
 
-    private fun buildWebDavBaseUrl(serverUrl: String, username: String): String {
-        val cleanServer = normalizeUrl(serverUrl)
-        val cleanUser = username.trim()
-        return "$cleanServer/remote.php/dav/files/$cleanUser"
-    }
+    private fun buildWebDavBaseUrl(serverUrl: String, username: String): String =
+        webDavBaseUrl(normalizeUrl(serverUrl), username)
 
     private fun buildAppFolderUrl(serverUrl: String, username: String): String {
         return "${buildWebDavBaseUrl(serverUrl, username)}/$APP_FOLDER"
