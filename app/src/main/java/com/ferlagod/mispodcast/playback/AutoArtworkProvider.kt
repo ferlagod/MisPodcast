@@ -40,7 +40,8 @@ import java.util.concurrent.ConcurrentHashMap
  * solicita, la guarda en la caché de la app y la sirve desde disco en las siguientes peticiones.
  *
  * Por seguridad solo se sirven URLs registradas previamente por la propia app mediante [toContentUri]
- * (o ya presentes en la caché), de modo que otras apps no pueden usarlo para descargar URLs arbitrarias.
+ * (o ya presentes en la caché), de modo que otras apps no pueden usarlo para descargar URLs arbitrarias,
+ * y solo a los llamantes que también pueden explorar la biblioteca.
  */
 class AutoArtworkProvider : ContentProvider() {
 
@@ -81,6 +82,9 @@ class AutoArtworkProvider : ContentProvider() {
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
         val ctx = context ?: throw FileNotFoundException("Sin contexto")
+        // Igual que la exploración de la biblioteca: si cualquier app pudiera leer la caché, podría
+        // deducir qué podcasts sigue el usuario probando hashes de portadas conocidas
+        if (!isCallerAllowed(ctx)) throw SecurityException("Llamante no autorizado")
         val key = uri.lastPathSegment?.takeIf { it.matches(Regex("[0-9a-f]{64}")) }
             ?: throw FileNotFoundException("URI no válida: $uri")
 
@@ -128,6 +132,20 @@ class AutoArtworkProvider : ContentProvider() {
             tmp.delete()
             Log.e(TAG, "Error al descargar la portada para Android Auto", e)
             throw FileNotFoundException(e.message ?: "Error al descargar la portada")
+        }
+    }
+
+    /** La propia app, el sistema, apps de sistema (p. ej. Android Automotive) o las de [LibraryAccessPolicy]. */
+    private fun isCallerAllowed(ctx: Context): Boolean {
+        val uid = android.os.Binder.getCallingUid()
+        if (uid == android.os.Process.myUid() || uid == android.os.Process.SYSTEM_UID) return true
+        // getCallingPackage() lo verifica el sistema contra el UID del llamante
+        val pkg = callingPackage ?: return false
+        if (pkg in LibraryAccessPolicy.ALLOWED_PACKAGES) return true
+        return try {
+            (ctx.packageManager.getApplicationInfo(pkg, 0).flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+        } catch (_: Exception) {
+            false
         }
     }
 
