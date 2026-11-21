@@ -3,14 +3,14 @@ Categories:
   - Podcast
 License: GPL-3.0-or-later
 AuthorName: ferlagod
-SourceCode: https://github.com/ferlagod/MisPodcast
-IssueTracker: https://github.com/ferlagod/MisPodcast/issues
-Changelog: https://github.com/ferlagod/MisPodcast/releases
+SourceCode: https://github.com/MisApps-labs/MisPodcast
+IssueTracker: https://github.com/MisApps-labs/MisPodcast/issues
+Changelog: https://github.com/MisApps-labs/MisPodcast/releases
 
 AutoName: Mis Podcast
 
 RepoType: git
-Repo: https://github.com/ferlagod/MisPodcast.git
+Repo: https://github.com/MisApps-labs/MisPodcast.git
 
 Builds:
   - versionName: 1.0.1

@@ -192,7 +192,7 @@ El proyecto sigue una arquitectura limpia orientada a componentes con el patrón
 ### Pasos
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/ferlagod/MisPodcast.git
+   git clone https://github.com/MisApps-labs/MisPodcast.git
    cd MisPodcast
    ```
 2. Compila el proyecto en modo depuración:

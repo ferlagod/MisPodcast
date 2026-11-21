@@ -36,7 +36,7 @@ La app no está dirigida específicamente a menores y no recoge datos personales
 
 ## Cambios y contacto
 
-Si esta política cambia, se publicará aquí la nueva versión. Para cualquier duda, abre una incidencia en <https://github.com/ferlagod/MisPodcast/issues>.
+Si esta política cambia, se publicará aquí la nueva versión. Para cualquier duda, abre una incidencia en <https://github.com/MisApps-labs/MisPodcast/issues>.
 
 ---
 
@@ -78,4 +78,4 @@ The app is not specifically aimed at children and doesn't collect personal data 
 
 ## Changes and contact
 
-If this policy changes, the new version will be published here. For any questions, open an issue at <https://github.com/ferlagod/MisPodcast/issues>.
+If this policy changes, the new version will be published here. For any questions, open an issue at <https://github.com/MisApps-labs/MisPodcast/issues>.

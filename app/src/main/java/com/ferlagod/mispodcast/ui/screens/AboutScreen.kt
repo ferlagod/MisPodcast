@@ -431,4 +431,4 @@ fun AboutScreen(
     }
 }
 
-private const val PRIVACY_POLICY_URL = "https://github.com/ferlagod/MisPodcast/blob/main/PRIVACY.md"
+private const val PRIVACY_POLICY_URL = "https://github.com/MisApps-labs/MisPodcast/blob/main/PRIVACY.md"

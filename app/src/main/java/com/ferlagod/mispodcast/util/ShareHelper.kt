@@ -37,7 +37,7 @@ import java.util.Locale
 object ShareHelper {
 
     /** Página pública del proyecto que se enlaza en la firma. */
-    const val APP_PUBLIC_URL = "https://github.com/ferlagod/MisPodcast"
+    const val APP_PUBLIC_URL = "https://github.com/MisApps-labs/MisPodcast"
 
     /** Refleja el ajuste "Firma al compartir"; lo actualiza [com.ferlagod.mispodcast.MisPodcastApplication]. */
     @Volatile
