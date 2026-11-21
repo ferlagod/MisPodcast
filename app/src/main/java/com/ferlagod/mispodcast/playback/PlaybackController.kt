@@ -501,6 +501,7 @@ class PlaybackController(
 }
 
 /** Comandos que el reproductor de la sesión anuncia siempre (ver [PlaybackController.createForwardingPlayer]). */
+@OptIn(UnstableApi::class)
 internal fun withSkipCommands(base: Player.Commands): Player.Commands =
     base.buildUpon()
         .addAll(
